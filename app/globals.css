@@ -3759,6 +3759,10 @@ button {
   align-items: end;
 }
 
+.river-route-page {
+  padding-bottom: 5rem;
+}
+
 .route-progress b {
   color: var(--blood);
   font-size: 3rem;
@@ -3836,9 +3840,10 @@ button {
 }
 
 .route-controls {
-  position: sticky;
+  position: fixed;
   z-index: 8;
   bottom: 1rem;
+  left: 50%;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
@@ -3847,6 +3852,7 @@ button {
   background: rgba(239, 236, 228, 0.94);
   border: 1px solid var(--ink);
   backdrop-filter: blur(12px);
+  transform: translateX(-50%);
 }
 
 .route-controls button {
