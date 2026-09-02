@@ -2564,6 +2564,802 @@ button {
   box-shadow: 0 1rem 3.5rem rgba(23, 22, 18, 0.18) !important;
 }
 
+/* Chapter two: people are presented as collection records, not character cards. */
+.person-page,
+.photo-record-page,
+.death-record-page {
+  width: min(100%, 78rem);
+  margin: 0 auto;
+}
+
+.person-masthead,
+.death-record-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.32fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  align-items: end;
+  padding-bottom: clamp(2rem, 4vw, 3.5rem);
+  border-bottom: 1px solid var(--ink);
+}
+
+.person-masthead > div:first-child,
+.death-record-head > div:first-child {
+  max-width: 52rem;
+}
+
+.person-masthead .section-kicker,
+.death-record-head .section-kicker {
+  margin-top: 1.25rem;
+}
+
+.person-masthead h1,
+.death-record-head h1,
+.photo-record-page .index-head h1 {
+  margin: 0.45rem 0 0;
+  font-family: "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+  font-size: clamp(3.4rem, 8vw, 7.2rem);
+  font-weight: 610;
+  line-height: 0.92;
+  letter-spacing: -0.085em;
+}
+
+.person-masthead h1 small {
+  color: var(--ash);
+  font-size: 0.32em;
+  font-weight: 450;
+  letter-spacing: -0.04em;
+}
+
+.person-masthead > div:first-child > p:last-child,
+.death-record-head > div:first-child > p:last-child {
+  max-width: 41rem;
+  margin: 1.6rem 0 0;
+  color: var(--ash);
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.broken-portrait {
+  display: grid;
+  align-content: space-between;
+  min-height: 17rem;
+  padding: 1rem;
+  background:
+    linear-gradient(135deg, transparent 49.75%, rgba(243, 241, 234, 0.14) 50%, transparent 50.25%),
+    linear-gradient(45deg, transparent 49.75%, rgba(243, 241, 234, 0.14) 50%, transparent 50.25%),
+    #24231f;
+  color: #d7d2c8;
+}
+
+.broken-portrait span,
+.broken-portrait b {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.broken-portrait b {
+  justify-self: center;
+  align-self: center;
+  color: #f0ece2;
+}
+
+.person-evidence-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  margin-top: clamp(3rem, 7vw, 6.5rem);
+}
+
+.dossier-facts,
+.person-quick-facts,
+.water-dossier dl {
+  margin: 0;
+  border-top: 1px solid var(--ink);
+}
+
+.dossier-facts .meta-line,
+.person-quick-facts .meta-line,
+.water-dossier .meta-line {
+  grid-template-columns: minmax(5.5rem, 0.34fr) minmax(0, 1fr);
+  padding: 1rem 0;
+}
+
+.dossier-facts .meta-line dt,
+.person-quick-facts .meta-line dt,
+.water-dossier .meta-line dt {
+  color: var(--ash);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.dossier-facts .meta-line dd,
+.person-quick-facts .meta-line dd,
+.water-dossier .meta-line dd {
+  font-size: 0.96rem;
+  line-height: 1.6;
+}
+
+.redirect-card {
+  align-self: start;
+  padding: clamp(1.5rem, 4vw, 2.6rem);
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.redirect-card > span,
+.redirect-card code,
+.source-note > span,
+.biography-sheet > span,
+.lost-photo-card span,
+.anonymous-profile span,
+.identity-compare span,
+.alias-source-grid span,
+.photo-transcript span,
+.visitor-note header,
+.kinship-note > span,
+.case-crossref > span {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.redirect-card > span {
+  color: var(--blood);
+}
+
+.redirect-card h2 {
+  max-width: 20rem;
+  margin: 2rem 0 0.85rem;
+  font-size: clamp(1.35rem, 2.5vw, 2rem);
+  font-weight: 520;
+  line-height: 1.25;
+}
+
+.redirect-card code {
+  display: block;
+  padding: 0.9rem 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+  color: var(--blood);
+  font-size: 0.95rem;
+  text-transform: none;
+}
+
+.redirect-card p,
+.source-note p,
+.biography-sheet p,
+.kinship-note p {
+  color: var(--ash);
+  line-height: 1.8;
+}
+
+.source-note {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.22fr) minmax(0, 1fr);
+  gap: 2rem;
+  margin-top: 4rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+
+.source-note > span {
+  color: var(--blood);
+}
+
+.source-note p {
+  margin: 0;
+}
+
+.identity-status,
+.death-status,
+.public-conclusion {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 15rem;
+  padding: 1.25rem 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+
+.identity-status span,
+.identity-status small,
+.death-status span,
+.death-status small,
+.public-conclusion span,
+.public-conclusion small {
+  color: var(--ash);
+  font-size: 0.76rem;
+  letter-spacing: 0.06em;
+}
+
+.identity-status b,
+.death-status b,
+.public-conclusion b {
+  margin: 0.55rem 0 0.8rem;
+  color: var(--blood);
+  font-size: clamp(1.35rem, 3vw, 2.1rem);
+  font-weight: 620;
+}
+
+.identity-status small,
+.death-status small,
+.public-conclusion small {
+  line-height: 1.6;
+}
+
+.public-conclusion strong {
+  margin-bottom: 0.75rem;
+  padding: 0.25rem 0.45rem;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.82rem;
+  font-weight: 560;
+}
+
+.overwritten-name {
+  position: relative;
+  display: grid;
+  width: max-content;
+  max-width: 100%;
+}
+
+.overwritten-name > span,
+.overwritten-name > b {
+  grid-area: 1 / 1;
+}
+
+.overwritten-name > span {
+  color: rgba(23, 22, 18, 0.24);
+  text-decoration: line-through;
+  text-decoration-color: var(--blood);
+  text-decoration-thickness: 0.05em;
+  transform: translate(-0.08em, 0.02em);
+  animation: old-name-drift 4.8s steps(1, end) infinite;
+}
+
+.overwritten-name > b {
+  position: relative;
+  color: var(--ink);
+  font: inherit;
+  transform: translate(0.18em, 0.22em);
+  animation: new-name-lock 4.8s steps(1, end) infinite;
+}
+
+@keyframes old-name-drift {
+  0%, 91%, 100% { transform: translate(-0.08em, 0.02em); }
+  92% { transform: translate(-0.12em, 0.04em); }
+  94% { transform: translate(-0.04em, -0.01em); }
+}
+
+@keyframes new-name-lock {
+  0%, 91%, 100% { transform: translate(0.18em, 0.22em); }
+  92% { transform: translate(0.21em, 0.2em); }
+  94% { transform: translate(0.14em, 0.24em); }
+}
+
+.reduce-motion .overwritten-name > span,
+.reduce-motion .overwritten-name > b {
+  animation: none;
+}
+
+.identity-compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: stretch;
+  margin-top: clamp(3rem, 7vw, 6rem);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.identity-compare > div:not(.identity-equals) {
+  min-height: 18rem;
+  padding: clamp(1.5rem, 4vw, 2.8rem);
+}
+
+.identity-compare > div:first-child {
+  padding-left: 0;
+}
+
+.identity-compare > div:last-child {
+  padding-right: 0;
+}
+
+.identity-compare h2,
+.alias-source-grid h2 {
+  margin: 2.25rem 0 1.35rem;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 540;
+  letter-spacing: -0.06em;
+}
+
+.identity-compare p,
+.alias-source-grid p {
+  margin: 0.55rem 0;
+  color: var(--ash);
+  line-height: 1.55;
+}
+
+.identity-equals {
+  display: grid;
+  place-items: center;
+  width: clamp(4rem, 9vw, 8rem);
+  border-right: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+  color: var(--blood);
+  font-family: var(--display-serif);
+  font-size: clamp(2.2rem, 5vw, 4rem);
+}
+
+.anonymous-profile {
+  margin-top: 4rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.anonymous-profile header,
+.anonymous-profile footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.2rem;
+  color: var(--ash);
+}
+
+.anonymous-profile header {
+  border-bottom: 1px solid var(--line);
+}
+
+.anonymous-profile header b {
+  color: var(--blood);
+  font-size: 0.76rem;
+  font-weight: 620;
+}
+
+.anonymous-profile > div {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.4fr) minmax(0, 1fr);
+  gap: clamp(2rem, 6vw, 6rem);
+  padding: clamp(1.5rem, 4vw, 3rem) 1.2rem;
+}
+
+.anonymous-profile h2 {
+  margin: 0;
+  color: var(--ash);
+  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 460;
+}
+
+.anonymous-profile p {
+  max-width: 43rem;
+  margin: 0;
+  font-family: var(--display-serif);
+  font-size: 1.05rem;
+  line-height: 1.9;
+}
+
+.anonymous-profile footer {
+  border-top: 1px solid var(--line);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+}
+
+.person-quick-facts {
+  align-self: end;
+}
+
+.biography-sheet {
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--ink);
+}
+
+.biography-sheet > span {
+  color: var(--blood);
+}
+
+.biography-sheet p {
+  margin: 1.6rem 0 0;
+}
+
+.lost-photo-card {
+  margin: 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.lost-photo-card > div {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.65rem;
+  min-height: 23rem;
+  padding: 1rem;
+  background:
+    linear-gradient(135deg, transparent 49.8%, rgba(243, 241, 234, 0.14) 50%, transparent 50.2%),
+    linear-gradient(45deg, transparent 49.8%, rgba(243, 241, 234, 0.14) 50%, transparent 50.2%),
+    #24231f;
+  color: #d7d2c8;
+}
+
+.lost-photo-card > div b {
+  color: #f0ece2;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.lost-photo-card > div small {
+  color: #9f9b92;
+}
+
+.lost-photo-card figcaption {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.45rem 1.4rem;
+  padding: 1.2rem;
+  border-top: 1px solid var(--line);
+}
+
+.lost-photo-card figcaption > span {
+  color: var(--blood);
+}
+
+.lost-photo-card figcaption strong {
+  font-size: 1.1rem;
+  font-weight: 610;
+}
+
+.lost-photo-card figcaption p {
+  grid-column: 2;
+  margin: 0;
+  color: var(--ash);
+  font-size: 0.85rem;
+}
+
+.embedded-script {
+  margin-top: clamp(4.5rem, 10vw, 9rem);
+  padding: clamp(2rem, 5vw, 4.5rem) clamp(1.2rem, 5vw, 4.5rem);
+  background: var(--paper);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.embedded-script > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.embedded-script > header > div {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.embedded-script > header > div > span {
+  color: var(--ash);
+  font-size: 0.8rem;
+}
+
+.embedded-script-title {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 2rem;
+  margin-top: clamp(3rem, 7vw, 6rem);
+  padding-bottom: 1.3rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.embedded-script-title h2 {
+  margin: 0;
+  font-size: clamp(2.8rem, 7vw, 6.5rem);
+  font-weight: 560;
+  line-height: 0.95;
+  letter-spacing: -0.075em;
+}
+
+.embedded-script-title p {
+  margin: 0;
+  color: var(--ash);
+  font-size: 0.84rem;
+}
+
+.embedded-script .poem-body {
+  max-width: 42rem;
+  margin: clamp(3rem, 7vw, 6rem) auto 1rem;
+  padding-left: clamp(1rem, 5vw, 4rem);
+  border-left: 1px solid var(--line);
+}
+
+.embedded-script .poem-body p {
+  margin: 0 0 2rem;
+  font-size: clamp(1.02rem, 1.5vw, 1.2rem);
+  line-height: 2;
+}
+
+.photo-record-page .index-head {
+  align-items: end;
+}
+
+.photo-transcript {
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.28fr) minmax(0, 1fr);
+  margin-top: clamp(3rem, 7vw, 6rem);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.photo-index {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.5rem 1.5rem 1.5rem 0;
+  border-right: 1px solid var(--line);
+}
+
+.photo-index b {
+  margin-top: auto;
+  color: var(--blood);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.photo-index small {
+  color: var(--ash);
+  font-size: 0.75rem;
+}
+
+.photo-description {
+  min-height: 23rem;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  background:
+    linear-gradient(135deg, transparent 49.85%, rgba(243, 241, 234, 0.1) 50%, transparent 50.15%),
+    linear-gradient(45deg, transparent 49.85%, rgba(243, 241, 234, 0.1) 50%, transparent 50.15%),
+    #292824;
+  color: #eee9df;
+}
+
+.photo-description span {
+  color: #aaa69e;
+}
+
+.photo-description p {
+  max-width: 38rem;
+  margin: clamp(4rem, 10vw, 8rem) auto 0;
+  font-family: var(--display-serif);
+  font-size: clamp(1.15rem, 2.4vw, 1.8rem);
+  line-height: 1.75;
+}
+
+.ocr-strip {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(10rem, 0.28fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.ocr-strip strong {
+  color: var(--blood);
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 590;
+  letter-spacing: 0.12em;
+}
+
+.ocr-strip i {
+  color: var(--ash);
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+.visitor-note {
+  width: min(100%, 58rem);
+  margin: clamp(4rem, 9vw, 8rem) auto 0;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.visitor-note header,
+.visitor-note footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1.2rem;
+}
+
+.visitor-note header {
+  border-bottom: 1px solid var(--line);
+  color: var(--ash);
+}
+
+.visitor-note header b {
+  color: var(--blood);
+  font-size: 0.8rem;
+}
+
+.visitor-note blockquote {
+  margin: 0;
+  padding: clamp(2rem, 6vw, 5rem);
+  font-family: var(--display-serif);
+  font-size: clamp(1.2rem, 2.4vw, 1.7rem);
+  line-height: 1.85;
+}
+
+.visitor-note footer {
+  justify-content: flex-end;
+  border-top: 1px solid var(--line);
+  color: var(--ash);
+  font-size: 0.82rem;
+}
+
+.visitor-note footer strong {
+  color: var(--blood);
+  font-size: 1rem;
+  font-weight: 620;
+}
+
+.group-photo-transcript {
+  align-self: start;
+  padding: 1.3rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+}
+
+.group-photo-transcript > span {
+  color: var(--ash);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+}
+
+.group-photo-transcript ol {
+  margin: 2rem 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: member;
+}
+
+.group-photo-transcript li {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--line);
+  counter-increment: member;
+}
+
+.group-photo-transcript li::before {
+  content: counter(member, decimal-leading-zero);
+  color: var(--ash);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+}
+
+.group-photo-transcript .next-name {
+  color: var(--blood);
+  font-weight: 620;
+}
+
+.group-photo-transcript p {
+  margin: 0;
+  color: var(--ash);
+  font-size: 0.85rem;
+  line-height: 1.65;
+}
+
+.alias-source-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: clamp(3rem, 7vw, 6rem);
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.alias-source-grid > div {
+  min-height: 17rem;
+  padding: 1.5rem;
+  border-right: 1px solid var(--line);
+}
+
+.alias-source-grid > div:first-child {
+  padding-left: 0;
+}
+
+.alias-source-grid > div:last-child {
+  padding-right: 0;
+  border-right: 0;
+}
+
+.alias-source-grid .damaged-relation {
+  padding-left: 1.5rem;
+  background: var(--paper);
+}
+
+.damaged-relation h2 {
+  color: var(--blood);
+}
+
+.water-record {
+  position: relative;
+}
+
+.water-record::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 5rem;
+  right: -5vw;
+  width: min(32vw, 25rem);
+  height: min(32vw, 25rem);
+  border: 1px solid rgba(148, 27, 31, 0.22);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 3rem rgba(148, 27, 31, 0.025),
+    0 0 0 7rem rgba(148, 27, 31, 0.018);
+}
+
+.water-dossier {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(18rem, 1.1fr);
+  gap: clamp(2rem, 8vw, 8rem);
+  margin-top: clamp(3rem, 7vw, 6rem);
+}
+
+.kinship-note {
+  align-self: start;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background: var(--paper);
+  border-left: 1px solid var(--blood);
+}
+
+.kinship-note > span {
+  color: var(--blood);
+}
+
+.kinship-note p:last-child {
+  margin-bottom: 0;
+}
+
+.case-crossref {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.22fr) minmax(0, 1fr) auto;
+  gap: 2rem;
+  align-items: start;
+  margin-top: 4rem;
+  padding: 1.4rem 0;
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--line);
+}
+
+.case-crossref > span {
+  color: var(--blood);
+}
+
+.case-crossref h2 {
+  margin: 0 0 0.85rem;
+  font-size: 1.5rem;
+  font-weight: 540;
+}
+
+.case-crossref p {
+  margin: 0.3rem 0;
+  color: var(--ash);
+}
+
+.case-crossref code {
+  color: var(--ash);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 960px) {
   .site-header {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -2613,6 +3409,21 @@ button {
 
   .catalog-panel li:last-child {
     border-bottom: 0;
+  }
+
+  .person-masthead,
+  .death-record-head {
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, 0.34fr);
+    gap: 2rem;
+  }
+
+  .person-evidence-grid,
+  .water-dossier {
+    gap: 3rem;
+  }
+
+  .alias-source-grid > div {
+    min-height: 15rem;
   }
 }
 
@@ -2679,5 +3490,143 @@ button {
 
   .version-sheet {
     grid-template-columns: 1fr;
+  }
+
+  .person-masthead,
+  .death-record-head,
+  .person-evidence-grid,
+  .water-dossier,
+  .source-note,
+  .anonymous-profile > div,
+  .case-crossref {
+    grid-template-columns: 1fr;
+  }
+
+  .person-masthead,
+  .death-record-head {
+    align-items: start;
+  }
+
+  .person-masthead h1,
+  .death-record-head h1,
+  .photo-record-page .index-head h1 {
+    font-size: clamp(3.2rem, 18vw, 5.7rem);
+  }
+
+  .broken-portrait {
+    min-height: 13rem;
+  }
+
+  .person-quick-facts,
+  .identity-status,
+  .death-status,
+  .public-conclusion {
+    width: 100%;
+  }
+
+  .identity-compare {
+    grid-template-columns: 1fr;
+  }
+
+  .identity-compare > div:not(.identity-equals) {
+    min-height: auto;
+    padding: 2rem 0;
+  }
+
+  .identity-equals {
+    width: 100%;
+    min-height: 4rem;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .anonymous-profile header,
+  .anonymous-profile footer,
+  .embedded-script > header,
+  .embedded-script > header > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .lost-photo-card > div,
+  .photo-description {
+    min-height: 18rem;
+  }
+
+  .lost-photo-card figcaption,
+  .embedded-script-title,
+  .photo-transcript,
+  .ocr-strip {
+    grid-template-columns: 1fr;
+  }
+
+  .lost-photo-card figcaption p,
+  .ocr-strip {
+    grid-column: 1;
+  }
+
+  .embedded-script {
+    margin-right: -1rem;
+    margin-left: -1rem;
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .embedded-script-title {
+    align-items: start;
+  }
+
+  .embedded-script .poem-body {
+    margin-left: 0;
+  }
+
+  .photo-index {
+    min-height: 8rem;
+    padding-right: 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .ocr-strip {
+    gap: 0.6rem;
+    padding: 1.2rem 0;
+  }
+
+  .visitor-note blockquote {
+    padding: 2rem 1.2rem;
+  }
+
+  .alias-source-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .alias-source-grid > div,
+  .alias-source-grid > div:first-child,
+  .alias-source-grid > div:last-child,
+  .alias-source-grid .damaged-relation {
+    min-height: auto;
+    padding: 2rem 0;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .alias-source-grid > div:last-child {
+    border-bottom: 0;
+  }
+
+  .alias-source-grid .damaged-relation {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .case-crossref {
+    gap: 1rem;
+  }
+
+  .water-record::before {
+    right: -2rem;
+    width: 13rem;
+    height: 13rem;
   }
 }
