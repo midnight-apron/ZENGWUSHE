@@ -11,13 +11,17 @@ import {
 } from "react";
 import {
   ArrowUpRight,
+  ArrowDown,
+  ArrowUp,
   Eye,
   EyeOff,
   FileWarning,
   FolderOpen,
   HelpCircle,
+  LockKeyhole,
   Search,
   Settings2,
+  UnlockKeyhole,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -45,6 +49,10 @@ type GameState = {
   recovered: string[];
   visited: string[];
   frameClicks: number;
+  stoneBreakClicks: number;
+  stoneBaseClicks: number;
+  routeTrips: number;
+  routeReachedBottom: boolean;
   scaresSeen: string[];
   settings: Settings;
 };
@@ -66,6 +74,10 @@ const DEFAULT_STATE: GameState = {
   recovered: [],
   visited: [],
   frameClicks: 0,
+  stoneBreakClicks: 0,
+  stoneBaseClicks: 0,
+  routeTrips: 0,
+  routeReachedBottom: false,
   scaresSeen: [],
   settings: {
     reducedScares: false,
@@ -89,6 +101,14 @@ const ROUTES = {
   wangKeding: "/members/wang-keding",
   xingWan: "/members/xing-wan",
   liXiangDeath: "/archive/deaths/lixiang",
+  wangAutopsy: "/archive/autopsy/wang-keding",
+  stoneHead: "/archive/evidence/stone-head",
+  xiyanTemple: "/archive/evidence/xiyansi",
+  phoenixRoute: "/archive/routes/phoenix-reservoir",
+  wangSupplement: "/archive/autopsy/wang-keding-supplement",
+  wangDeath: "/recovered/13-wang-keding",
+  duCremation: "/archive/forms/cremation-du",
+  duCremationSigned: "/archive/forms/cremation-du-complete",
 };
 
 const PAGE_TITLES: Record<string, string> = {
@@ -106,6 +126,14 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.wangKeding]: "王克定｜人物档案",
   [ROUTES.xingWan]: "刑万／刑某｜合并人物档案",
   [ROUTES.liXiangDeath]: "莉香｜溺亡记录",
+  [ROUTES.wangAutopsy]: "王克定｜认尸与尸检摘要",
+  [ROUTES.stoneHead]: "石立人头｜物证记录",
+  [ROUTES.xiyanTemple]: "西岩寺｜石像档案",
+  [ROUTES.phoenixRoute]: "凤凰水库｜河流路线",
+  [ROUTES.wangSupplement]: "王克定｜尸检补充",
+  [ROUTES.wangDeath]: "王克定之死｜已恢复",
+  [ROUTES.duCremation]: "杜万琳｜火化单",
+  [ROUTES.duCremationSigned]: "杜万琳｜完整火化单",
 };
 
 const HINTS: Record<string, string[]> = {
@@ -179,6 +207,46 @@ const HINTS: Record<string, string[]> = {
     "把死者姓名与材料类型组合起来搜索。",
     "搜索：王克定尸检。",
   ],
+  [ROUTES.wangAutopsy]: [
+    "报告里有一件与投河叙述极不相称的物证。",
+    "它连接在死者反绑的双手后面。",
+    "搜索：石立人头。",
+  ],
+  [ROUTES.stoneHead]: [
+    "物证来源栏保留了一处寺院名称。",
+    "后山旧照与《浣石》残句都指向同一地点。",
+    "搜索：西岩寺。",
+  ],
+  [ROUTES.xiyanTemple]: [
+    "图注中的“六十七”也可以拆成两个动作次数。",
+    "先检查佛头断口，再检查石座。",
+    "断口点 6 次，石座点 7 次。",
+  ],
+  [ROUTES.phoenixRoute]: [
+    "尸体路线需要回溯，不能只顺流看一遍。",
+    "从上游到水库再返回上游，重复三次。",
+    "完成 3 次往返后，查看新出现的伤口批注。",
+  ],
+  [ROUTES.wangSupplement]: [
+    "口令由两份已经看过的数字组成，不是日期。",
+    "西岩寺有多少尊像？死者脸颊有几道伤口？",
+    "输入：67-3。",
+  ],
+  [ROUTES.wangDeath]: [
+    "版本历史还连接着另一名参与者的死亡手续。",
+    "《始末的碎点》把这道手续称为“焚烧签字单”。",
+    "搜索：火化单。",
+  ],
+  [ROUTES.duCremation]: [
+    "代签人并非杜家直系亲属，遮挡层只露出“方＿”。",
+    "回想谁最早赶到医院，又在诗中承认代签。",
+    "搜索：方晚署名。",
+  ],
+  [ROUTES.duCremationSigned]: [
+    "火化单与项目往来共享了一个完整案名。",
+    "下一章将把五个人放回同一份项目索引。",
+    "搜索：他山地方公墓贪污案。",
+  ],
 };
 
 const RECOVERED_FILES = [
@@ -188,6 +256,14 @@ const RECOVERED_FILES = [
   { id: "04", title: "1.3 王克定（方晚）", source: "城市旧照片" },
   { id: "05", title: "1.4 在兰道（刑万）", source: "刑万合并档案" },
   { id: "06", title: "2.1 溺水的莉香（刑万）", source: "莉香溺亡记录" },
+  { id: "07", title: "2.2 舞（徐惠）", source: "婚礼档案" },
+  { id: "08", title: "3.1 自白（方晚）", source: "完整火化单" },
+  { id: "09", title: "3.2 浣石（方晚）", source: "西岩寺石像档案" },
+  { id: "10", title: "4.1 刍味（杜彻）", source: "寿享陵园" },
+  { id: "11", title: "4.2 刍胃（杜万琳）", source: "医学删除页" },
+  { id: "12", title: "5.1 始末的碎点", source: "碎点索引" },
+  { id: "13", title: "5.2 王克定之死（杜万琳）", source: "尸检补充" },
+  { id: "14", title: "结诗：赭红门", source: "终场" },
 ];
 
 function unique(values: string[]) {
@@ -246,8 +322,16 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [scareActive, setScareActive] = useState(false);
   const [scareTextVisible, setScareTextVisible] = useState(false);
   const [roleGlitch, setRoleGlitch] = useState(false);
+  const [stoneRevealActive, setStoneRevealActive] = useState(false);
+  const [supplementPassword, setSupplementPassword] = useState("");
+  const [supplementPasswordVisible, setSupplementPasswordVisible] = useState(false);
+  const [supplementPasswordAttempts, setSupplementPasswordAttempts] = useState(0);
+  const [supplementPasswordNote, setSupplementPasswordNote] = useState("");
+  const [deathScareActive, setDeathScareActive] = useState(false);
+  const [deathScareTextVisible, setDeathScareTextVisible] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const skipScareRef = useRef<HTMLButtonElement>(null);
+  const skipDeathScareRef = useRef<HTMLButtonElement>(null);
 
   const currentPath = displayPath(path);
   const currentHints = HINTS[currentPath] ?? HINTS[ROUTES.exhibition];
@@ -269,6 +353,10 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     setQuery("");
     setFrameNotice(false);
     setPlainText(false);
+    setSupplementPassword("");
+    setSupplementPasswordVisible(false);
+    setSupplementPasswordAttempts(0);
+    setSupplementPasswordNote("");
   }, []);
 
   const finishMangRecovery = useCallback(() => {
@@ -276,6 +364,14 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     setScareTextVisible(false);
     mutateGame(["S03", "S04"], ["01"]);
     navigate(ROUTES.recoveredOne);
+  }, [mutateGame, navigate]);
+
+  const finishWangRecovery = useCallback(() => {
+    setDeathScareActive(false);
+    setDeathScareTextVisible(false);
+    mutateGame(["S18"], ["13"]);
+    navigate(ROUTES.wangDeath);
+    window.setTimeout(() => searchInputRef.current?.focus(), 0);
   }, [mutateGame, navigate]);
 
   useEffect(() => {
@@ -360,6 +456,38 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12"],
         recover: ["01", "02", "03", "04", "05", "06"],
       },
+      [ROUTES.wangAutopsy]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13"],
+        recover: ["01", "02", "03", "04", "05", "06"],
+      },
+      [ROUTES.stoneHead]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14"],
+        recover: ["01", "02", "03", "04", "05", "06"],
+      },
+      [ROUTES.xiyanTemple]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14"],
+        recover: ["01", "02", "03", "04", "05", "06"],
+      },
+      [ROUTES.phoenixRoute]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15"],
+        recover: ["01", "02", "03", "04", "05", "06", "09"],
+      },
+      [ROUTES.wangSupplement]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16"],
+        recover: ["01", "02", "03", "04", "05", "06", "09"],
+      },
+      [ROUTES.wangDeath]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18"],
+        recover: ["01", "02", "03", "04", "05", "06", "09", "13"],
+      },
+      [ROUTES.duCremation]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19"],
+        recover: ["01", "02", "03", "04", "05", "06", "09", "13"],
+      },
+      [ROUTES.duCremationSigned]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
     };
     const effect = arrival[currentPath];
     const syncArrival = window.setTimeout(() => {
@@ -414,6 +542,61 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     };
   }, [scareActive, finishMangRecovery, game.settings.reducedMotion]);
 
+  useEffect(() => {
+    if (!deathScareActive) return;
+    skipDeathScareRef.current?.focus();
+    const reveal = window.setTimeout(
+      () => setDeathScareTextVisible(true),
+      game.settings.reducedMotion ? 0 : 160,
+    );
+    const enter = window.setTimeout(
+      () => finishWangRecovery(),
+      game.settings.reducedMotion ? 180 : 1760,
+    );
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") finishWangRecovery();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(reveal);
+      window.clearTimeout(enter);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [deathScareActive, finishWangRecovery, game.settings.reducedMotion]);
+
+  useEffect(() => {
+    if (!hydrated || currentPath !== ROUTES.phoenixRoute || game.routeTrips >= 3) return;
+
+    const inspectRoutePosition = () => {
+      const page = document.documentElement;
+      const atBottom = window.innerHeight + window.scrollY >= page.scrollHeight - 32;
+      const atTop = window.scrollY <= 32;
+
+      if (atBottom && !game.routeReachedBottom) {
+        setGame((previous) => ({ ...previous, routeReachedBottom: true }));
+        return;
+      }
+
+      if (atTop && game.routeReachedBottom) {
+        setGame((previous) => {
+          const nextTrips = Math.min(3, previous.routeTrips + 1);
+          return {
+            ...previous,
+            routeTrips: nextTrips,
+            routeReachedBottom: false,
+            unlocked: nextTrips === 3
+              ? unique([...previous.unlocked, "S16"])
+              : previous.unlocked,
+          };
+        });
+      }
+    };
+
+    window.addEventListener("scroll", inspectRoutePosition, { passive: true });
+    inspectRoutePosition();
+    return () => window.removeEventListener("scroll", inspectRoutePosition);
+  }, [currentPath, game.routeReachedBottom, game.routeTrips, hydrated]);
+
   function triggerMangRecovery() {
     if (game.settings.reducedScares || game.scaresSeen.includes("J01")) {
       finishMangRecovery();
@@ -425,6 +608,70 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     }));
     setScareTextVisible(false);
     setScareActive(true);
+  }
+
+  function triggerWangRecovery() {
+    if (game.settings.reducedScares || game.scaresSeen.includes("J03")) {
+      finishWangRecovery();
+      return;
+    }
+    setGame((previous) => ({
+      ...previous,
+      scaresSeen: unique([...previous.scaresSeen, "J03"]),
+    }));
+    setDeathScareTextVisible(false);
+    setDeathScareActive(true);
+  }
+
+  function inspectStone(part: "break" | "base") {
+    if (currentPath !== ROUTES.xiyanTemple || game.unlocked.includes("S15")) return;
+
+    if (part === "break") {
+      const nextBreakClicks = Math.min(6, game.stoneBreakClicks + 1);
+      setGame((previous) => ({ ...previous, stoneBreakClicks: nextBreakClicks }));
+      return;
+    }
+
+    if (game.stoneBreakClicks < 6) return;
+    const nextBaseClicks = Math.min(7, game.stoneBaseClicks + 1);
+    const completed = nextBaseClicks === 7;
+    setGame((previous) => ({
+      ...previous,
+      stoneBaseClicks: nextBaseClicks,
+      unlocked: completed ? unique([...previous.unlocked, "S15"]) : previous.unlocked,
+      recovered: completed ? unique([...previous.recovered, "09"]) : previous.recovered,
+      scaresSeen: completed ? unique([...previous.scaresSeen, "J02"]) : previous.scaresSeen,
+    }));
+
+    if (completed && !game.settings.reducedScares && !game.scaresSeen.includes("J02")) {
+      setStoneRevealActive(true);
+      window.setTimeout(() => setStoneRevealActive(false), 900);
+    }
+  }
+
+  function moveAlongRoute(destination: "top" | "bottom") {
+    window.scrollTo({
+      top: destination === "top" ? 0 : document.documentElement.scrollHeight,
+      behavior: game.settings.reducedMotion ? "auto" : "smooth",
+    });
+  }
+
+  function submitSupplementPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalized = supplementPassword.trim().replace(/[—–\-\s]/g, "");
+    if (normalized === "673") {
+      mutateGame(["S17"]);
+      setSupplementPasswordNote("校验通过。被删除的文字层已恢复。");
+      return;
+    }
+
+    const nextAttempts = supplementPasswordAttempts + 1;
+    setSupplementPasswordAttempts(nextAttempts);
+    setSupplementPasswordNote(
+      nextAttempts >= 3
+        ? "口令不匹配。回看西岩寺的石像数量，以及尸检摘要中的面部伤口数。"
+        : "口令不匹配；附件不会锁定。",
+    );
   }
 
   function openResult(result: SearchResult) {
@@ -682,19 +929,239 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (["王克定尸检", "认尸记录", "尸检报告"].includes(normalized)) {
+    if (["王克定尸检", "王克定认尸"].includes(normalized)) {
       const allowed = game.unlocked.includes("S12") || currentPath === ROUTES.liXiangDeath;
       setResults([{
-        id: "wang-autopsy-next",
-        kind: allowed ? "认尸／尸检摘要 · 已定位" : "受限案件元数据",
-        title: "王克定｜尸检摘要",
+        id: "wang-autopsy",
+        kind: allowed ? "认尸／尸检摘要 · 1份" : "受限案件元数据",
+        title: "王克定｜认尸与尸检摘要",
         summary: allowed
-          ? "河流档案交叉引用了这份材料；正文将在下一段物证链中恢复。"
+          ? "家属认尸记录与部分尸检文字层可读取；附件物证链接失效。"
           : "材料存在，但尚未取得河流档案的交叉索引。",
+        path: allowed ? ROUTES.wangAutopsy : undefined,
+        unlock: allowed ? ["S13"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "证据不足",
+      }]);
+      setResultNote(allowed ? "找到一份文学作品内的虚构档案。" : "先完成与河流有关的人物档案。");
+      return;
+    }
+
+    if (["石立人头", "石人头"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S13") || currentPath === ROUTES.wangAutopsy;
+      setResults([{
+        id: "stone-head",
+        kind: allowed ? "独立物证记录 · 1件" : "雕塑索引 · 4条",
+        title: "石立人头",
+        summary: allowed
+          ? "与死者反绑双手连接的石物；物证来源栏仍可读取。"
+          : "名称命中旧雕塑目录，但案件关联尚未开放。",
+        path: allowed ? ROUTES.stoneHead : undefined,
+        unlock: allowed ? ["S14"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "关联未恢复",
+      }]);
+      setResultNote(allowed ? "失效的物证编号已转为可读记录。" : "先从尸检摘要取得完整物证名称。");
+      return;
+    }
+
+    if (["西岩寺", "西岩寺院"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S14") || currentPath === ROUTES.stoneHead;
+      setResults([{
+        id: "xiyan-temple",
+        kind: allowed ? "地点档案＋石像旧照" : "公开地点介绍",
+        title: "西岩寺｜后山石像档案",
+        summary: allowed
+          ? "物证来源地；旧照说明院墙内曾排列六十七尊等身像。"
+          : "寺院公开介绍可读；后山档案尚未与物证互证。",
+        path: allowed ? ROUTES.xiyanTemple : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "档案未关联",
+      }]);
+      setResultNote(allowed ? "地点与物证来源字段完全一致。" : "先确认是哪一件物证来自这里。");
+      return;
+    }
+
+    if (["凤凰水库", "凤凰水庫", "鳳凰水庫"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S15");
+      setResults([{
+        id: "phoenix-reservoir",
+        kind: allowed ? "河流路线附件 · 批注缺失" : "公开地点介绍",
+        title: "凤凰水库｜尸体漂流路线",
+        summary: allowed
+          ? "从上游至水库的路线可读；三层勘验批注尚未复原。"
+          : "地点存在于报告摘要；石像隐藏层尚未恢复。",
+        path: allowed ? ROUTES.phoenixRoute : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "证据层未完成",
+      }]);
+      setResultNote(allowed ? "路线附件已打开，需要沿水流来回核对。" : "先完成西岩寺石像档案中的检查。");
+      return;
+    }
+
+    if (["小手指", "右手小指"].includes(normalized)) {
+      const allowed = game.routeTrips >= 3 || game.unlocked.includes("S16");
+      setResults([{
+        id: "wang-supplement",
+        kind: allowed ? "加密附件 · 尸检补充" : "伤口索引 · 元数据",
+        title: "王克定｜尸检补充",
+        summary: allowed
+          ? "右手小指缺失一截；创口时间早于溺水。附件需要口令。"
+          : "伤口条目存在；完整路线批注尚未恢复。",
+        path: allowed ? ROUTES.wangSupplement : undefined,
+        locked: !allowed,
+        note: allowed ? "需要口令" : "证据不足",
+      }]);
+      setResultNote(allowed ? "加密附件已定位。提示：石像数量－面部伤口数。" : "先完成三次尸体路线回溯。");
+      return;
+    }
+
+    if (normalized === "王克定之死") {
+      const allowed = game.unlocked.includes("S17");
+      if (allowed) {
+        setResults(null);
+        setResultNote("");
+        triggerWangRecovery();
+      } else {
+        setResults([{
+          id: "wang-death-locked",
+          kind: "文学文件 · 受限元数据",
+          title: "5.2 王克定之死",
+          summary: "文件存在，当前版本不可访问。",
+          locked: true,
+          note: "缺少尸检补充",
+        }]);
+        setResultNote("同名文件尚不能由现有证据打开。");
+      }
+      return;
+    }
+
+    if (["火化单", "焚烧签字单", "火化签字单"].includes(normalized)) {
+      const allowed = game.recovered.includes("13") || currentPath === ROUTES.wangDeath;
+      setResults([{
+        id: "du-cremation",
+        kind: allowed ? "死亡手续扫描件 · 1份" : "受限文件元数据",
+        title: "杜万琳｜火化单",
+        summary: allowed
+          ? "姓名与火化状态可读；代签栏仍被遮挡。"
+          : "文件名存在于版本历史；来源文件尚未恢复。",
+        path: allowed ? ROUTES.duCremation : undefined,
+        unlock: allowed ? ["S19"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "来源不足",
+      }]);
+      setResultNote(allowed ? "找到一份纸边焦黑的手续扫描件。" : "先恢复把这份手续写入版本历史的文学文件。");
+      return;
+    }
+
+    if (["方晚署名", "方晚火化单", "方晚代签"].includes(normalized)) {
+      const hasProcedure = game.unlocked.includes("S19") || currentPath === ROUTES.duCremation;
+      const hasPerson = game.visited.includes(ROUTES.fangWan);
+      const allowed = hasProcedure && hasPerson;
+      setResults([{
+        id: "du-cremation-signed",
+        kind: allowed ? "完整文字层＋朗读文件" : "人物／手续交叉结果",
+        title: allowed ? "杜万琳｜完整火化单" : "方晚 × 火化单",
+        summary: allowed
+          ? "代签栏遮挡已解除；附朗读文件08《自白》。"
+          : hasProcedure
+            ? "手续已找到，但需先查看方晚人物档案确认关系。"
+            : "人物档案存在；相关死亡手续尚未开放。",
+        path: allowed ? ROUTES.duCremationSigned : undefined,
+        unlock: allowed ? ["S20"] : undefined,
+        recover: allowed ? ["08"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "交叉证据不足",
+      }]);
+      setResultNote(allowed ? "人物履历与手续代签栏互相补全。" : "必须同时看过人物档案和遮挡版手续。");
+      return;
+    }
+
+    if (normalized === "他山地方公墓贪污案") {
+      const allowed = game.unlocked.includes("S20") || currentPath === ROUTES.duCremationSigned;
+      setResults([{
+        id: "cemetery-case-next",
+        kind: allowed ? "案件索引 · 已定位" : "受限项目元数据",
+        title: "他山地方公墓贪污案",
+        summary: allowed
+          ? "火化单与项目往来首次共享完整案名；正文将在下一章恢复。"
+          : "项目名存在，但参与者与死亡手续尚未完成交叉。",
         locked: true,
         note: allowed ? "下一章入口" : "证据不足",
       }]);
-      setResultNote(allowed ? "你已定位第三章的下一份材料。" : "先完成与河流有关的人物档案。");
+      setResultNote(allowed ? "第三章完成：个人死亡开始汇入同一项目。" : "先恢复完整火化单与方晚的自白。");
+      return;
+    }
+
+    if (["尸检", "尸检报告", "认尸记录"].includes(normalized)) {
+      markWrong("同类材料过多；莉香档案给出了另一名死者的姓名。", [{
+        id: "autopsy-public",
+        kind: "档案类型 · 7条",
+        title: "认尸／尸检摘要",
+        summary: "请把文件类型与死者姓名组合搜索。",
+        locked: true,
+      }]);
+      return;
+    }
+
+    if (normalized === "佛头") {
+      markWrong("“佛头”命中公开寺院介绍，案件记录使用更具体的物证名。", [{
+        id: "buddha-public",
+        kind: "公开地点资料",
+        title: "西岩寺石刻介绍",
+        summary: "复制尸检摘要中的原始名词，才能打开独立物证页。",
+        locked: true,
+      }]);
+      return;
+    }
+
+    if (normalized === "凤凰" || normalized === "鳳凰") {
+      markWrong("“凤凰”命中多个公开地点；报告写出了完整的漂流终点。", [{
+        id: "phoenix-public",
+        kind: "公开地点 · 6条",
+        title: "凤凰",
+        summary: "请使用带地点类型的完整名称。",
+        locked: true,
+      }]);
+      return;
+    }
+
+    if (normalized === "小指") {
+      setResults([{
+        id: "little-finger-meta",
+        kind: "伤口索引 · 元数据",
+        title: "右手小指／补充附件",
+        summary: "附件名可见，但搜索词不足以验证路线中的完整批注。",
+        locked: true,
+        note: "补全伤口名称",
+      }]);
+      setResultNote("回到第三层路线批注，使用其中的完整写法。");
+      return;
+    }
+
+    if (normalized === "王克定死") {
+      setResults([{
+        id: "wang-death-meta",
+        kind: "文学文件 · 元数据",
+        title: "5.2 王克定之死",
+        summary: "标题可辨，但文件仍需要精确名称与尸检补充权限。",
+        locked: true,
+        note: "当前不可访问",
+      }]);
+      setResultNote("文章标题就是人名加上事件。");
+      return;
+    }
+
+    if (normalized === "死亡证明") {
+      setResults([{
+        id: "death-summary-public",
+        kind: "医院摘要 · 1条",
+        title: "杜万琳｜死亡摘要",
+        summary: "表面记录为病逝／肝病相关；后续手续另有名称。",
+        locked: true,
+        note: "仅摘要",
+      }]);
+      setResultNote("继续查找死亡之后用于处理遗体的手续。");
       return;
     }
 
@@ -798,6 +1265,44 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         return <XingWanPage />;
       case ROUTES.liXiangDeath:
         return <LiXiangDeathPage />;
+      case ROUTES.wangAutopsy:
+        return <WangAutopsyPage />;
+      case ROUTES.stoneHead:
+        return <StoneHeadEvidencePage />;
+      case ROUTES.xiyanTemple:
+        return <XiyanTemplePage
+          breakClicks={game.stoneBreakClicks}
+          baseClicks={game.stoneBaseClicks}
+          completed={game.unlocked.includes("S15")}
+          revealActive={stoneRevealActive}
+          reducedScares={game.settings.reducedScares}
+          assisted={game.settings.assistedInteraction}
+          onInspect={inspectStone}
+        />;
+      case ROUTES.phoenixRoute:
+        return <PhoenixRoutePage
+          trips={game.routeTrips}
+          reachedBottom={game.routeReachedBottom}
+          reducedMotion={game.settings.reducedMotion}
+          onMove={moveAlongRoute}
+        />;
+      case ROUTES.wangSupplement:
+        return <WangSupplementPage
+          unlocked={game.unlocked.includes("S17")}
+          password={supplementPassword}
+          passwordVisible={supplementPasswordVisible}
+          attempts={supplementPasswordAttempts}
+          note={supplementPasswordNote}
+          onPasswordChange={setSupplementPassword}
+          onTogglePassword={() => setSupplementPasswordVisible((visible) => !visible)}
+          onSubmit={submitSupplementPassword}
+        />;
+      case ROUTES.wangDeath:
+        return <WangDeathPage />;
+      case ROUTES.duCremation:
+        return <DuCremationPage revealed={false} />;
+      case ROUTES.duCremationSigned:
+        return <DuCremationPage revealed />;
       case ROUTES.exhibition:
       default:
         return <ExhibitionPage frameNotice={frameNotice} onInspectFrame={inspectFrame} />;
@@ -874,7 +1379,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
                   const found = game.recovered.includes(file.id);
                   return <li key={file.id} className={found ? "is-found" : ""}><span>{file.id}</span><div><b>{found ? file.title : "未恢复"}</b><small>{found ? `来源：${file.source}` : "文件名未知"}</small></div></li>;
                 })}
-                <li className="archive-locked-row"><span>07—14</span><div><b>尚未开放</b><small>继续沿尸检、火化单与公墓案索引恢复</small></div></li>
               </ol>
             </DialogContent>
           </Dialog>
@@ -906,10 +1410,21 @@ export function GameApp({ initialPath }: { initialPath: string }) {
 
       <footer className="site-footer"><span>憎恶社 · 作品与旧档案</span><span>本页面为文学文本改编的虚构交互原型</span><button type="button" onClick={() => searchInputRef.current?.focus()}>搜索站内记录</button></footer>
 
-      <p className="sr-only" aria-live="polite">{searchSummary}{currentPath === ROUTES.dimensions ? `空框已检查 ${game.frameClicks} 次。` : ""}</p>
+      <p className="sr-only" aria-live="polite">{searchSummary}{currentPath === ROUTES.dimensions ? `空框已检查 ${game.frameClicks} 次。` : ""}{currentPath === ROUTES.xiyanTemple ? `断口已检查 ${game.stoneBreakClicks} 次，石座已检查 ${game.stoneBaseClicks} 次。` : ""}{currentPath === ROUTES.phoenixRoute ? `河流路线已完成 ${game.routeTrips} 次往返。` : ""}</p>
 
       {scareActive && (
         <div className="scare-layer" role="dialog" aria-modal="true" aria-label="短暂黑场提示"><button ref={skipScareRef} type="button" onClick={finishMangRecovery}>跳过</button><p className={scareTextVisible ? "is-visible" : ""}>先听见，后看见。</p></div>
+      )}
+
+      {deathScareActive && (
+        <div className="deleted-post-scare" role="dialog" aria-modal="true" aria-label="已删除帖子" onClick={finishWangRecovery}>
+          <button ref={skipDeathScareRef} type="button" onClick={(event) => { event.stopPropagation(); finishWangRecovery(); }}>跳过</button>
+          <article className={deathScareTextVisible ? "is-visible" : ""}>
+            <span>帖子 302｜已删除</span>
+            <p>他们已经替王克定写好了一种死法。</p>
+            <strong>但绳结不会替人作证。</strong>
+          </article>
+        </div>
       )}
     </div>
   );
@@ -1194,6 +1709,263 @@ function LiXiangDeathPage() {
       </RecoveredScript>
 
       <section className="prototype-end"><span>第三章入口已定位</span><div><h2>河流档案指向一份尸检摘要。</h2><p>下一步需要把另一名死者的姓名与材料类型组合起来搜索。</p></div></section>
+    </article>
+  );
+}
+
+function WangAutopsyPage() {
+  return (
+    <article className="autopsy-page">
+      <header className="evidence-masthead">
+        <div><CacheStamp>FORENSIC CACHE / WK-01</CacheStamp><p className="section-kicker">亲属认尸记录 · 尸检摘要</p><h1>王克定</h1><p>两份损坏材料的文字层被并置保存；以下内容只复述可交叉确认的现场状态。</p></div>
+        <div className="document-notice"><span>档案性质</span><b>文学改编／虚构界面</b><small>无公章 · 无机构名称</small></div>
+      </header>
+
+      <section className="autopsy-layout">
+        <div className="scan-sheet">
+          <header className="scan-sheet-head"><span>尸体辨认摘要</span><code>WK / BODY / PARTIAL</code></header>
+          <dl className="scan-fields">
+            <MetaLine label="辨认人">母亲、表哥</MetaLine>
+            <MetaLine label="身长">约 1.6 米</MetaLine>
+            <MetaLine label="双手">反绑于身后</MetaLine>
+            <MetaLine label="连接物">数公斤重石立人头</MetaLine>
+            <MetaLine label="面部">脸颊三道割伤</MetaLine>
+            <MetaLine label="漂流终点">凤凰水库</MetaLine>
+          </dl>
+          <span className="scan-mark" aria-hidden="true">复印件</span>
+        </div>
+        <aside className="transcription-panel">
+          <ArtifactTag>转录层 02</ArtifactTag>
+          <h2>反绑与坠物</h2>
+          <p>死者双手在背后受束，并与石质人头像连接。原记录将石头像来源指向西岩寺后山。</p>
+          <p>尸表另见脸颊三道伤痕。关于漂流与伤痕形成方式的表面解释，仍需沿河流路线复核。</p>
+          <div className="evidence-callout"><span>物证索引</span><strong>石立人头</strong><code>SOURCE FIELD AVAILABLE</code></div>
+        </aside>
+      </section>
+      <p className="literary-disclaimer">此页是依据用户提供文学文本制作的游戏档案，不对应现实司法文书。</p>
+    </article>
+  );
+}
+
+function StoneHeadEvidencePage() {
+  return (
+    <article className="stone-evidence-page">
+      <header className="evidence-masthead">
+        <div><CacheStamp>EVIDENCE OBJECT / ST-67</CacheStamp><p className="section-kicker">物证记录 · 石质残件</p><h1>石立人头</h1><p>照片层保留为干燥状态。异常痕迹并不在这份初始物证页出现。</p></div>
+        <div className="document-notice"><span>状态</span><b>入库照片</b><small>色彩未校正</small></div>
+      </header>
+      <figure className="evidence-photo">
+        {/* Generated archival asset is already WebP-compressed and uses the runtime base path. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={browserPath("/archive/stone-head-evidence.webp")} alt="灰黑背景下干燥、断裂的石质佛头档案照片" />
+        <figcaption><span>图像编号 ST-67-A</span><p>颈部断口干燥；此页未检出红色液体痕迹。</p></figcaption>
+      </figure>
+      <section className="evidence-ledger">
+        <dl><MetaLine label="物件">石质立人头像残件</MetaLine><MetaLine label="重量">数公斤（原文未给精确值）</MetaLine><MetaLine label="辨认来源">西岩寺后山</MetaLine><MetaLine label="关联">王克定尸体反绑处</MetaLine></dl>
+        <div><span>旧照附注</span><p>寺院后山曾排列六十七尊等身石像。断口与石座被分列为两个检查区域。</p><code>RELATED PLACE INDEX: 西岩寺</code></div>
+      </section>
+    </article>
+  );
+}
+
+function XiyanTemplePage({
+  breakClicks,
+  baseClicks,
+  completed,
+  revealActive,
+  reducedScares,
+  assisted,
+  onInspect,
+}: {
+  breakClicks: number;
+  baseClicks: number;
+  completed: boolean;
+  revealActive: boolean;
+  reducedScares: boolean;
+  assisted: boolean;
+  onInspect: (part: "break" | "base") => void;
+}) {
+  const showCounts = assisted || breakClicks > 0 || baseClicks > 0;
+  return (
+    <article className="temple-page">
+      <header className="evidence-masthead">
+        <div><CacheStamp>PLACE CACHE / XY-67</CacheStamp><p className="section-kicker">西岩寺 · 后山旧照</p><h1>六十七尊</h1><p>旧图说明写着：等身石像从主殿排列至寝房。最后一尊只剩下头部与石座。</p></div>
+        <div className="document-notice"><span>检查规则</span><b>六／七</b><small>断口在先，石座在后</small></div>
+      </header>
+
+      <section className={`stone-inspection${completed ? " is-complete" : ""}${revealActive ? " is-revealing" : ""}`}>
+        <div className="stone-image-stage">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={browserPath("/archive/stone-head-evidence.webp")} alt="可检查的断裂石质佛头；断口与底座分别设有互动区域" />
+          <span className="seep-line" aria-hidden="true" />
+          <div className="stone-hotspots">
+            <button className="stone-hotspot break-hotspot" type="button" onClick={() => onInspect("break")} aria-label={`检查佛头断口，已检查 ${breakClicks} 次`}><span>检查断口</span></button>
+            <button className="stone-hotspot base-hotspot" type="button" onClick={() => onInspect("base")} disabled={breakClicks < 6} aria-label={`检查石座，已检查 ${baseClicks} 次`}><span>检查石座</span></button>
+          </div>
+        </div>
+        <div className="stone-controls">
+          <div><span>图像检查</span><h2>{completed ? "断口出现一条细红渗痕。" : breakClicks < 6 ? "先确认颈部断口。" : "断口已标记；现在检查石座。"}</h2><p>没有声音、喷溅或闪烁。痕迹只在完成既定顺序后出现。</p></div>
+          {showCounts && <div className="stone-counts" aria-live="polite"><span>断口 <b>{breakClicks}/6</b></span><span>石座 <b>{baseClicks}/7</b></span></div>}
+          {completed && reducedScares && <p className="static-scare-note">减少惊吓：断口出现一条细红渗痕（静态替代）。</p>}
+        </div>
+      </section>
+
+      <section className="xiyan-archive"><span>旧照转录</span><p>“六十七个等身像放在院墙，摆做一排。从主殿一直列到寝房。”</p><code>67 → 6 / 7</code></section>
+
+      {completed && (
+        <RecoveredScript id="09" section="句肉篇 · 3.2" title="浣石" reader="方晚">
+          <p>之后两年我一直想起<br />合伙做生意前的日子<br />那时还没接受政府的招标项目<br />得空就沿着西岩寺外小路<br />走一个上午。人们不知道<br />周末了无人烟的西岩寺<br />为何总有履印刻蚀在<br />寺门外一圈复叠一圈。</p>
+          <p>那时候你那凿石为佛的朋友<br />还健在，仍挥得起重几斤的<br />铁椎拟物刻像。<br />彼此身形都很完整<br />肝脏那么新鲜喜欢看<br />这人老派的造佛艺术<br />你能听到的敲击声往往是<br />一整个早晨，短促而惶惑。</p>
+          <p>六十七个等身像放在院墙<br />摆做一排。从主殿一直列到寝房。<br />到染疾逝世前两年<br />他没再雕。终日看着那些<br />逐步抵达释迦牟尼佛的仿品<br />在露天坝子被雨洗刷。</p>
+          <p>这故事讲并得不干净<br />你确切的脸容从那时便屡屡浮现<br />读颂经文的幸福感。被山雨乔装的<br />刀将佛面刻在腹下那么暗淡<br />像不啻宗门还俗的头陀。这是<br />为你刻造的石躯，山间昏暗的光<br />我们从中认出一张最隳败的脸。</p>
+          <p>左右反复比对。石英质地的胚子<br />青苔在其上缘皲裂纵向长开。<br />凹陷处晨露汇作一处。</p>
+          <p>你说那立像眼角窜流的水<br />多年后会同样出现在<br />你我二人的眼角。像我们各自<br />抵达的圆寂，你掏出雄踞在你<br />中庭的肝脏，它如磐石，反复洗濯。<br />到进炉火前它已很干净了。</p>
+        </RecoveredScript>
+      )}
+    </article>
+  );
+}
+
+function PhoenixRoutePage({ trips, reachedBottom, reducedMotion, onMove }: { trips: number; reachedBottom: boolean; reducedMotion: boolean; onMove: (destination: "top" | "bottom") => void }) {
+  return (
+    <article className="river-route-page" id="route-top">
+      <header className="route-head">
+        <div><CacheStamp>ROUTE RECONSTRUCTION / PHX</CacheStamp><p className="section-kicker">水路复核 · 上游至凤凰水库</p><h1>逆读一条河</h1><p>顺流只能得到结论；折返才会显出被覆盖的批注。</p></div>
+        <div className="route-progress"><span>完整往返</span><b>{trips}/3</b><small>{reachedBottom ? "已到下游，返回上游" : "从上游前往下游"}</small></div>
+      </header>
+
+      <div className="river-track" aria-label="王克定尸体漂流路线">
+        <span className="river-spine" aria-hidden="true" />
+        <section className="river-stop"><span>00 / 上游</span><h2>老城河入口</h2><p>记录把这里列作可能的入水区，却没有保留可靠目击证词。</p>{trips >= 1 && <aside className="route-annotation">水位批注：当周河水不足以覆盖岸边全部石面。</aside>}</section>
+        <section className="river-stop"><span>01 / 石滩</span><h2>第一处弯道</h2><p>原解释称面部伤口可能来自漂流中撞击河石。</p>{trips >= 2 && <aside className="route-annotation">时间批注：伤口状态与长距离漂流的单一解释不能完全闭合。</aside>}</section>
+        <section className="river-stop"><span>02 / 闸口</span><h2>废弃测量点</h2><p>绳结、石质坠物与水流方向被分开记录，从未在同一张表中对照。</p>{trips >= 2 && <aside className="route-annotation">复核批注：先验结论遮住了反绑这一事实。</aside>}</section>
+        <section className="river-stop"><span>03 / 回水</span><h2>低速水域</h2><p>漂流路线在此变缓，随后进入水库。</p>{trips >= 3 && <aside className="route-annotation pinky-reveal">伤口批注：右手小指缺失；切口时间早于落水。</aside>}</section>
+        <section className="river-stop route-reservoir" id="route-bottom"><span>04 / 下游</span><h2>凤凰水库</h2><p>尸体在这里被发现。河流记录至此结束，但尸检附件仍缺少一页。</p></section>
+      </div>
+
+      <div className="route-controls" aria-label="河流路线操作">
+        <button type="button" onClick={() => onMove("bottom")}><ArrowDown aria-hidden="true" />到下游</button>
+        <span>{reducedMotion ? "即时移动" : "沿路线移动"}</span>
+        <button type="button" onClick={() => onMove("top")}><ArrowUp aria-hidden="true" />回上游</button>
+      </div>
+      {trips >= 3 && <section className="prototype-end"><span>补充附件已定位</span><div><h2>被漏记的部位：右手小指。</h2><p>用部位名称搜索尸检补充记录。</p></div></section>}
+    </article>
+  );
+}
+
+function WangSupplementPage({
+  unlocked,
+  password,
+  passwordVisible,
+  attempts,
+  note,
+  onPasswordChange,
+  onTogglePassword,
+  onSubmit,
+}: {
+  unlocked: boolean;
+  password: string;
+  passwordVisible: boolean;
+  attempts: number;
+  note: string;
+  onPasswordChange: (value: string) => void;
+  onTogglePassword: () => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+}) {
+  return (
+    <article className="supplement-page">
+      <header className="evidence-masthead">
+        <div><CacheStamp>FORENSIC ATTACHMENT / WK-02</CacheStamp><p className="section-kicker">被删除的尸检补充页</p><h1>右手小指</h1><p>附件正文仍在，但访问口令被拆散在石像记录与面部伤痕中。</p></div>
+        <div className="document-notice"><span>附件状态</span><b>{unlocked ? "文字层已恢复" : "加密"}</b><small>无失败锁定</small></div>
+      </header>
+
+      {!unlocked ? (
+        <section className="locked-attachment">
+          <LockKeyhole aria-hidden="true" />
+          <div><span>口令提示</span><h2>石像数量－面部伤口数</h2><p>分隔符可使用短横线、长横线或空格。</p></div>
+          <form className="password-form" onSubmit={onSubmit}>
+            <label htmlFor="supplement-password">附件口令</label>
+            <div className="password-field"><input id="supplement-password" type={passwordVisible ? "text" : "password"} value={password} onChange={(event) => onPasswordChange(event.target.value)} autoComplete="off" /><button type="button" onClick={onTogglePassword} aria-label={passwordVisible ? "隐藏口令" : "显示口令"}>{passwordVisible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}</button></div>
+            <button className="password-submit" type="submit">校验并打开</button>
+            {note && <p className="password-note" role="status">{note}</p>}
+            {attempts >= 3 && <div className="password-return-links"><span>回看：</span><a href={browserPath(ROUTES.xiyanTemple)}>西岩寺</a><span>／</span><a href={browserPath(ROUTES.wangAutopsy)}>尸检摘要</a></div>}
+          </form>
+        </section>
+      ) : (
+        <section className="supplement-evidence">
+          <header><UnlockKeyhole aria-hidden="true" /><div><span>DECRYPTED TEXT LAYER</span><h2>尸检补充摘要</h2></div></header>
+          <dl><MetaLine label="缺失部位">右手小指</MetaLine><MetaLine label="切口状态">人为切割痕迹</MetaLine><MetaLine label="发生顺序">落水之前</MetaLine><MetaLine label="时间批注">前一周六（原文相对时间）</MetaLine></dl>
+          <p className="evidence-callout">该伤口不能由漂流撞击解释；它与脸颊伤痕、反绑双手和石质坠物共同要求重新判断死亡过程。</p>
+          <div className="cross-index-grid"><span>交叉索引</span><b>302 室</b><b>3 × 3dm</b><b>老城河</b></div>
+        </section>
+      )}
+    </article>
+  );
+}
+
+function WangDeathPage() {
+  return (
+    <article className="death-recovery-page">
+      <header className="evidence-masthead">
+        <div><CacheStamp>CASE REVIEW / WK-FINAL</CacheStamp><p className="section-kicker">证据复核 · 死亡过程</p><h1>王克定之死</h1><p>判断只覆盖死亡过程，不推定或暗示实施者身份。</p></div>
+        <span className="recovered-seal">RECOVERED 13</span>
+      </header>
+      <section className="case-verdict">
+        <span>复核结论</span>
+        <h2>王克定并非自杀。他遭到杀害，现场被布置为投河自杀。</h2>
+        <p>责任主体：现有材料不指认。</p>
+      </section>
+      <section className="evidence-verdict-grid">
+        <div><span>01</span><h3>反绑</h3><p>双手在背后受束，且连接数公斤重的石质人头。</p></div>
+        <div><span>02</span><h3>伤痕</h3><p>脸颊三道割伤不能仅靠河石碰撞闭合解释。</p></div>
+        <div><span>03</span><h3>缺指</h3><p>右手小指在人落水前已被人为切断。</p></div>
+        <div><span>04</span><h3>路线</h3><p>水位、时间与回水路线彼此留下矛盾。</p></div>
+      </section>
+
+      <RecoveredScript id="13" section="目盲 · 5.2" title="王克定之死" reader="杜万琳">
+        <p>第一天我们进城。房子独栋两不相接。<br />招徕客人的年青女孩在客房二楼<br />旁边是路灯。她很干净，手背有皮屑<br />在楼底能把握住，清清楚楚。</p>
+        <p>老人办住房登记，屏幕上说身份<br />信息缺失。我们上下打点，住进三楼<br />勉为其难。302室，左墙空的，向右是街。</p>
+        <p>警察背后牵着一组月亮，看得见<br />房间里落地窗仅一个方格<br />三个人挤在同一个区域，3×3dm<br />月光呈素色散开，颇显立体。那一刻<br />如果没有抒情警察和哨棍得空着手。<br />诗和发表，它们合法，没到89年前<br />今天单位在痛打西洋画家。</p>
+        <p>曾几何时，我们像这样围成一圈在<br />街道办前的小凳高谈阔论。一块空地<br />只有两个颜色，渗水的蓝和零食袋上<br />人像红（我们常吃的）。众人围作暴风<br />最深处站立他写文字，（也会鼓吹）<br />但肠胃不好。讲正话，或者是反话<br />是反话。无非是骂政委和军阀。</p>
+        <p>有人指明当今是看不见君王，也看不见臣属。<br />如同是歌剧里刺耳的女角色，<br />这个偌大的城池，古称是什么<br />还有些旧人，如扇骨一样重迭的身影。</p>
+        <p>你应该反思，为年青时狂暴的诗篇<br />有些不恰当的日子，他一头跳进老城河<br />以至于和谁又忘了这座城市<br />谁记得的，众人默不作声，全权算作祭奠。</p>
+      </RecoveredScript>
+      <section className="version-history"><span>版本历史</span><div><h2>下一份手续发生在另一名参与者死后。</h2><p>相关诗文将它称为“焚烧签字单”；档案分类使用更日常的名称。</p></div><code>FORM INDEX AVAILABLE</code></section>
+    </article>
+  );
+}
+
+function DuCremationPage({ revealed }: { revealed: boolean }) {
+  return (
+    <article className="cremation-page">
+      <header className="evidence-masthead">
+        <div><CacheStamp>DISPOSITION FORM / DW</CacheStamp><p className="section-kicker">遗体处理手续 · {revealed ? "完整文字层" : "表面副本"}</p><h1>杜万琳</h1><p>死亡表面记录与代签信息分属两个图层；空缺字段保持空缺。</p></div>
+        <div className="document-notice"><span>页面状态</span><b>{revealed ? "代签人已交叉确认" : "签名遮挡"}</b><small>人物异名：杜南阳</small></div>
+      </header>
+
+      <section className="cremation-layout">
+        <div className="cremation-sheet burnt-edge">
+          <header><span>火化签字单／转录件</span><code>DW-FORM-01</code></header>
+          <dl><MetaLine label="死者">杜万琳</MetaLine><MetaLine label="死亡日期">未记载</MetaLine><MetaLine label="医院">未记载</MetaLine><MetaLine label="表面记录">病逝／肝病相关</MetaLine><MetaLine label="遗体处置">已火化</MetaLine><MetaLine label="家属状态">儿子在外；妻子留家</MetaLine></dl>
+          <div className="signature-field"><span>代家属签字</span><b className={revealed ? "signature-reveal" : "signature-mask"}>{revealed ? "方晚" : "方＿"}</b><small>{revealed ? "与到院记录、诗文声部交叉确认" : "第二字被纸面灼痕覆盖"}</small></div>
+        </div>
+        <aside className="transcription-panel"><ArtifactTag>{revealed ? "文字层已恢复" : "表面可见"}</ArtifactTag><h2>{revealed ? "方晚代杜家签字" : "最先到院的人"}</h2><p>方晚先到医院。由于杜万琳的儿子不在场、妻子留在家中，后续手续由这名朋友代签。</p><p>现有材料只记录过程，不把表面病逝说明扩写成未经证实的医学诊断。</p></aside>
+      </section>
+
+      {revealed && (
+        <>
+          <RecoveredScript id="08" section="句肉篇 · 3.1" title="自白" reader="方晚">
+            <p>前几年你风光得意，总在思忖合适的死<br />会倒在哪里。想要突发暴疾<br />和朋友一起喝到胃穿孔<br />——你说这病非得不是肝硬化。</p>
+            <p>我们共有因贪杯而沾染的罪过<br />趔趄像失足的苍蝇<br />头脑昏沉连两翅都已濡湿。<br />想着就因此淹死吧。你挣脱<br />的意愿，将那份糜烂的肝脏剖划而出<br />如托起一枚玉石、裹着璞质的珍玩。<br />就因此淹死吧。</p>
+            <p>你反复声明<br />把摧折肝器的历史<br />比作好事多磨的象征。</p>
+            <p>后来你真走了。<br />尸检的报告单上写着<br />——小麦。徐惠发给我们这讯息<br />来不及吊唁，你生前少有的几个朋友<br />大家互相联系赶到殡仪馆。</p>
+            <p>那当天鼓起热风，你胸骨<br />哔剥作响从中辨认出红色的怪脸<br />像是你沉底的孽障欲将练成舍利。</p>
+            <p>徐惠哭至力竭很早便离开。<br />我代为家属在火化单署名<br />想到签下一个代号这门事儿<br />便裁定你惶惶的一生——<br />另一代号——自此变成土壤。</p>
+            <p>簇拥着喝得烂醉像以前一样<br />轻蔑地悲悼一条命的垂死<br />我们放弃审视各自毫无活性的肝脏<br />当天夜里织合一道谎言瞒过自己<br />杯酒相撞，庆幸仍活在世上。</p>
+          </RecoveredScript>
+          <section className="case-name-reveal"><span>案件名称／首次完整出现</span><h2>他山地方公墓贪污案</h2><p>五名参与者的档案由此被编入同一索引。下一章暂只开放元数据。</p><code>NEXT: CASE / CEMETERY / METADATA ONLY</code></section>
+        </>
+      )}
     </article>
   );
 }
