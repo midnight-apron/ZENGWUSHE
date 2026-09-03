@@ -53,6 +53,7 @@ type GameState = {
   stoneBaseClicks: number;
   routeTrips: number;
   routeReachedBottom: boolean;
+  medicalGlyphRevealed: boolean;
   scaresSeen: string[];
   settings: Settings;
 };
@@ -78,6 +79,7 @@ const DEFAULT_STATE: GameState = {
   stoneBaseClicks: 0,
   routeTrips: 0,
   routeReachedBottom: false,
+  medicalGlyphRevealed: false,
   scaresSeen: [],
   settings: {
     reducedScares: false,
@@ -109,6 +111,14 @@ const ROUTES = {
   wangDeath: "/recovered/13-wang-keding",
   duCremation: "/archive/forms/cremation-du",
   duCremationSigned: "/archive/forms/cremation-du-complete",
+  cemeteryCase: "/archive/case/cemetery",
+  xingNews: "/news/cache/xing-mou",
+  shouxiang: "/mirror/shouxiang/staff",
+  duChe: "/members/du-che",
+  wedding: "/archive/wedding/du-li",
+  taste: "/recovered/10-chuwei-taste",
+  medical: "/archive/medical/redacted",
+  stomach: "/recovered/11-chuwei-stomach",
 };
 
 const PAGE_TITLES: Record<string, string> = {
@@ -134,6 +144,14 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.wangDeath]: "王克定之死｜已恢复",
   [ROUTES.duCremation]: "杜万琳｜火化单",
   [ROUTES.duCremationSigned]: "杜万琳｜完整火化单",
+  [ROUTES.cemeteryCase]: "他山地方公墓贪污案｜参与者索引",
+  [ROUTES.xingNews]: "刑某｜新闻缓存",
+  [ROUTES.shouxiang]: "寿享陵园｜旧站人员页",
+  [ROUTES.duChe]: "杜彻｜人物档案",
+  [ROUTES.wedding]: "杜彻与李髮｜婚礼档案",
+  [ROUTES.taste]: "刍味｜已恢复",
+  [ROUTES.medical]: "刍胃｜医学删除页",
+  [ROUTES.stomach]: "刍胃｜已恢复",
 };
 
 const HINTS: Record<string, string[]> = {
@@ -246,6 +264,46 @@ const HINTS: Record<string, string[]> = {
     "火化单与项目往来共享了一个完整案名。",
     "下一章将把五个人放回同一份项目索引。",
     "搜索：他山地方公墓贪污案。",
+  ],
+  [ROUTES.cemeteryCase]: [
+    "五个人的姓名已经归入同一个案名；下一步从公开新闻措辞找人。",
+    "索引中的一名参与者在新闻里被匿名写成“某”。",
+    "搜索：刑某。",
+  ],
+  [ROUTES.xingNews]: [
+    "切换原刊与缓存，留意缓存多出的一处陵园名称。",
+    "后来材料提到：世伯承办的寿享陵园。",
+    "搜索：寿享陵园。",
+  ],
+  [ROUTES.shouxiang]: [
+    "旧站人员目录里有一位年轻负责人，家庭关系链接仍可用。",
+    "负责人的姓名是杜彻。",
+    "搜索：杜彻。",
+  ],
+  [ROUTES.duChe]: [
+    "人物页写出杜彻结婚对象的名字；两种字形都在来源中出现。",
+    "“髮”与“髪”指向同一个人。简体字只会给出纠错提示。",
+    "搜索：李髮或李髪。也可以先搜索：刍味。",
+  ],
+  [ROUTES.wedding]: [
+    "婚礼档案不是这一支线唯一的朗读文件；杜彻本人也有一个声部。",
+    "从寿享陵园材料中的味觉词继续搜索。",
+    "搜索：刍味。",
+  ],
+  [ROUTES.taste]: [
+    "搜索结果里出现了一个只差一字的同音标题。",
+    "把“味”换成身体器官的“胃”。",
+    "搜索：刍胃。",
+  ],
+  [ROUTES.medical]: [
+    "删除页列出的症状共同指向一种神经系统退行性疾病。",
+    "可点击被划去的“味”，确认标题应写作“胃”。",
+    "搜索：阿尔茨海默病。阿兹海默症也可以。",
+  ],
+  [ROUTES.stomach]: [
+    "旧站历史里留着画廊开业时没有采用的原名称。",
+    "杜彻最初想把画廊命名为阔南会社。",
+    "搜索：阔南会社。",
   ],
 };
 
@@ -487,6 +545,38 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       [ROUTES.duCremationSigned]: {
         unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20"],
         recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.cemeteryCase]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.xingNews]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.shouxiang]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.duChe]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.wedding]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S25"],
+        recover: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "13"],
+      },
+      [ROUTES.taste]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "13"],
+      },
+      [ROUTES.medical]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26", "S27"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "13"],
+      },
+      [ROUTES.stomach]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26", "S27", "S28"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "11", "13"],
       },
     };
     const effect = arrival[currentPath];
@@ -914,6 +1004,19 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     }
 
     if (["刑万", "刑萬", "刑某"].includes(normalized)) {
+      const caseIndexed = game.unlocked.includes("S21") || currentPath === ROUTES.cemeteryCase;
+      if (caseIndexed) {
+        setResults([{
+          id: "xing-mou-news",
+          kind: "新闻原刊／缓存 · 2个版本",
+          title: "‘他山地方公墓贪污案’涉案人员刑某现已被警方依法逮捕",
+          summary: "公开报道采用匿名写法；缓存与旧成员索引将刑某映射为刑万。",
+          path: ROUTES.xingNews,
+          unlock: ["S22"],
+        }]);
+        setResultNote("同一个姓名在社团合照与新闻标题中采用了不同写法。");
+        return;
+      }
       const allowed = game.unlocked.includes("S10") || currentPath === ROUTES.wangKeding;
       setResults([{
         id: "xing-wan",
@@ -1099,19 +1202,191 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (normalized === "他山地方公墓贪污案") {
+    if (["他山地方公墓贪污案", "他山公墓贪污案", "地方公墓贪污案"].includes(normalized)) {
       const allowed = game.unlocked.includes("S20") || currentPath === ROUTES.duCremationSigned;
       setResults([{
-        id: "cemetery-case-next",
-        kind: allowed ? "案件索引 · 已定位" : "受限项目元数据",
+        id: "cemetery-case",
+        kind: allowed ? "案件参与者索引 · 5人" : "受限项目元数据",
         title: "他山地方公墓贪污案",
         summary: allowed
-          ? "火化单与项目往来首次共享完整案名；正文将在下一章恢复。"
+          ? "五名参与者、项目关系与已公开死亡过程已完成交叉。"
           : "项目名存在，但参与者与死亡手续尚未完成交叉。",
-        locked: true,
-        note: allowed ? "下一章入口" : "证据不足",
+        path: allowed ? ROUTES.cemeteryCase : undefined,
+        unlock: allowed ? ["S21"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "证据不足",
       }]);
-      setResultNote(allowed ? "第三章完成：个人死亡开始汇入同一项目。" : "先恢复完整火化单与方晚的自白。");
+      setResultNote(allowed ? "个人档案已汇入同一项目索引。" : "先恢复完整火化单与方晚的自白。");
+      return;
+    }
+
+    if (["寿享陵园", "寿享陵園"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S22") || currentPath === ROUTES.xingNews;
+      setResults([{
+        id: "shouxiang-old-site",
+        kind: allowed ? "旧网站镜像 · 人员目录" : "失效网站元数据",
+        title: "寿享陵园｜旧站人员页",
+        summary: allowed
+          ? "失效站点的文字层仍可读取；负责人字段链接到杜彻。"
+          : "旧域名存在于缓存，但尚未取得新闻版本差异。",
+        path: allowed ? ROUTES.shouxiang : undefined,
+        unlock: allowed ? ["S23"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "来源不足",
+      }]);
+      setResultNote(allowed ? "找到一份保留早期网页样式的站点镜像。" : "先查看刑某新闻的缓存版本。");
+      return;
+    }
+
+    if (["杜彻", "杜徹"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S23") || currentPath === ROUTES.shouxiang;
+      setResults([{
+        id: "du-che",
+        kind: allowed ? "人物档案 · 家庭／职业交叉" : "旧站负责人",
+        title: "杜彻",
+        summary: allowed
+          ? "杜万琳与徐惠之子；经世伯介绍进入他山市公墓系统。"
+          : "姓名出现在一份失效陵园人员目录中。",
+        path: allowed ? ROUTES.duChe : undefined,
+        unlock: allowed ? ["S24"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "履历未恢复",
+      }]);
+      setResultNote(allowed ? "家庭与职业字段指向同一人物。" : "先取得旧陵园网页的完整人员目录。");
+      return;
+    }
+
+    if (["李髮", "李髪"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S24") || currentPath === ROUTES.duChe;
+      setResults([{
+        id: "du-li-wedding",
+        kind: allowed ? "婚礼档案＋朗读文件" : "人物关系元数据",
+        title: "杜彻与李髮｜婚礼档案",
+        summary: allowed
+          ? "叙事来源同时使用李髮与李髪；附朗读文件07《舞》。"
+          : "人物名存在，家庭关系尚未与杜彻档案互证。",
+        path: allowed ? ROUTES.wedding : undefined,
+        unlock: allowed ? ["S25"] : undefined,
+        recover: allowed ? ["07"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "关系未确认",
+      }]);
+      setResultNote(allowed ? "两种字形已合并为同一份婚礼档案。" : "先打开杜彻的人物档案。");
+      return;
+    }
+
+    if (normalized === "李发") {
+      setResults([{
+        id: "li-fa-suggestion",
+        kind: "姓名纠错",
+        title: "是否查找“李髮”或“李髪”？",
+        summary: "原始来源保留异体字；简体写法不直接打开档案。",
+        locked: true,
+        note: "请使用来源字形",
+      }]);
+      setResultNote("姓名的字形本身是交叉线索。");
+      return;
+    }
+
+    if (["刍味", "芻味"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S24") || currentPath === ROUTES.duChe || currentPath === ROUTES.wedding;
+      setResults(allowed ? [
+        {
+          id: "chuwei-taste",
+          kind: "朗读文件 · 10 / 14",
+          title: "4.1 刍味（杜彻）",
+          summary: "寿享陵园、世伯与一场酒在同一声部中重合。",
+          path: ROUTES.taste,
+          unlock: ["S26"],
+          recover: ["10"],
+        },
+        {
+          id: "chuwei-homophone",
+          kind: "相似标题 · 受限",
+          title: "4.2 刍胃",
+          summary: "只差一个同音字；正文仍处于医学删除页之后。",
+          locked: true,
+          note: "标题相似",
+        },
+      ] : [{
+        id: "chuwei-locked",
+        kind: "受限朗读文件",
+        title: "4.1 刍味",
+        summary: "文件存在；朗读声部与陵园人员目录尚未交叉。",
+        locked: true,
+        note: "来源不足",
+      }]);
+      setResultNote(allowed ? "检索同时命中一个同音标题。" : "先确认寿享陵园的负责人。");
+      return;
+    }
+
+    if (["刍胃", "芻胃"].includes(normalized)) {
+      const allowed = game.recovered.includes("10") || currentPath === ROUTES.taste;
+      setResults([{
+        id: "medical-redaction",
+        kind: allowed ? "医学文字删除页" : "相似标题元数据",
+        title: "4.2 刍胃｜标题校订层",
+        summary: allowed
+          ? "标题中的“味”被划去；疾病名称仍被六个字符遮挡。"
+          : "同音标题存在，但前一份朗读文件尚未恢复。",
+        path: allowed ? ROUTES.medical : undefined,
+        unlock: allowed ? ["S27"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "缺少刍味",
+      }]);
+      setResultNote(allowed ? "同音字把味觉材料引向了身体器官。" : "先恢复《刍味》。");
+      return;
+    }
+
+    if (["阿尔茨海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S27") || currentPath === ROUTES.medical;
+      setResults([{
+        id: "chuwei-stomach",
+        kind: allowed ? "删除层已解除＋朗读文件" : "医学词条",
+        title: "4.2 刍胃（杜万琳）",
+        summary: allowed
+          ? "疾病名与完整文字层已恢复；附朗读文件11。"
+          : "公开医学词条可见，但尚不能解锁文学档案。",
+        path: allowed ? ROUTES.stomach : undefined,
+        unlock: allowed ? ["S28"] : undefined,
+        recover: allowed ? ["11"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "删除页未定位",
+      }]);
+      setResultNote(allowed ? "症状列表与病名吻合，删除层已解除。" : "先找到列出症状的删除页。");
+      return;
+    }
+
+    if (normalized === "老年痴呆") {
+      setResults([{
+        id: "medical-synonym",
+        kind: "医学同义提示",
+        title: "请使用原病名：阿尔茨海默病",
+        summary: "该词仅作搜索容错，不作为唯一答案，也不用于人物标签。",
+        locked: true,
+        note: "改用规范病名",
+      }]);
+      setResultNote("症状索引可以命中，但解锁需要原病名。");
+      return;
+    }
+
+    if (["阔南会社", "闊南會社"].includes(normalized)) {
+      const medicalComplete = game.unlocked.includes("S28") || currentPath === ROUTES.stomach;
+      const weddingComplete = game.recovered.includes("07") || currentPath === ROUTES.wedding;
+      const allowed = medicalComplete && weddingComplete;
+      setResults([{
+        id: "kuonan-next",
+        kind: allowed ? "旧画廊名称 · 元数据" : "受限组织元数据",
+        title: "阔南会社",
+        summary: allowed
+          ? "杜彻与葛东平改造画廊时曾考虑使用的名称；下一章正文尚未恢复。"
+          : medicalComplete
+            ? "名称已经出现，但杜彻婚礼档案中的朗读文件07尚未恢复。"
+            : "名称存在，但旧站历史仍被医学删除层遮挡。",
+        locked: true,
+        note: allowed ? "下一章入口" : medicalComplete ? "缺少 07《舞》" : "证据不足",
+      }]);
+      setResultNote(allowed ? "第五章入口已定位，当前版本推进至 12/14。" : medicalComplete ? "回到杜彻档案，查找李髮或李髪。" : "先恢复《刍胃》的完整文字层。");
       return;
     }
 
@@ -1325,6 +1600,26 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         return <DuCremationPage revealed={false} />;
       case ROUTES.duCremationSigned:
         return <DuCremationPage revealed />;
+      case ROUTES.cemeteryCase:
+        return <CemeteryCasePage />;
+      case ROUTES.xingNews:
+        return <XingNewsPage />;
+      case ROUTES.shouxiang:
+        return <ShouxiangPage />;
+      case ROUTES.duChe:
+        return <DuChePage />;
+      case ROUTES.wedding:
+        return <WeddingPage />;
+      case ROUTES.taste:
+        return <TastePage />;
+      case ROUTES.medical:
+        return <MedicalPage
+          revealed={false}
+          glyphRevealed={game.medicalGlyphRevealed}
+          onToggleGlyph={() => setGame((previous) => ({ ...previous, medicalGlyphRevealed: true }))}
+        />;
+      case ROUTES.stomach:
+        return <MedicalPage revealed glyphRevealed onToggleGlyph={() => undefined} />;
       case ROUTES.exhibition:
       default:
         return <ExhibitionPage frameNotice={frameNotice} onInspectFrame={inspectFrame} />;
@@ -1985,9 +2280,130 @@ function DuCremationPage({ revealed }: { revealed: boolean }) {
             <p>徐惠哭至力竭很早便离开。<br />我代为家属在火化单署名<br />想到签下一个代号这门事儿<br />便裁定你惶惶的一生——<br />另一代号——自此变成土壤。</p>
             <p>簇拥着喝得烂醉像以前一样<br />轻蔑地悲悼一条命的垂死<br />我们放弃审视各自毫无活性的肝脏<br />当天夜里织合一道谎言瞒过自己<br />杯酒相撞，庆幸仍活在世上。</p>
           </RecoveredScript>
-          <section className="case-name-reveal"><span>案件名称／首次完整出现</span><h2>他山地方公墓贪污案</h2><p>五名参与者的档案由此被编入同一索引。下一章暂只开放元数据。</p><code>NEXT: CASE / CEMETERY / METADATA ONLY</code></section>
+          <section className="case-name-reveal"><span>案件名称／首次完整出现</span><h2>他山地方公墓贪污案</h2><p>五名参与者的档案由此被编入同一索引。使用完整案名继续搜索。</p><code>NEXT: CASE / CEMETERY / 05 PERSONS</code></section>
         </>
       )}
+    </article>
+  );
+}
+
+function CemeteryCasePage() {
+  const participants = [
+    { name: "杜万琳", alias: "旧名：杜南阳", relation: "项目参与者；与画廊、家庭手续相互交叉", record: "火化单／方晚代签", death: "已故；表面记录为病逝、肝病相关，遗体已火化" },
+    { name: "方晚", alias: "", relation: "项目参与者；杜万琳同乡、同学与画廊合伙人", record: "旧成员履历／火化单代签", death: "已故；死亡过程未公开" },
+    { name: "王克定", alias: "", relation: "项目参与者；旧社团关系者", record: "认尸、尸检与物证补充", death: "已故；遭杀害，自杀现场系伪造" },
+    { name: "刑万", alias: "新闻匿名：刑某", relation: "项目参与者；旧社团名单与新闻缓存重合", record: "公开新闻／旧合照", death: "已故；死亡过程未公开" },
+    { name: "莉香", alias: "", relation: "项目参与者；杜家亲属、刑万关联人", record: "亲属卡／河流档案", death: "已故；溺亡" },
+  ];
+
+  return (
+    <article className="case-index-page">
+      <header className="case-index-head">
+        <div><CacheStamp>CASE INDEX / 05 PERSONS</CacheStamp><p className="section-kicker">项目参与者交叉索引</p><h1>他山地方<br />公墓贪污案</h1></div>
+        <aside><span>索引原则</span><p>只呈现人物关系、可核对记录与死亡过程；不在现有文本之外推定任何责任归属。</p></aside>
+      </header>
+
+      <div className="case-table-wrap">
+        <table className="case-table">
+          <thead><tr><th>人物</th><th>项目关系</th><th>公开／恢复记录</th><th>死亡过程</th></tr></thead>
+          <tbody>{participants.map((person) => <tr key={person.name}><th scope="row"><b>{person.name}</b>{person.alias && <small>{person.alias}</small>}</th><td>{person.relation}</td><td>{person.record}</td><td className={person.name === "王克定" ? "case-critical" : ""}>{person.death}</td></tr>)}</tbody>
+        </table>
+      </div>
+
+      <section className="case-index-foot"><span>下一条公开记录</span><h2>刑某</h2><p>新闻标题没有写出全名；合照与人物库将这个匿名写法合并到刑万。</p></section>
+    </article>
+  );
+}
+
+function XingNewsPage() {
+  const [version, setVersion] = useState<"published" | "cache">("published");
+  const cached = version === "cache";
+  return (
+    <article className="news-cache-page">
+      <header className="news-cache-head"><div><CacheStamp>NEWS CACHE / VERSION DIFF</CacheStamp><p className="section-kicker">公开报道与缓存对照</p><h1>刑某</h1></div><div className="version-toggle" role="group" aria-label="选择新闻版本"><button type="button" className={!cached ? "is-active" : ""} onClick={() => setVersion("published")}>原刊</button><button type="button" className={cached ? "is-active" : ""} onClick={() => setVersion("cache")}>缓存</button></div></header>
+      <section className="news-paper">
+        <div className="news-masthead"><b>他山晚讯</b><span>{cached ? "网页缓存副本" : "原刊文字层"}</span></div>
+        <p className="news-date">社会简讯 · 日期字段缺失</p>
+        <h2>“他山地方公墓贪污案”涉案人员<br />刑某现已被警方依法逮捕</h2>
+        <div className="news-copy"><p>报道正文未公开完整姓名，案由之外的犯罪事实、审判结果与死亡因果均不在本页扩写。</p><p>人物交叉索引：<strong>{cached ? "刑万（新闻匿名：刑某）" : "刑某"}</strong></p></div>
+        {cached && <aside className="cache-difference"><span>CACHE ONLY</span><p><del>关联材料：内部人员栏已移除</del></p><p>后来材料残留：世伯承办的<strong>寿享陵园</strong>。</p></aside>}
+      </section>
+    </article>
+  );
+}
+
+function ShouxiangPage() {
+  return (
+    <article className="old-web-page">
+      <div className="old-browser-bar"><span>网页存档</span><code>http://shouxiang.invalid/staff/index.htm</code><b>最后抓取：20—</b></div>
+      <header className="old-site-head"><div className="broken-old-logo" role="img" aria-label="寿享陵园旧标志图片加载失败"><span>IMG</span></div><div><h1>寿享陵园</h1><p>让思念有处安放</p></div><nav aria-label="旧网站导航"><span>首页</span><span>园区介绍</span><b>人员名单</b><span>联系我们</span></nav></header>
+      <div className="old-marquee">通知：旧站停止维护，图片与联系方式均已失效。文字层由网页缓存保留。</div>
+      <section className="old-staff-layout"><aside><h2>栏目导航</h2><ul><li>管理人员</li><li>园区服务</li><li>墓型展示</li><li>来园路线</li></ul><div className="broken-ad"><span>IMAGE NOT FOUND</span><p>陵园全景图</p></div></aside><div className="old-staff-list"><h2>工作人员名录</h2><table><thead><tr><th>姓名</th><th>职务</th><th>资料</th></tr></thead><tbody><tr><td><strong>杜彻</strong></td><td>负责人</td><td>家庭关系／婚礼通告可查</td></tr><tr><td>［字段损坏］</td><td>园务</td><td>图片失效</td></tr><tr><td>［字段损坏］</td><td>维护</td><td>联系方式已清除</td></tr></tbody></table><div className="old-responsible"><span>本页负责人</span><b>杜彻</b><p>经一位世伯介绍进入他山市公墓系统；旧站把他的家庭资料与婚礼通告放在同一人员索引下。</p></div></div></section>
+      <footer className="old-site-foot">Copyright 20— 寿享陵园 · 本镜像使用无效示例域名，不提供现实联系方式</footer>
+    </article>
+  );
+}
+
+function DuChePage() {
+  const [loginNote, setLoginNote] = useState("");
+  return (
+    <article className="person-page du-che-page">
+      <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子。前一代人物离世之后，他仍留在公墓系统与画廊往来中。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮／李髪</MetaLine></dl></header>
+      <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。画廊并非主要收入来源，他经一位世伯介绍，成为他山市公墓系统中的负责人。</p><p>家庭档案显示，他在前一代人物死亡之后继续留在这一系统。现有文本只呈现这段职业延续，不推定他承担案件责任。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名在两个来源中分别写作“李髮”与“李髪”。</p><code>INDEX: LI_髮 / LI_髪</code></aside></section>
+      <Dialog>
+        <DialogTrigger asChild><button className="editor-login-link" type="button">编辑登录</button></DialogTrigger>
+        <DialogContent className="editor-login-dialog"><DialogHeader><DialogTitle>旧站编辑登录</DialogTitle><DialogDescription>登录入口仍在，但本页没有提供账号或密码。</DialogDescription></DialogHeader><form onSubmit={(event) => { event.preventDefault(); setLoginNote("凭据不完整，编辑缓存未开放。输入内容没有被保存。"); }}><label>账号<input name="archive-user" autoComplete="off" /></label><label>密码<input name="archive-password" type="password" autoComplete="off" /></label><Button type="submit">登录后台</Button><p role="status">{loginNote}</p></form></DialogContent>
+      </Dialog>
+    </article>
+  );
+}
+
+function WeddingPage() {
+  const [variant, setVariant] = useState<"髮" | "髪">("髮");
+  return (
+    <article className="wedding-page">
+      <header className="wedding-head"><div><CacheStamp>WEDDING ARCHIVE / 07</CacheStamp><p className="section-kicker">家庭公告与城市舞台指示</p><h1>杜彻 × 李{variant}</h1><p>两种字形来自不同文本层，人物关系完全一致。</p></div><div className="variant-toggle" role="group" aria-label="切换李髮姓名字形"><span>来源字形</span><button type="button" className={variant === "髮" ? "is-active" : ""} onClick={() => setVariant("髮")}>李髮</button><button type="button" className={variant === "髪" ? "is-active" : ""} onClick={() => setVariant("髪")}>李髪</button></div></header>
+      <section className="wedding-record"><div><span>婚礼记录</span><p>“杜彻婚礼办得足够气派。”婚礼档案把画廊、公墓工作与新家庭放进同一个时间切面。</p></div><div><span>人物关系</span><p>杜彻：杜万琳与徐惠之子。李{variant}：杜彻的结婚对象。</p></div></section>
+      <RecoveredScript id="07" section="瞽人篇 · 2.2" title="舞" reader="徐惠">
+        <p>斗转直下的黑<br />负重之湿<br />还有云此间将要有雨</p>
+        <p>去到新康路<br />扔掉雨具<br />像这样左脚<br />轻曼地踏在双实线<br />像这样右脚<br />跨过排水口</p>
+        <p>舞在一个又一个<br />打夜场的铺面之前<br />唱一支新近的流行歌<br />抵着喉咙根<br />不必处处都唱得好</p>
+        <p>我们合着这朝夕复刻的濡湿声<br />今天它迟了半个拍子，比以往慢。<br />可是还得一样地跳起来，散射在侧身雨汽里的<br />前照灯扑在脸妆上</p>
+        <p>黄色晕圈早于粉彩使你更加鲜艳<br />在这盛大的湿润里<br />你还能舞到清晨。</p>
+      </RecoveredScript>
+    </article>
+  );
+}
+
+function TastePage() {
+  return (
+    <article className="script-record-page">
+      <header className="script-record-head"><div><ArtifactTag>已恢复 10 / 14</ArtifactTag><p className="section-kicker">句肉篇 · 4.1</p><h1>刍味</h1><p>朗读声部：杜彻</p></div><aside><span>相似标题</span><b>刍胃</b><p>只差一个同音字。</p></aside></header>
+      <RecoveredScript id="10" section="句肉篇 · 4.1" title="刍味" reader="杜彻">
+        <p>有可能只是一个问句<br />关于先前愤岖的酒瓶<br />——在它没抛出口的那一瞬间——他举得很高。<br />之后却失手沉重摔落地上，<br />碎片剥离的断口上沾着酒精带血。</p>
+        <p>你同旁人喝的第一场酒，<br />兴许是在城东的烧烤摊。<br />请教你胡须的割法，你记得<br />他一边还不停摸着下颌。</p>
+        <p>这反倒让你注意到他眉目舒展，<br />阴影里棱角分明。<br />你想问问某人关于婚姻，甚至是血或者月亮<br />颤巍的音节总不构成一段话<br />告诉自己再多喝两杯。</p>
+        <p>你想到可以有另外的问题，譬如从世伯<br />承办的寿享陵园着手，关于死后的住处<br />他很早就向你兜售一种活法<br />告诉你中国人古典的稳重和他眼里全部的社会。</p>
+        <p>真能这般说出口么<br />这些死和不安？究底是另外些什么？<br />这会儿你只是这样想<br />烟晕笼住顶棚打下的灯<br />面对着的中年男人愈来愈沉默。</p>
+        <p>血反冲到口腔的腥味快淹过来。<br />倒在地面，众人惊忙里赶来<br />拨着急救电话。</p>
+      </RecoveredScript>
+    </article>
+  );
+}
+
+function MedicalPage({ revealed, glyphRevealed, onToggleGlyph }: { revealed: boolean; glyphRevealed: boolean; onToggleGlyph: () => void }) {
+  return (
+    <article className={`medical-page${revealed ? " is-revealed" : ""}`}>
+      <header className="medical-head"><div><CacheStamp>{revealed ? "REDACTION REMOVED / 11" : "MEDICAL CACHE / REDACTED"}</CacheStamp><p className="section-kicker">标题校订与症状索引</p><h1>刍<button type="button" className="glyph-correction" onClick={onToggleGlyph} disabled={revealed || glyphRevealed} aria-label="把被划去的味字校订为胃"><del>味</del><ins className={glyphRevealed || revealed ? "is-visible" : ""}>胃</ins></button></h1></div><div className="time-reversal"><span>旧站修改记录</span><b>{revealed ? "18:14 ← 18:15" : "18:15"}</b><small>{revealed ? "时间戳短暂倒退一分钟" : "历史层未展开"}</small></div></header>
+      <section className="medical-sheet"><div className="medical-title-line"><span>疾病名称</span><strong>{revealed ? "阿尔茨海默病" : "××××××"}</strong></div><p>一种起病隐匿、进行性发展的神经系统退行性疾病。现有文字层列出以下临床表现：</p><ul><li>记忆障碍</li><li>失语</li><li>失用</li><li>失认</li><li>视空间技能损害</li><li>执行功能障碍</li><li>人格和行为改变</li></ul>{!revealed && <p className="medical-search-note">病名被六个字符遮挡；症状列表仍可全文搜索。</p>}</section>
+      {revealed && <RecoveredScript id="11" section="句肉篇 · 4.2" title="刍胃" reader="杜万琳">
+        <p>时钟要敲打六点一刻的表面<br />它会多走一分钟。<br />这样的话偌大院子里<br />那些胡乱种下的果树<br />会抛出那枚剥开的橘子<br />经护工埋下再发新芽。</p>
+        <p>有时偶然落在其他人不大的墓碑跟前<br />你会抱怨修在养老院旁为何没有围墙。<br />它因此被判入室抢劫么？<br />还是和许多年前一样动人的枪毙<br />是含水的？</p>
+        <p>如今看见的像是<br />养老院发来的亡故通知<br />也带着果梗。<br />几个同住的老兄弟<br />站在碑前感叹<br />也许真已到暮年。</p>
+        <p>你会觉得呼吸依旧顺畅，子女们<br />偶尔会拿着那薄纸闻闻<br />寻橘子鲜活的气味无时无刻<br />在你油墨名字、<br />在你老的尸首上反刍。</p>
+        <p>你讲不出一个完整的故事<br />屏息前最后几个画面<br />以至于毫无干系。</p>
+      </RecoveredScript>}
+      {revealed && <section className="old-history-reveal"><span>旧站历史／下一条名称</span><h2>阔南会社</h2><p>杜彻与葛东平改造画廊时曾考虑使用的名称。正文尚未进入当前恢复范围。</p><code>NEXT: S29 / METADATA ONLY</code></section>}
     </article>
   );
 }

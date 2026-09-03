@@ -80,3 +80,57 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
   assert.match(cremation, /已恢复 08 \/ 14/);
   assert.match(cremation, /他山地方公墓贪污案/);
 });
+
+test("renders the five-person cemetery case without inventing missing deaths", async () => {
+  const caseIndex = await renderPath("/archive/case/cemetery");
+  assert.match(caseIndex, /CASE INDEX \/ 05 PERSONS/);
+  assert.match(caseIndex, /杜万琳/);
+  assert.match(caseIndex, /方晚/);
+  assert.match(caseIndex, /王克定/);
+  assert.match(caseIndex, /刑万/);
+  assert.match(caseIndex, /莉香/);
+  assert.match(caseIndex, /自杀现场系伪造/);
+  assert.match(caseIndex, /溺亡/);
+  assert.match(caseIndex, /死亡过程未公开/);
+  assert.doesNotMatch(caseIndex, /责任单位|执行人|凶手/);
+});
+
+test("renders the cached news, cemetery mirror, and Du Che profile", async () => {
+  const news = await renderPath("/news/cache/xing-mou");
+  assert.match(news, /刑某现已被警方依法逮捕/);
+  assert.match(news, /原刊/);
+  assert.match(news, /缓存/);
+
+  const cemetery = await renderPath("/mirror/shouxiang/staff");
+  assert.match(cemetery, /shouxiang\.invalid/);
+  assert.match(cemetery, /杜彻/);
+  assert.match(cemetery, /负责人/);
+
+  const duChe = await renderPath("/members/du-che");
+  assert.match(duChe, /杜万琳与徐惠之子/);
+  assert.match(duChe, /李髮／李髪/);
+  assert.match(duChe, /编辑登录/);
+});
+
+test("renders recovered scripts 07, 10, and 11 with the medical clue chain", async () => {
+  const wedding = await renderPath("/archive/wedding/du-li");
+  assert.match(wedding, /已恢复 07 \/ 14/);
+  assert.match(wedding, /舞/);
+  assert.match(wedding, /朗读声部：徐惠/);
+
+  const taste = await renderPath("/recovered/10-chuwei-taste");
+  assert.match(taste, /已恢复 10 \/ 14/);
+  assert.match(taste, /寿享陵园/);
+  assert.match(taste, /朗读声部：杜彻/);
+
+  const redacted = await renderPath("/archive/medical/redacted");
+  assert.match(redacted, /××××××/);
+  assert.match(redacted, /记忆障碍/);
+  assert.match(redacted, /执行功能障碍/);
+
+  const stomach = await renderPath("/recovered/11-chuwei-stomach");
+  assert.match(stomach, /阿尔茨海默病/);
+  assert.match(stomach, /已恢复 11 \/ 14/);
+  assert.match(stomach, /朗读声部：杜万琳/);
+  assert.match(stomach, /阔南会社/);
+});
