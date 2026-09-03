@@ -34,6 +34,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { JUROUTUANFEI_TEXT, type JuroutuanfeiTextBlock } from "./juroutuanfei-text";
 
 const STORAGE_KEY = "zengwu-she-prototype-v1";
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -145,6 +146,7 @@ const ROUTES = {
   kuonanHistory: "/archive/site-history/kuonan",
   liLetter: "/archive/letters/li-to-ye",
   mahePublication: "/publications/mahe-de-chufang",
+  juroutuanfei: "/publications/juroutuanfei",
   editorLogin: "/admin/editor/login",
   editorRevisions: "/admin/editor/revisions",
   yuanchang: "/admin/characters/yuanchang",
@@ -193,6 +195,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.kuonanHistory]: "阔南会社｜网站版本史",
   [ROUTES.liLetter]: "李司贰致叶是｜书信档案",
   [ROUTES.mahePublication]: "玛赫的厨房｜出版档案",
+  [ROUTES.juroutuanfei]: "句肉抟飞｜完整小说集",
   [ROUTES.editorLogin]: "叶是｜编辑后台登录",
   [ROUTES.editorRevisions]: "叶是｜编辑缓存",
   [ROUTES.yuanchang]: "元昶／左君｜角色修订页",
@@ -377,6 +380,11 @@ const HINTS: Record<string, string[]> = {
     "把书名拼音首字母放在 2019 前面。",
     "搜索叶主任或叶是；后台口令是 MHDC2019。",
   ],
+  [ROUTES.juroutuanfei]: [
+    "这是一份在人物关系完成合并后开放的完整小说集，不再承担前期答案。",
+    "五个 Section 保持在同一阅读页中；正文没有拆成线索或分期连载。",
+    "读完后，回到元昶／左君页面的附件索引，继续解除《始末的碎点》。",
+  ],
   [ROUTES.editorLogin]: [
     "账号在李司贰书信的收件元数据里。",
     "口令规则在《玛赫的厨房》版权页：首字母＋2019。",
@@ -475,6 +483,7 @@ function buildPublicCatalog(game: GameState) {
     { id: "catalog-zhuhongmen", eyebrow: "展览手册", title: "《赭红门》", summary: "当期展览作品目录与现场记录。", path: ROUTES.exhibition },
     ...RECOVERED_FILES.filter((file) => recovered(file.id)).map((file) => ({ id: `script-${file.id}`, eyebrow: `朗读文件 / ${file.id}`, title: file.title, summary: `来源：${file.source}`, path: RECOVERED_FILE_ROUTES[file.id], isNew: true })),
     unlocked("S31") && { id: "mahe", eyebrow: "小说 / 2019", title: "《玛赫的厨房》", summary: "杜彻小说的出版档案与版权页。", path: ROUTES.mahePublication, isNew: true },
+    unlocked("S33") && { id: "juroutuanfei", eyebrow: "小说集 / 完整卷", title: "《句肉抟飞》", summary: "五个 Section 的完整合订文本；人物与案件材料在这里重新进入同一叙事。", path: ROUTES.juroutuanfei, isNew: true },
     recovered("14") && { id: "shinan-script", eyebrow: "诗剧 / 完整版", title: "《诗喃》排练文本", summary: "序诗、五个篇章与结诗的完整恢复版本。", path: ROUTES.shinan, isNew: true },
   ].filter(Boolean) as DirectoryEntry[];
 
@@ -1794,6 +1803,24 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
+    if (["句肉抟飞", "句肉抟飛"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S33") || currentPath === ROUTES.yuanchang;
+      setResults([{
+        id: "juroutuanfei-complete",
+        kind: allowed ? "小说集 · 完整合订本" : "受限馆藏书目",
+        title: "《句肉抟飞》",
+        summary: allowed
+          ? "五个 Section 已按原稿顺序恢复为同一阅读卷，不拆分、不隐藏段落。"
+          : "馆藏登记存在；正文涉及尚未完成的人物映射，暂不开放。",
+        path: allowed ? ROUTES.juroutuanfei : undefined,
+        unlock: allowed ? ["S33"] : undefined,
+        locked: !allowed,
+        note: allowed ? "真相阅读区" : "人物索引未完成",
+      }]);
+      setResultNote(allowed ? "完整合订本已经开放。这份文本不再承担前期解谜。" : "先完成编辑缓存中的人物年表与身份合并。");
+      return;
+    }
+
     if (["始末的碎点", "始末碎点"].includes(normalized)) {
       const allowed = game.unlocked.includes("S33") || currentPath === ROUTES.yuanchang;
       setResults([{
@@ -2095,6 +2122,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         return <LiLetterPage />;
       case ROUTES.mahePublication:
         return <MahePublicationPage />;
+      case ROUTES.juroutuanfei:
+        return <JuroutuanfeiPage unlocked={game.unlocked.includes("S33")} onBack={() => navigate(ROUTES.publications)} onReturnToCharacter={() => navigate(ROUTES.yuanchang)} />;
       case ROUTES.editorLogin:
         return <EditorLoginPage
           user={editorUser}
@@ -3021,6 +3050,66 @@ function MahePublicationPage() {
   );
 }
 
+function JuroutuanfeiBlock({ block }: { block: JuroutuanfeiTextBlock }) {
+  if (block.kind === "section") return <h2 id={block.anchor}>{block.text}</h2>;
+  if (block.kind === "subheading") return <h3>{block.text}</h3>;
+  if (block.kind === "dedication") return <p className="jurou-dedication">{block.text}</p>;
+  if (block.kind === "toc-title") return <h3 className="jurou-source-index">{block.text}</h3>;
+  if (block.kind === "toc-entry") return <p className="jurou-source-index-entry">{block.text}</p>;
+  if (block.kind === "press-mark") return <p className="jurou-press-mark">{block.text}</p>;
+  if (block.kind === "epigraph") return <blockquote className="jurou-epigraph">{block.text}</blockquote>;
+  if (block.kind === "imprint") return <p className="jurou-imprint">{block.text}</p>;
+  if (block.kind === "timeline-date") return <time className="jurou-timeline-date">{block.text}</time>;
+  if (block.kind === "timeline-event") return <p className="jurou-timeline-event">{block.text}</p>;
+  if (block.kind === "timeline-note") return <p className="jurou-timeline-note">{block.text}</p>;
+  return <p>{block.text}</p>;
+}
+
+function JuroutuanfeiPage({ unlocked, onBack, onReturnToCharacter }: { unlocked: boolean; onBack: () => void; onReturnToCharacter: () => void }) {
+  if (!unlocked) {
+    return (
+      <article className="jurou-locked-page">
+        <header><CacheStamp>CATALOG RECORD / SEALED</CacheStamp><p className="section-kicker">受限馆藏</p><h1>句肉抟飞</h1></header>
+        <section><LockKeyhole aria-hidden="true" /><span>全文未开放</span><h2>人物索引仍未完成</h2><p>这份合订本会把多条人物关系和案件材料重新放回同一叙事。为避免提前泄露，必须先完成编辑缓存中的人物年表与身份合并。</p><Button type="button" variant="outline" onClick={onBack}>返回出版物目录</Button></section>
+      </article>
+    );
+  }
+
+  const sections = [
+    ["01", "3dm×3dm", "section-1"],
+    ["02", "紙式鱿鱼", "section-2"],
+    ["03", "鳥首上行功曹歌", "section-3"],
+    ["04", "皮", "section-4"],
+    ["05", "瑪赫的厨房", "section-5"],
+  ];
+
+  return (
+    <article className="jurou-publication-page">
+      <header className="jurou-publication-head">
+        <div><CacheStamp>ARCHIVE RELEASE / COMPLETE EDITION</CacheStamp><p className="section-kicker">小说集 · 真相阅读区</p><h1>句肉<br />抟飞</h1></div>
+        <aside><span>完整卷</span><b>{JUROUTUANFEI_TEXT.length}</b><small>非空原稿段落<br />依原顺序收录</small></aside>
+      </header>
+
+      <section className="jurou-reader-note"><span>阅读边界</span><p>此页只在元昶／左君身份合并完成后开放。五个 Section 保持在同一页面中，正文没有拆成谜题、摘要或分期连载；它用于让前面获得的证词、人物关系与死亡记录重新进入完整叙事。</p></section>
+
+      <nav className="jurou-reader-index" aria-label="句肉抟飞章节目录">
+        {sections.map(([number, title, anchor]) => <a key={anchor} href={`#${anchor}`}><span>{number}</span><b>{title}</b><ArrowDown aria-hidden="true" /></a>)}
+      </nav>
+
+      <section className="jurou-reading-column" aria-label="句肉抟飞完整正文">
+        {JUROUTUANFEI_TEXT.map((block) => <JuroutuanfeiBlock key={block.sourceIndex} block={block} />)}
+        <figure className="jurou-ending-illustration">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={browserPath("/publications/juroutuanfei/ending-illustration.webp")} alt="原稿末页插图：一位托腮坐着的人物线描" />
+          <figcaption>原稿末页插图</figcaption>
+        </figure>
+      </section>
+
+      <footer className="jurou-reader-end"><span>END OF COMPLETE TEXT</span><h2>文本到这里结束。</h2><p>你已经读到此前档案在小说叙事中的完整回声。下一份加密文本仍在元昶／左君页面的附件索引中。</p><div><Button type="button" onClick={onReturnToCharacter}>返回元昶／左君</Button><Button type="button" variant="outline" onClick={onBack}>返回出版物目录</Button></div></footer>
+    </article>
+  );
+}
+
 function EditorLoginPage({ user, password, attempts, note, alreadyUnlocked, onUserChange, onPasswordChange, onSubmit, onReopen }: { user: string; password: string; attempts: number; note: string; alreadyUnlocked: boolean; onUserChange: (value: string) => void; onPasswordChange: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onReopen: () => void }) {
   return (
     <article className="editor-gate-page">
@@ -3054,7 +3143,7 @@ function YuanchangPage() {
     <article className="character-revision-page">
       <header className="character-head"><div><CacheStamp>CHARACTER / IDENTITY MERGED</CacheStamp><p className="section-kicker">小说角色与可改写年表</p><h1>元昶 <span>／左君</span></h1><p>法名与本名指向同一角色。这里展示的是小说及编辑版本，不是现实人物档案。</p></div><div className="version-toggle" role="group" aria-label="切换年表版本"><button type="button" className={edition === "initial" ? "is-active" : ""} onClick={() => setEdition("initial")}>初版</button><button type="button" className={edition === "edited" ? "is-active" : ""} onClick={() => setEdition("edited")}>再版</button></div></header>
       <section className="character-timeline">{timeline.map(([date, event], index) => <div key={date} className={edition === "edited" && [1, 2, 3, 5].includes(index) ? "is-edited" : ""}><time>{date}</time><p>{edition === "initial" && [1, 2, 3, 5].includes(index) ? "［初版此段缺失］" : event}</p>{edition === "edited" && [1, 2, 3, 5].includes(index) && <span>再版补写</span>}</div>)}</section>
-      <section className="fragment-index-preview"><header><span>附件索引</span><b>Ⅰ—Ⅹ</b></header><div>{["Ⅰ","Ⅱ","Ⅲ","Ⅳ","Ⅴ","Ⅵ","Ⅶ","Ⅷ","Ⅸ","Ⅹ"].map((number) => <i key={number}>{number}</i>)}</div><p>标题碎片：始／末／的／碎／点</p><small>解密提示：口令为作者被替换前的旧名。</small></section>
+      <section className="fragment-index-preview"><header><span>附件索引</span><b>Ⅰ—Ⅹ</b></header><div>{["Ⅰ","Ⅱ","Ⅲ","Ⅳ","Ⅴ","Ⅵ","Ⅶ","Ⅷ","Ⅸ","Ⅹ"].map((number) => <i key={number}>{number}</i>)}</div><p>标题碎片：始／末／的／碎／点</p><small>解密提示：口令为作者被替换前的旧名。</small><p className="publication-update"><b>NEW</b> 出版物目录已新增一册完整合订本。</p></section>
     </article>
   );
 }
