@@ -1,6 +1,7 @@
 # 憎恶社 / ZENGWUSHE
 
-艇造司出品的基于陈潮小说集《句肉抟飞》与诗集《目盲》的ARG游戏
+艇造司出品的基于陈潮小说集《句肉抟飞》与诗集《目盲》改变的ARG游戏
+可点击以下链接进行游玩：https://midnight-apron.github.io/ZENGWUSHE
 
 ## 当前版本
 
