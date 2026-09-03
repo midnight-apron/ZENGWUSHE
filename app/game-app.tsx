@@ -573,12 +573,15 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       const atTop = window.scrollY <= 32;
 
       if (atBottom && !game.routeReachedBottom) {
-        setGame((previous) => ({ ...previous, routeReachedBottom: true }));
+        setGame((previous) => previous.routeReachedBottom
+          ? previous
+          : { ...previous, routeReachedBottom: true });
         return;
       }
 
       if (atTop && game.routeReachedBottom) {
         setGame((previous) => {
+          if (!previous.routeReachedBottom) return previous;
           const nextTrips = Math.min(3, previous.routeTrips + 1);
           return {
             ...previous,
@@ -650,6 +653,25 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }
 
   function moveAlongRoute(destination: "top" | "bottom") {
+    if (currentPath === ROUTES.phoenixRoute && game.routeTrips < 3) {
+      setGame((previous) => {
+        if (destination === "bottom") {
+          return previous.routeReachedBottom
+            ? previous
+            : { ...previous, routeReachedBottom: true };
+        }
+        if (!previous.routeReachedBottom) return previous;
+        const nextTrips = Math.min(3, previous.routeTrips + 1);
+        return {
+          ...previous,
+          routeTrips: nextTrips,
+          routeReachedBottom: false,
+          unlocked: nextTrips === 3
+            ? unique([...previous.unlocked, "S16"])
+            : previous.unlocked,
+        };
+      });
+    }
     window.scrollTo({
       top: destination === "top" ? 0 : document.documentElement.scrollHeight,
       behavior: game.settings.reducedMotion ? "auto" : "smooth",
