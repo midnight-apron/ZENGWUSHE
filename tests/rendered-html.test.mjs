@@ -30,11 +30,36 @@ async function renderPath(pathname) {
   return (await response.text()).replaceAll("<!-- -->", "");
 }
 
-test("renders the game metadata and opening exhibition", async () => {
+test("renders the gallery homepage and missing-work entrance", async () => {
   const html = await renderPath("/");
   assert.match(html, /<title>憎恶社｜作品与旧档案<\/title>/);
+  assert.match(html, /正在展出 \/ NOW ON VIEW/);
   assert.match(html, /赭红门/);
+  assert.match(html, /展品丢失/);
+  assert.match(html, /\/gallery\/zhuhongmen-hall\.webp/);
   assert.match(html, /搜索作品、人名、尺寸或文件标签/);
+});
+
+test("renders the public gallery directories without leaking locked records", async () => {
+  const exhibitions = await renderPath("/exhibitions");
+  assert.match(exhibitions, /PROGRAM \/ EXHIBITIONS/);
+  assert.match(exhibitions, /正在展出 \/ 主厅/);
+  assert.doesNotMatch(exhibitions, /白芍肉/);
+
+  const people = await renderPath("/people");
+  assert.match(people, /PEOPLE \/ INDEX/);
+  assert.match(people, /葛东平/);
+  assert.doesNotMatch(people, /莉香/);
+
+  const news = await renderPath("/news");
+  assert.match(news, /NEWS \/ ARCHIVE/);
+  assert.match(news, /关于 A-07 展品状态的说明/);
+  assert.doesNotMatch(news, /他山地方公墓贪污案/);
+
+  const publications = await renderPath("/publications");
+  assert.match(publications, /PUBLICATIONS \/ TEXT/);
+  assert.match(publications, /展览手册/);
+  assert.doesNotMatch(publications, /盲之春/);
 });
 
 test("renders the recovered identity and death-record chapter routes", async () => {

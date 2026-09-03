@@ -1,5 +1,5 @@
 import { GameApp } from "./game-app";
 
 export default function Home() {
-  return <GameApp initialPath="/exhibitions/zhuhongmen" />;
+  return <GameApp initialPath="/" />;
 }

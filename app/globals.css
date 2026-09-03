@@ -6,6 +6,609 @@
   scrollbar-width: thin;
 }
 
+/* Public gallery homepage and progress-aware institutional directories. */
+.gallery-section-nav button {
+  position: relative;
+}
+
+.gallery-section-nav button > i {
+  position: absolute;
+  top: -0.7rem;
+  right: -1.25rem;
+  color: var(--blood);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.52rem;
+  font-style: normal;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.is-gallery-home .game-main {
+  width: 100%;
+  max-width: none;
+  min-height: 100vh;
+  padding: 0;
+}
+
+.gallery-home {
+  background: var(--paper);
+}
+
+.gallery-home-hero {
+  position: relative;
+  min-height: 40rem;
+  height: calc(100vh - 10rem);
+  max-height: 66rem;
+  overflow: hidden;
+  background: var(--black);
+  color: #fff;
+}
+
+.gallery-home-hero > img,
+.gallery-home-shade {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.gallery-home-hero > img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.gallery-home-shade {
+  background: linear-gradient(90deg, rgba(12, 12, 11, 0.74) 0%, rgba(12, 12, 11, 0.38) 32%, rgba(12, 12, 11, 0.04) 68%);
+}
+
+.gallery-home-caption {
+  position: absolute;
+  top: clamp(4rem, 12vh, 8rem);
+  left: max(1.5rem, calc((100vw - 1360px) / 2));
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: min(42rem, calc(100% - 3rem));
+}
+
+.gallery-home-caption > p,
+.gallery-home-caption > span {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.gallery-home-caption > p {
+  margin-bottom: 2rem;
+  color: #f0c2c3;
+}
+
+.gallery-home-caption > span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.gallery-home-caption h1 {
+  margin: 0.45rem 0 0.7rem;
+  font-size: clamp(5rem, 10vw, 10rem);
+  font-weight: 620;
+  line-height: 0.9;
+  letter-spacing: -0.09em;
+}
+
+.gallery-home-caption > b {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(1.05rem, 1.6vw, 1.4rem);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+.gallery-home-caption > button,
+.gallery-notice-copy > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 3rem;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+  font-size: 0.83rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.gallery-home-caption > button:hover,
+.gallery-home-caption > button:focus-visible {
+  background: #fff;
+  color: var(--ink);
+}
+
+.gallery-home-caption svg,
+.gallery-notice-copy svg,
+.gallery-home-hero > a svg,
+.gallery-home-index svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.gallery-home-hero > a {
+  position: absolute;
+  right: max(1.5rem, calc((100vw - 1360px) / 2));
+  bottom: 2rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  color: #fff;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.gallery-notice {
+  display: grid;
+  grid-template-columns: minmax(9rem, 0.28fr) minmax(0, 1fr) minmax(16rem, 0.6fr);
+  gap: clamp(2rem, 5vw, 6rem);
+  width: min(calc(100% - 3rem), 1360px);
+  margin: 0 auto;
+  padding: clamp(5rem, 10vw, 10rem) 0;
+  border-bottom: 1px solid var(--ink);
+  scroll-margin-top: 2rem;
+}
+
+.gallery-notice > header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.gallery-notice > header p,
+.gallery-notice > header time,
+.gallery-notice-copy > span,
+.gallery-home-index > header p {
+  margin: 0;
+  color: var(--blood);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.gallery-notice > header time {
+  color: var(--ash);
+}
+
+.gallery-notice-copy h2 {
+  margin: 0.75rem 0 1.5rem;
+  font-size: clamp(3.2rem, 6vw, 6.5rem);
+  font-weight: 620;
+  line-height: 0.92;
+  letter-spacing: -0.075em;
+}
+
+.gallery-notice-copy > p {
+  max-width: 42rem;
+  margin: 0;
+  color: var(--ash);
+  font-family: var(--display-serif);
+  font-size: 1.05rem;
+  line-height: 1.9;
+}
+
+.gallery-notice-copy > button {
+  color: var(--ink);
+}
+
+.gallery-notice-copy > button:hover,
+.gallery-notice-copy > button:focus-visible {
+  background: var(--blood);
+  border-color: var(--blood);
+  color: #fff;
+}
+
+.missing-work-mark {
+  align-self: center;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1.35;
+  border: 1px solid var(--ink);
+  box-shadow: inset 0 0 0 0.45rem var(--paper), inset 0 0 0 0.52rem var(--line);
+  text-align: center;
+}
+
+.missing-work-mark span,
+.missing-work-mark i {
+  grid-area: 1 / 1;
+}
+
+.missing-work-mark span {
+  color: var(--blood);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(2.8rem, 6vw, 6rem);
+  font-weight: 700;
+  letter-spacing: -0.08em;
+  opacity: 0.22;
+}
+
+.missing-work-mark i {
+  border: 1px solid var(--blood);
+  background: var(--paper);
+  color: var(--blood);
+  padding: 0.4rem 0.65rem;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.gallery-home-index {
+  width: min(calc(100% - 3rem), 1360px);
+  margin: 0 auto;
+  padding: clamp(5rem, 9vw, 9rem) 0;
+}
+
+.gallery-home-index > header {
+  display: grid;
+  grid-template-columns: 0.6fr 1fr;
+  align-items: end;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+.gallery-home-index > header h2 {
+  margin: 0;
+  font-family: var(--display-serif);
+  font-size: clamp(2rem, 4vw, 4rem);
+  font-weight: 500;
+  line-height: 1.12;
+}
+
+.gallery-home-index > div {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--ink);
+}
+
+.gallery-home-index button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-height: 16rem;
+  border: 0;
+  border-right: 1px solid var(--line);
+  background: transparent;
+  padding: 1.2rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.gallery-home-index button:last-child {
+  border-right: 0;
+}
+
+.gallery-home-index button:hover,
+.gallery-home-index button:focus-visible {
+  background: var(--blood);
+  color: #fff;
+  outline: 0;
+}
+
+.gallery-home-index button > span,
+.gallery-home-index button > small {
+  color: var(--ash);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+}
+
+.gallery-home-index button:hover > span,
+.gallery-home-index button:hover > small,
+.gallery-home-index button:focus-visible > span,
+.gallery-home-index button:focus-visible > small {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.gallery-home-index button > strong {
+  margin-top: auto;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  font-weight: 560;
+  letter-spacing: -0.05em;
+}
+
+.gallery-home-index button > small {
+  max-width: 13rem;
+  margin-top: 0.7rem;
+  line-height: 1.5;
+}
+
+.gallery-home-index button > svg {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+}
+
+.is-directory-page .game-main {
+  padding-top: clamp(4rem, 7vw, 7rem);
+}
+
+.directory-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.6fr);
+  align-items: end;
+  gap: 4rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--ink);
+}
+
+.directory-head p,
+.directory-head h1 {
+  margin: 0;
+}
+
+.directory-head > div:first-child > p,
+.directory-head > div:last-child > span {
+  color: var(--blood);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+
+.directory-head h1 {
+  margin-top: 0.75rem;
+  font-size: clamp(4.5rem, 10vw, 9.5rem);
+  font-weight: 620;
+  line-height: 0.84;
+  letter-spacing: -0.1em;
+}
+
+.directory-head > div:last-child > p {
+  margin-top: 1rem;
+  color: var(--ash);
+  font-family: var(--display-serif);
+  line-height: 1.8;
+}
+
+.directory-list > button,
+.directory-list > section {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+  gap: 1.5rem;
+  align-items: start;
+  width: 100%;
+  min-height: 11rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  padding: 1.7rem 0;
+  color: var(--ink);
+  text-align: left;
+}
+
+.directory-list > button {
+  cursor: pointer;
+}
+
+.directory-list > button:hover,
+.directory-list > button:focus-visible {
+  background: var(--blood);
+  color: #fff;
+  outline: 0;
+  padding-right: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.directory-number {
+  padding-top: 0.2rem;
+  color: var(--ash);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+}
+
+.directory-list p,
+.directory-list h2 {
+  margin: 0;
+}
+
+.directory-list p {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--ash);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.directory-list p > b {
+  display: inline-block;
+  background: var(--blood);
+  color: #fff;
+  padding: 0.2rem 0.38rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+}
+
+.directory-list h2 {
+  margin: 0.55rem 0 0.85rem;
+  font-size: clamp(2rem, 4vw, 4.2rem);
+  font-weight: 560;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
+.directory-list div > span {
+  color: var(--ash);
+  font-family: var(--display-serif);
+  line-height: 1.7;
+}
+
+.directory-list > button:hover .directory-number,
+.directory-list > button:hover p,
+.directory-list > button:hover div > span,
+.directory-list > button:focus-visible .directory-number,
+.directory-list > button:focus-visible p,
+.directory-list > button:focus-visible div > span {
+  color: rgba(255, 255, 255, 0.74);
+}
+
+.directory-list > button:hover p > b,
+.directory-list > button:focus-visible p > b {
+  background: #fff;
+  color: var(--blood);
+}
+
+.directory-list svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.directory-list > section > i {
+  color: var(--ash);
+  font-size: 0.72rem;
+  font-style: normal;
+}
+
+.directory-page > footer {
+  display: grid;
+  grid-template-columns: 0.4fr 1fr;
+  gap: 2rem;
+  margin-top: 5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ink);
+  color: var(--ash);
+  font-size: 0.75rem;
+}
+
+.directory-page > footer p {
+  max-width: 42rem;
+  margin: 0;
+  line-height: 1.7;
+}
+
+@media (max-width: 960px) {
+  .gallery-home-hero {
+    height: 72vh;
+    min-height: 34rem;
+  }
+
+  .gallery-notice {
+    grid-template-columns: 8rem minmax(0, 1fr);
+  }
+
+  .missing-work-mark {
+    grid-column: 2;
+    width: min(100%, 30rem);
+  }
+
+  .gallery-home-index > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .gallery-home-index button:nth-child(2) {
+    border-right: 0;
+  }
+
+  .gallery-home-index button:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line);
+  }
+}
+
+@media (max-width: 680px) {
+  .gallery-section-nav button > i {
+    right: -0.9rem;
+  }
+
+  .gallery-home-hero {
+    height: 68vh;
+    min-height: 31rem;
+  }
+
+  .gallery-home-hero > img {
+    object-position: 58% center;
+  }
+
+  .gallery-home-caption {
+    top: 3rem;
+  }
+
+  .gallery-home-caption > p {
+    margin-bottom: 1.4rem;
+  }
+
+  .gallery-home-caption h1 {
+    font-size: clamp(4rem, 25vw, 6.5rem);
+  }
+
+  .gallery-home-caption > button {
+    margin-top: 2rem;
+  }
+
+  .gallery-home-hero > a {
+    bottom: 1.2rem;
+  }
+
+  .gallery-notice {
+    grid-template-columns: 1fr;
+    width: calc(100% - 2rem);
+    gap: 2rem;
+    padding: 4.5rem 0;
+  }
+
+  .gallery-notice > header {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .missing-work-mark {
+    grid-column: 1;
+  }
+
+  .gallery-home-index {
+    width: calc(100% - 2rem);
+    padding: 4.5rem 0;
+  }
+
+  .gallery-home-index > header,
+  .directory-head,
+  .directory-page > footer {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .gallery-home-index > div {
+    grid-template-columns: 1fr;
+  }
+
+  .gallery-home-index button,
+  .gallery-home-index button:nth-child(2) {
+    min-height: 12rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .gallery-home-index button:last-child {
+    border-bottom: 0;
+  }
+
+  .directory-list > button,
+  .directory-list > section {
+    grid-template-columns: 2rem minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  .directory-list svg,
+  .directory-list > section > i {
+    grid-column: 2;
+  }
+}
+
 @utility scrollbar-none {
   scrollbar-width: none;
 

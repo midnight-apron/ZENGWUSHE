@@ -74,6 +74,15 @@ type SearchResult = {
   note?: string;
 };
 
+type DirectoryEntry = {
+  id: string;
+  eyebrow: string;
+  title: string;
+  summary: string;
+  path?: string;
+  isNew?: boolean;
+};
+
 const DEFAULT_STATE: GameState = {
   unlocked: [],
   recovered: [],
@@ -97,6 +106,12 @@ const DEFAULT_STATE: GameState = {
 };
 
 const ROUTES = {
+  home: "/",
+  exhibitions: "/exhibitions",
+  people: "/people",
+  news: "/news",
+  publications: "/publications",
+  about: "/about",
   exhibition: "/exhibitions/zhuhongmen",
   artwork: "/cache/artwork/baishaorou",
   curator: "/cache/curator/li-tai",
@@ -139,6 +154,12 @@ const ROUTES = {
 };
 
 const PAGE_TITLES: Record<string, string> = {
+  [ROUTES.home]: "憎恶社｜当代艺术与出版",
+  [ROUTES.exhibitions]: "展览｜憎恶社",
+  [ROUTES.people]: "人物｜憎恶社",
+  [ROUTES.news]: "新闻｜憎恶社",
+  [ROUTES.publications]: "出版物｜憎恶社",
+  [ROUTES.about]: "关于｜憎恶社",
   [ROUTES.exhibition]: "赭红门｜当期展览",
   [ROUTES.artwork]: "白芍肉｜撤回作品缓存",
   [ROUTES.curator]: "李泰｜旧成员缓存",
@@ -181,6 +202,16 @@ const PAGE_TITLES: Record<string, string> = {
 };
 
 const HINTS: Record<string, string[]> = {
+  [ROUTES.home]: [
+    "这是画廊公开首页。最新公告会把你带进当期展览的异常记录。",
+    "向下滑动，找到关于展品状态的告示。",
+    "点击“查看告示及展厅记录”。",
+  ],
+  [ROUTES.exhibitions]: ["这里只收录已经公开或被你找回的展览记录。", "当期展览仍是所有异常的入口。", "打开：赭红门。"],
+  [ROUTES.people]: ["人物目录会随检索进度更新。", "刚刚破解的人物会带有 NEW 标记。", "选择任一已公开人物档案继续核对。"],
+  [ROUTES.news]: ["新闻栏目只显示已经完成交叉验证的记录。", "案件被破解后会出现在这里。", "选择带有 NEW 标记的新闻缓存。"],
+  [ROUTES.publications]: ["出版物目录与已恢复文本同步。", "每恢复一份朗读文件，目录就会增加一条。", "从已恢复的篇目返回其来源页面。"],
+  [ROUTES.about]: ["公开介绍与旧站历史并不完全一致。", "旧版本只有在被你找到后才会出现在这里。", "选择带有 NEW 标记的旧站资料。"],
   [ROUTES.exhibition]: [
     "目录与墙面并不一致。留意访客意见中被反复提到的作品。",
     "葛东平说，西南角本来应该挂着他的画。",
@@ -395,6 +426,74 @@ const RECOVERED_FILES = [
   { id: "14", title: "结诗：赭红门", source: "终场" },
 ];
 
+const RECOVERED_FILE_ROUTES: Record<string, string> = {
+  "01": ROUTES.recoveredOne,
+  "02": ROUTES.duWanlin,
+  "03": ROUTES.fangWan,
+  "04": ROUTES.wangKeding,
+  "05": ROUTES.xingWan,
+  "06": ROUTES.liXiangDeath,
+  "07": ROUTES.wedding,
+  "08": ROUTES.duCremationSigned,
+  "09": ROUTES.xiyanTemple,
+  "10": ROUTES.taste,
+  "11": ROUTES.stomach,
+  "12": ROUTES.recoveredIndex,
+  "13": ROUTES.wangDeath,
+  "14": ROUTES.stageZhuhongmen,
+};
+
+function buildPublicCatalog(game: GameState) {
+  const unlocked = (step: string) => game.unlocked.includes(step);
+  const recovered = (id: string) => game.recovered.includes(id);
+
+  const people: DirectoryEntry[] = [
+    { id: "ge-dongping", eyebrow: "参展者 / 公开资料", title: "葛东平", summary: "《赭红门》当期展览参展者；其访客意见被收录在展厅记录中。" },
+    unlocked("S02") && { id: "li-tai", eyebrow: "旧成员缓存", title: "李泰", summary: "撤回作品记录中的策展与编辑人员。", path: ROUTES.curator, isNew: true },
+    unlocked("S06") && { id: "du-nanyang", eyebrow: "人物档案", title: "杜南阳", summary: "旧成员页与社团合照中的同一人物。", path: ROUTES.duNanyangOld, isNew: true },
+    unlocked("S07") && { id: "du-wanlin", eyebrow: "合并人物档案", title: "杜万琳", summary: "创作者、家属关系与多份朗读文件的交叉节点。", path: ROUTES.duWanlin, isNew: true },
+    unlocked("S08") && { id: "fang-wan", eyebrow: "人物档案", title: "方晚", summary: "杜万琳的同乡、同学与画廊合伙人。", path: ROUTES.fangWan, isNew: true },
+    unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: true },
+    unlocked("S11") && { id: "xing-wan", eyebrow: "异名合并", title: "刑万／刑某", summary: "社团合照与新闻匿名记录指向的同一人物。", path: ROUTES.xingWan, isNew: true },
+    unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、刑万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: true },
+    unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭关系与寿享陵园旧站履历的交叉人物。", path: ROUTES.duChe, isNew: true },
+    unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: true },
+    unlocked("S33") && { id: "yuanchang", eyebrow: "小说角色", title: "元昶／左君", summary: "法名与本名已合并为同一个小说角色。", path: ROUTES.yuanchang, isNew: true },
+  ].filter(Boolean) as DirectoryEntry[];
+
+  const news: DirectoryEntry[] = [
+    { id: "current-exhibition", eyebrow: "展览动态", title: "《赭红门》开放公告", summary: "憎恶社二层主厅当期展览及观展信息。", path: ROUTES.exhibition },
+    { id: "missing-notice", eyebrow: "场馆告示", title: "关于 A-07 展品状态的说明", summary: "西南角展品未能在闭馆复核中确认位置。", path: ROUTES.exhibition },
+    recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: true },
+    unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: true },
+    unlocked("S22") && { id: "xing-news", eyebrow: "新闻原刊 / 缓存", title: "刑某被捕报道的两个版本", summary: "公开报道与缓存页面之间存在姓名和时间差异。", path: ROUTES.xingNews, isNew: true },
+    unlocked("S23") && { id: "shouxiang", eyebrow: "站点存档", title: "寿享陵园旧站镜像恢复", summary: "失效网站的人员目录和早期文字层重新可读。", path: ROUTES.shouxiang, isNew: true },
+    recovered("14") && { id: "shinan-open", eyebrow: "演出资料", title: "《诗喃》终场档案开放", summary: "完整排练文本、演出海报与现场照片已经归档。", path: ROUTES.shinan, isNew: true },
+  ].filter(Boolean) as DirectoryEntry[];
+
+  const publications: DirectoryEntry[] = [
+    { id: "catalog-zhuhongmen", eyebrow: "展览手册", title: "《赭红门》", summary: "当期展览作品目录与现场记录。", path: ROUTES.exhibition },
+    ...RECOVERED_FILES.filter((file) => recovered(file.id)).map((file) => ({ id: `script-${file.id}`, eyebrow: `朗读文件 / ${file.id}`, title: file.title, summary: `来源：${file.source}`, path: RECOVERED_FILE_ROUTES[file.id], isNew: true })),
+    unlocked("S31") && { id: "mahe", eyebrow: "小说 / 2019", title: "《玛赫的厨房》", summary: "杜彻小说的出版档案与版权页。", path: ROUTES.mahePublication, isNew: true },
+    recovered("14") && { id: "shinan-script", eyebrow: "诗剧 / 完整版", title: "《诗喃》排练文本", summary: "序诗、五个篇章与结诗的完整恢复版本。", path: ROUTES.shinan, isNew: true },
+  ].filter(Boolean) as DirectoryEntry[];
+
+  const exhibitions: DirectoryEntry[] = [
+    { id: "zhuhongmen", eyebrow: "正在展出 / 主厅", title: "赭红门", summary: "10.01—10.14｜憎恶社二层主厅", path: ROUTES.exhibition },
+    unlocked("S01") && { id: "baishaorou", eyebrow: "撤回作品缓存", title: "白芍肉", summary: "展厅目录中缺失的 A-07 作品记录。", path: ROUTES.artwork, isNew: true },
+    recovered("14") && { id: "shinan-stage", eyebrow: "特别项目 / 终场", title: "诗喃", summary: "航船诗歌社国庆诗歌剧场及现场档案。", path: ROUTES.shinan, isNew: true },
+  ].filter(Boolean) as DirectoryEntry[];
+
+  const about: DirectoryEntry[] = [
+    { id: "institution", eyebrow: "机构介绍", title: "憎恶社", summary: "以当代艺术、诗歌、出版与地方档案为工作线索的独立空间。" },
+    unlocked("S05") && { id: "old-history", eyebrow: "旧社团历史", title: "憎恶社的早期成员", summary: "角色字段损坏的社团历史与成员合照。", path: ROUTES.history, isNew: true },
+    unlocked("S29") && { id: "kuonan", eyebrow: "网站版本史", title: "阔南会社", summary: "本站公开名称被改写前的五层版本记录。", path: ROUTES.kuonanHistory, isNew: true },
+    unlocked("S30") && { id: "li-letter", eyebrow: "私人书信缓存", title: "李司贰致叶是", summary: "关于憎恶社、小说与画廊命名关系的书信。", path: ROUTES.liLetter, isNew: true },
+  ].filter(Boolean) as DirectoryEntry[];
+
+  return { people, news, publications, exhibitions, about };
+}
+
 function unique(values: string[]) {
   return Array.from(new Set(values));
 }
@@ -412,12 +511,20 @@ function displayPath(path: string) {
   if (BASE_PATH && cleanPath.startsWith(BASE_PATH)) {
     cleanPath = cleanPath.slice(BASE_PATH.length) || "/";
   }
-  if (cleanPath === "/") return ROUTES.exhibition;
   return cleanPath;
 }
 
 function browserPath(path: string) {
   return `${BASE_PATH}${path}` || "/";
+}
+
+function getNavigationSection(path: string) {
+  if (path === ROUTES.home) return ROUTES.home;
+  if (path === ROUTES.people || path.startsWith("/members/") || path === ROUTES.editorRevisions || path === ROUTES.yuanchang || path === ROUTES.liXiangDeath) return ROUTES.people;
+  if (path === ROUTES.news || path.startsWith("/news/") || path === ROUTES.cemeteryCase || path === ROUTES.wangDeath || path === ROUTES.shouxiang) return ROUTES.news;
+  if (path === ROUTES.publications || path.startsWith("/publications/") || path.startsWith("/recovered/") || path === ROUTES.recoveredIndex || path === ROUTES.shinan) return ROUTES.publications;
+  if (path === ROUTES.about || path.startsWith("/about/") || path === ROUTES.kuonanHistory || path === ROUTES.liLetter) return ROUTES.about;
+  return ROUTES.exhibitions;
 }
 
 function MetaLine({ label, children }: { label: string; children: ReactNode }) {
@@ -474,6 +581,10 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const currentHints = HINTS[currentPath] ?? HINTS[ROUTES.exhibition];
   const stageComplete = game.recovered.includes("14");
   const stageVocabulary = game.recovered.includes("12");
+  const publicCatalog = useMemo(() => buildPublicCatalog(game), [game]);
+  const currentNavigationSection = getNavigationSection(currentPath);
+  const isGalleryHome = currentPath === ROUTES.home;
+  const isDirectoryPage = [ROUTES.exhibitions, ROUTES.people, ROUTES.news, ROUTES.publications, ROUTES.about].includes(currentPath);
 
   const mutateGame = useCallback((unlock: string[] = [], recover: string[] = []) => {
     setGame((previous) => ({
@@ -1882,6 +1993,18 @@ export function GameApp({ initialPath }: { initialPath: string }) {
 
   function renderPage() {
     switch (currentPath) {
+      case ROUTES.home:
+        return <GalleryHomePage onStart={() => navigate(ROUTES.exhibition)} onOpenDirectory={navigate} />;
+      case ROUTES.exhibitions:
+        return <DirectoryPage kicker="PROGRAM / EXHIBITIONS" title="展览" intro="正在展出的项目与从旧版本中恢复的特别计划。未被发现的条目不会出现在公开目录中。" entries={publicCatalog.exhibitions} onOpen={navigate} />;
+      case ROUTES.people:
+        return <DirectoryPage kicker="PEOPLE / INDEX" title="人物" intro="参展者、编辑、旧成员与文本中的相关人物。搜索所得的新人物将在这里更新。" entries={publicCatalog.people} onOpen={navigate} />;
+      case ROUTES.news:
+        return <DirectoryPage kicker="NEWS / ARCHIVE" title="新闻" intro="场馆公告、公开报道与恢复中的地方档案。只显示玩家已经找到的调查节点。" entries={publicCatalog.news} onOpen={navigate} />;
+      case ROUTES.publications:
+        return <DirectoryPage kicker="PUBLICATIONS / TEXT" title="出版物" intro="展览手册、小说出版信息与已经恢复的《目盲》朗读文本。" entries={publicCatalog.publications} onOpen={navigate} />;
+      case ROUTES.about:
+        return <DirectoryPage kicker="ABOUT / INSTITUTION" title="关于" intro="憎恶社的机构资料及逐步恢复的网站版本历史。" entries={publicCatalog.about} onOpen={navigate} />;
       case ROUTES.artwork:
         return <ArtworkPage />;
       case ROUTES.curator:
@@ -2018,21 +2141,28 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, [results, resultNote]);
 
   return (
-    <div className={`game-shell${game.settings.reducedMotion ? " reduce-motion" : ""}${stageComplete ? " stage-complete" : stageVocabulary ? " stage-transition" : ""}`}>
+    <div className={`game-shell${game.settings.reducedMotion ? " reduce-motion" : ""}${stageComplete ? " stage-complete" : stageVocabulary ? " stage-transition" : ""}${isGalleryHome ? " is-gallery-home" : ""}${isDirectoryPage ? " is-directory-page" : ""}`}>
       <a className="skip-link" href="#main-content">跳到正文</a>
 
       <header className="site-header">
-        <button className="wordmark" type="button" onClick={() => navigate(ROUTES.exhibition)} aria-label="返回憎恶社当期展览">
+        <button className="wordmark" type="button" onClick={() => navigate(ROUTES.home)} aria-label="返回憎恶社首页">
           <span className="wordmark-mark" aria-hidden="true">憎恶社</span>
-          <span><b>{stageComplete ? "航船诗歌社" : "ZENGWU SOCIETY"}</b><small>{stageComplete ? "诗喃 · 国庆诗歌剧场" : stageVocabulary ? "剧本与排练缓存" : "作品与旧档案"}</small></span>
+          <span><b>ZENGWU SOCIETY</b><small>当代艺术 · 诗歌 · 出版</small></span>
         </button>
 
         <nav className="gallery-section-nav" aria-label="画廊栏目">
-          <button type="button" className="is-current" onClick={() => navigate(stageComplete ? ROUTES.stageZhuhongmen : ROUTES.exhibition)}>{stageComplete ? "终场" : "展览"}</button>
-          <span>{game.stageTransformStep >= 1 ? "剧本" : "作品"}</span>
-          <span>{stageComplete ? "声音" : game.stageTransformStep >= 2 ? "朗读者" : "艺术家"}</span>
-          <span>{game.stageTransformStep >= 3 ? "场记" : "出版"}</span>
-          <span>{stageComplete ? "演出" : "关于"}</span>
+          {[
+            { path: ROUTES.home, label: "首页" },
+            { path: ROUTES.exhibitions, label: "展览", hasNew: publicCatalog.exhibitions.some((entry) => entry.isNew) },
+            { path: ROUTES.people, label: "人物", hasNew: publicCatalog.people.some((entry) => entry.isNew) },
+            { path: ROUTES.news, label: "新闻", hasNew: publicCatalog.news.some((entry) => entry.isNew) },
+            { path: ROUTES.publications, label: "出版物", hasNew: publicCatalog.publications.some((entry) => entry.isNew) },
+            { path: ROUTES.about, label: "关于", hasNew: publicCatalog.about.some((entry) => entry.isNew) },
+          ].map((item) => (
+            <button key={item.path} type="button" className={currentNavigationSection === item.path ? "is-current" : ""} onClick={() => navigate(item.path)}>
+              {item.label}{item.hasNew ? <i>NEW</i> : null}
+            </button>
+          ))}
         </nav>
 
         <form className="global-search" onSubmit={handleSearch} role="search">
@@ -2104,7 +2234,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         </nav>
       </header>
 
-      <div className="path-strip" aria-label="当前位置"><span>INDEX</span><code>{currentPath}</code>{game.visited.includes(currentPath) && <i>LOCAL COPY</i>}</div>
+      {!isGalleryHome && <div className="path-strip" aria-label="当前位置"><span>INDEX</span><code>{currentPath}</code>{game.visited.includes(currentPath) && <i>LOCAL COPY</i>}</div>}
 
       <main id="main-content" className="game-main">{renderPage()}</main>
 
@@ -2127,6 +2257,69 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         </div>
       )}
     </div>
+  );
+}
+
+function GalleryHomePage({ onStart, onOpenDirectory }: { onStart: () => void; onOpenDirectory: (path: string) => void }) {
+  return (
+    <article className="gallery-home">
+      <section className="gallery-home-hero" aria-labelledby="current-exhibition-title">
+        {/* Native image keeps the GitHub Pages base path and the Sites build on the same asset URL. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={browserPath("/gallery/zhuhongmen-hall.webp")} alt="憎恶社赭红门展览现场：暖白展墙、赭红色门状装置与一处留下挂钩的空展位" />
+        <div className="gallery-home-shade" />
+        <div className="gallery-home-caption">
+          <p>正在展出 / NOW ON VIEW</p>
+          <span>憎恶社二层主厅</span>
+          <h1 id="current-exhibition-title">赭红门</h1>
+          <b>10.01—10.14</b>
+          <button type="button" onClick={onStart}>进入展览 <ArrowUpRight aria-hidden="true" /></button>
+        </div>
+        <a href="#latest-notice">最新公告 <ArrowDown aria-hidden="true" /></a>
+      </section>
+
+      <section className="gallery-notice" id="latest-notice">
+        <header><p>场馆告示 / NOTICE 01</p><time>10.03</time></header>
+        <div className="gallery-notice-copy">
+          <span>展厅状态更新</span>
+          <h2>展品丢失</h2>
+          <p>闭馆复核时，工作人员未能确认 A 区西南角 A-07 展品的位置。展厅仍正常开放，相关墙面、目录与访客记录已暂时保留。</p>
+          <button type="button" onClick={onStart}>查看告示及展厅记录 <ArrowUpRight aria-hidden="true" /></button>
+        </div>
+        <div className="missing-work-mark" aria-hidden="true"><span>A—07</span><i>未确认位置</i></div>
+      </section>
+
+      <section className="gallery-home-index" aria-label="站点栏目">
+        <header><p>INDEX / 公开目录</p><h2>从公开页面开始查找。</h2></header>
+        <div>
+          {[
+            { path: ROUTES.exhibitions, index: "01", title: "展览", note: "当前项目与特别计划" },
+            { path: ROUTES.people, index: "02", title: "人物", note: "参展者与恢复的人物档案" },
+            { path: ROUTES.news, index: "03", title: "新闻", note: "场馆公告与地方记录" },
+            { path: ROUTES.publications, index: "04", title: "出版物", note: "展览手册、小说与朗读文本" },
+          ].map((item) => (
+            <button key={item.path} type="button" onClick={() => onOpenDirectory(item.path)}>
+              <span>{item.index}</span><strong>{item.title}</strong><small>{item.note}</small><ArrowUpRight aria-hidden="true" />
+            </button>
+          ))}
+        </div>
+      </section>
+    </article>
+  );
+}
+
+function DirectoryPage({ kicker, title, intro, entries, onOpen }: { kicker: string; title: string; intro: string; entries: DirectoryEntry[]; onOpen: (path: string) => void }) {
+  return (
+    <article className="directory-page">
+      <header className="directory-head"><div><p>{kicker}</p><h1>{title}</h1></div><div><span>{String(entries.length).padStart(2, "0")} ENTRIES</span><p>{intro}</p></div></header>
+      <div className="directory-list">
+        {entries.map((entry, index) => {
+          const content = <><span className="directory-number">{String(index + 1).padStart(2, "0")}</span><div><p>{entry.eyebrow}{entry.isNew ? <b>NEW</b> : null}</p><h2>{entry.title}</h2><span>{entry.summary}</span></div>{entry.path ? <ArrowUpRight aria-hidden="true" /> : <i>公开资料</i>}</>;
+          return entry.path ? <button key={entry.id} type="button" onClick={() => onOpen(entry.path)}>{content}</button> : <section key={entry.id}>{content}</section>;
+        })}
+      </div>
+      <footer><span>LOCAL INDEX</span><p>这里显示的目录由本机已恢复进度生成。换一台设备时，未发现条目不会提前出现。</p></footer>
+    </article>
   );
 }
 
