@@ -54,6 +54,10 @@ type GameState = {
   routeTrips: number;
   routeReachedBottom: boolean;
   medicalGlyphRevealed: boolean;
+  historyVersionsLoaded: number;
+  historyAutofillDone: boolean;
+  editorLoggedIn: boolean;
+  stageTransformStep: number;
   scaresSeen: string[];
   settings: Settings;
 };
@@ -80,6 +84,10 @@ const DEFAULT_STATE: GameState = {
   routeTrips: 0,
   routeReachedBottom: false,
   medicalGlyphRevealed: false,
+  historyVersionsLoaded: 1,
+  historyAutofillDone: false,
+  editorLoggedIn: false,
+  stageTransformStep: 0,
   scaresSeen: [],
   settings: {
     reducedScares: false,
@@ -119,6 +127,15 @@ const ROUTES = {
   taste: "/recovered/10-chuwei-taste",
   medical: "/archive/medical/redacted",
   stomach: "/recovered/11-chuwei-stomach",
+  kuonanHistory: "/archive/site-history/kuonan",
+  liLetter: "/archive/letters/li-to-ye",
+  mahePublication: "/publications/mahe-de-chufang",
+  editorLogin: "/admin/editor/login",
+  editorRevisions: "/admin/editor/revisions",
+  yuanchang: "/admin/characters/yuanchang",
+  recoveredIndex: "/stage/recovered-index",
+  stageZhuhongmen: "/stage/zhuhongmen",
+  shinan: "/stage/shinan",
 };
 
 const PAGE_TITLES: Record<string, string> = {
@@ -152,6 +169,15 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.taste]: "刍味｜已恢复",
   [ROUTES.medical]: "刍胃｜医学删除页",
   [ROUTES.stomach]: "刍胃｜已恢复",
+  [ROUTES.kuonanHistory]: "阔南会社｜网站版本史",
+  [ROUTES.liLetter]: "李司贰致叶是｜书信档案",
+  [ROUTES.mahePublication]: "玛赫的厨房｜出版档案",
+  [ROUTES.editorLogin]: "叶是｜编辑后台登录",
+  [ROUTES.editorRevisions]: "叶是｜编辑缓存",
+  [ROUTES.yuanchang]: "元昶／左君｜角色修订页",
+  [ROUTES.recoveredIndex]: "始末的碎点｜解密索引",
+  [ROUTES.stageZhuhongmen]: "赭红门｜终场",
+  [ROUTES.shinan]: "诗喃｜航船诗歌剧场",
 };
 
 const HINTS: Record<string, string[]> = {
@@ -305,6 +331,51 @@ const HINTS: Record<string, string[]> = {
     "杜彻最初想把画廊命名为阔南会社。",
     "搜索：阔南会社。",
   ],
+  [ROUTES.kuonanHistory]: [
+    "旧名没有消失，只藏在更早的网站版本。",
+    "连续触底或点击按钮，载入全部 5 个版本。",
+    "第 5 版会出现阔南会社，并把下一姓名写入搜索框。",
+  ],
+  [ROUTES.liLetter]: [
+    "书信说明“憎恶社”来自杜彻的一部小说。",
+    "出版目录中唯一对应的书名是《玛赫的厨房》。",
+    "搜索：玛赫的厨房。记住页脚账号 editor_ys。",
+  ],
+  [ROUTES.mahePublication]: [
+    "版权页给出首版年份，页边给出口令组合规则。",
+    "把书名拼音首字母放在 2019 前面。",
+    "搜索叶主任或叶是；后台口令是 MHDC2019。",
+  ],
+  [ROUTES.editorLogin]: [
+    "账号在李司贰书信的收件元数据里。",
+    "口令规则在《玛赫的厨房》版权页：首字母＋2019。",
+    "账号 editor_ys；口令 MHDC2019。",
+  ],
+  [ROUTES.editorRevisions]: [
+    "后台批注里有一个法名，访谈里有一个本名。",
+    "元昶与左君属于同一个小说角色。",
+    "搜索：元昶或左君。",
+  ],
+  [ROUTES.yuanchang]: [
+    "年表底部的Ⅰ至Ⅹ不是档案编号，而是下一份文本的碎片序号。",
+    "搜索标题后，口令要用作者替换前的旧名。",
+    "搜索：始末的碎点；口令：左君。",
+  ],
+  [ROUTES.recoveredIndex]: [
+    "口令不是法名。",
+    "访谈开头说：原谅我称呼你本名。",
+    "输入左君；恢复后搜索赭红门。",
+  ],
+  [ROUTES.stageZhuhongmen]: [
+    "最后的答案已经写在场记里。",
+    "它不是人物或案件名，而是一场演出的名字。",
+    "搜索：诗喃。",
+  ],
+  [ROUTES.shinan]: [
+    "全部文本已经就位。选择静音字幕版即可完成谢幕。",
+    "海报、活动照和录音将在取得原始授权素材后替换占位。",
+    "点击：静音字幕版开演。",
+  ],
 };
 
 const RECOVERED_FILES = [
@@ -387,12 +458,22 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [supplementPasswordNote, setSupplementPasswordNote] = useState("");
   const [deathScareActive, setDeathScareActive] = useState(false);
   const [deathScareTextVisible, setDeathScareTextVisible] = useState(false);
+  const [editorUser, setEditorUser] = useState("");
+  const [editorPassword, setEditorPassword] = useState("");
+  const [editorAttempts, setEditorAttempts] = useState(0);
+  const [editorNote, setEditorNote] = useState("");
+  const [fragmentPassword, setFragmentPassword] = useState("");
+  const [fragmentAttempts, setFragmentAttempts] = useState(0);
+  const [fragmentNote, setFragmentNote] = useState("");
+  const [stableStage, setStableStage] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const skipScareRef = useRef<HTMLButtonElement>(null);
   const skipDeathScareRef = useRef<HTMLButtonElement>(null);
 
   const currentPath = displayPath(path);
   const currentHints = HINTS[currentPath] ?? HINTS[ROUTES.exhibition];
+  const stageComplete = game.recovered.includes("14");
+  const stageVocabulary = game.recovered.includes("12");
 
   const mutateGame = useCallback((unlock: string[] = [], recover: string[] = []) => {
     setGame((previous) => ({
@@ -415,6 +496,12 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     setSupplementPasswordVisible(false);
     setSupplementPasswordAttempts(0);
     setSupplementPasswordNote("");
+    setEditorPassword("");
+    setEditorNote("");
+    setFragmentPassword("");
+    setFragmentAttempts(0);
+    setFragmentNote("");
+    setStableStage(false);
   }, []);
 
   const finishMangRecovery = useCallback(() => {
@@ -473,6 +560,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
 
   useEffect(() => {
     if (!hydrated) return;
+    const unlocksThrough = (step: number) => Array.from({ length: step }, (_, index) => `S${String(index + 1).padStart(2, "0")}`);
+    const recoveredTwelve = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "13"];
     const arrival: Record<string, { unlock?: string[]; recover?: string[] }> = {
       [ROUTES.artwork]: { unlock: ["S01"] },
       [ROUTES.curator]: { unlock: ["S01", "S02"] },
@@ -578,6 +667,15 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26", "S27", "S28"],
         recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "11", "13"],
       },
+      [ROUTES.kuonanHistory]: { unlock: unlocksThrough(29), recover: recoveredTwelve },
+      [ROUTES.liLetter]: { unlock: unlocksThrough(30), recover: recoveredTwelve },
+      [ROUTES.mahePublication]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
+      [ROUTES.editorLogin]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
+      [ROUTES.editorRevisions]: { unlock: unlocksThrough(32), recover: recoveredTwelve },
+      [ROUTES.yuanchang]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
+      [ROUTES.recoveredIndex]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
+      [ROUTES.stageZhuhongmen]: { unlock: unlocksThrough(35), recover: [...recoveredTwelve, "12", "14"] },
+      [ROUTES.shinan]: { unlock: unlocksThrough(36), recover: [...recoveredTwelve, "12", "14"] },
     };
     const effect = arrival[currentPath];
     const syncArrival = window.setTimeout(() => {
@@ -586,6 +684,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         unlocked: unique([...previous.unlocked, ...(effect?.unlock ?? [])]),
         recovered: unique([...previous.recovered, ...(effect?.recover ?? [])]),
         visited: unique([...previous.visited, currentPath]),
+        editorLoggedIn: currentPath === ROUTES.editorRevisions || currentPath === ROUTES.yuanchang || currentPath === ROUTES.recoveredIndex || currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? true : previous.editorLoggedIn,
+        stageTransformStep: currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? Math.max(previous.stageTransformStep, 3) : previous.stageTransformStep,
       }));
       setHintLevel(0);
     }, 0);
@@ -690,6 +790,38 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     return () => window.removeEventListener("scroll", inspectRoutePosition);
   }, [currentPath, game.routeReachedBottom, game.routeTrips, hydrated]);
 
+  useEffect(() => {
+    if (!hydrated || currentPath !== ROUTES.kuonanHistory || game.historyVersionsLoaded >= 5 || game.settings.reducedMotion) return;
+    const loadAtBottom = () => {
+      const page = document.documentElement;
+      if (window.innerHeight + window.scrollY < page.scrollHeight - 24) return;
+      setGame((previous) => ({
+        ...previous,
+        historyVersionsLoaded: Math.min(5, previous.historyVersionsLoaded + 1),
+      }));
+    };
+    window.addEventListener("scroll", loadAtBottom, { passive: true });
+    return () => window.removeEventListener("scroll", loadAtBottom);
+  }, [currentPath, game.historyVersionsLoaded, game.settings.reducedMotion, hydrated]);
+
+  useEffect(() => {
+    if (currentPath !== ROUTES.kuonanHistory || game.historyVersionsLoaded < 5 || game.historyAutofillDone || query.trim()) return;
+    const fill = window.setTimeout(() => {
+      setQuery("李司贰");
+      setGame((previous) => ({ ...previous, historyAutofillDone: true }));
+      searchInputRef.current?.focus();
+    }, game.settings.reducedMotion ? 0 : 650);
+    return () => window.clearTimeout(fill);
+  }, [currentPath, game.historyAutofillDone, game.historyVersionsLoaded, game.settings.reducedMotion, query]);
+
+  useEffect(() => {
+    if (!game.recovered.includes("12") || game.stageTransformStep === 0 || game.stageTransformStep >= 3) return;
+    const advance = window.setTimeout(() => {
+      setGame((previous) => ({ ...previous, stageTransformStep: Math.min(3, previous.stageTransformStep + 1) }));
+    }, game.settings.reducedMotion ? 100 : 4000);
+    return () => window.clearTimeout(advance);
+  }, [game.recovered, game.settings.reducedMotion, game.stageTransformStep]);
+
   function triggerMangRecovery() {
     if (game.settings.reducedScares || game.scaresSeen.includes("J01")) {
       finishMangRecovery();
@@ -784,6 +916,54 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         ? "口令不匹配。回看西岩寺的石像数量，以及尸检摘要中的面部伤口数。"
         : "口令不匹配；附件不会锁定。",
     );
+  }
+
+  function loadOlderSiteVersion() {
+    setGame((previous) => ({
+      ...previous,
+      historyVersionsLoaded: Math.min(5, previous.historyVersionsLoaded + 1),
+    }));
+  }
+
+  function submitEditorLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const userMatches = editorUser.trim().toLowerCase() === "editor_ys";
+    const passwordMatches = editorPassword.trim().toLowerCase() === "mhdc2019";
+    if (userMatches && passwordMatches) {
+      setGame((previous) => ({
+        ...previous,
+        editorLoggedIn: true,
+        unlocked: unique([...previous.unlocked, "S32"]),
+      }));
+      setEditorPassword("");
+      navigate(ROUTES.editorRevisions);
+      return;
+    }
+    const nextAttempts = editorAttempts + 1;
+    setEditorAttempts(nextAttempts);
+    setEditorPassword("");
+    setEditorNote(nextAttempts >= 3
+      ? "仍未通过。账号来自李司贰书信：editor_ys；口令为书名首字母＋2019。"
+      : userMatches ? "口令不匹配；账号已保留，不会锁定。" : "账号不匹配；不会锁定。");
+  }
+
+  function submitFragmentPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (fragmentPassword.trim() === "左君") {
+      setGame((previous) => ({
+        ...previous,
+        unlocked: unique([...previous.unlocked, "S34"]),
+        recovered: unique([...previous.recovered, "12"]),
+        stageTransformStep: Math.max(1, previous.stageTransformStep),
+      }));
+      setFragmentNote("十段索引已解除。档案正在改写为场记。可立即显示稳定版。");
+      return;
+    }
+    const nextAttempts = fragmentAttempts + 1;
+    setFragmentAttempts(nextAttempts);
+    setFragmentNote(nextAttempts >= 3
+      ? "口令不是法名“元昶”。回看访谈里“原谅我称呼你本名”的下一称呼。"
+      : fragmentPassword.trim() === "元昶" ? "这是角色法名。口令要求被替换前的旧名。" : "口令不匹配；已读碎片不会清空。");
   }
 
   function openResult(result: SearchResult) {
@@ -1375,18 +1555,184 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       const weddingComplete = game.recovered.includes("07") || currentPath === ROUTES.wedding;
       const allowed = medicalComplete && weddingComplete;
       setResults([{
-        id: "kuonan-next",
-        kind: allowed ? "旧画廊名称 · 元数据" : "受限组织元数据",
+        id: "kuonan-history",
+        kind: allowed ? "网站版本历史 · 5个版本" : "受限组织元数据",
         title: "阔南会社",
         summary: allowed
-          ? "杜彻与葛东平改造画廊时曾考虑使用的名称；下一章正文尚未恢复。"
+          ? "杜彻与葛东平改造画廊时曾考虑使用的名称；旧站曾在多个名称之间改写。"
           : medicalComplete
             ? "名称已经出现，但杜彻婚礼档案中的朗读文件07尚未恢复。"
             : "名称存在，但旧站历史仍被医学删除层遮挡。",
-        locked: true,
-        note: allowed ? "下一章入口" : medicalComplete ? "缺少 07《舞》" : "证据不足",
+        path: allowed ? ROUTES.kuonanHistory : undefined,
+        unlock: allowed ? ["S29"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : medicalComplete ? "缺少 07《舞》" : "证据不足",
       }]);
-      setResultNote(allowed ? "第五章入口已定位，当前版本推进至 12/14。" : medicalComplete ? "回到杜彻档案，查找李髮或李髪。" : "先恢复《刍胃》的完整文字层。");
+      setResultNote(allowed ? "找到五层旧站历史；最早版本仍在页面底部。" : medicalComplete ? "回到杜彻档案，查找李髮或李髪。" : "先恢复《刍胃》的完整文字层。");
+      return;
+    }
+
+    if (normalized === "阔南画廊" || normalized === "闊南畫廊") {
+      setResults([{
+        id: "kuonan-public-summary",
+        kind: "普通历史摘要",
+        title: "阔南画廊",
+        summary: "画廊曾在 Z 城重新装修；旧名称没有在公开摘要中展开。",
+        locked: true,
+        note: "使用正式旧名",
+      }]);
+      setResultNote("这是普通名称，不会打开五层版本历史。");
+      return;
+    }
+
+    if (normalized === "李司贰") {
+      const allowed = game.historyVersionsLoaded >= 5 || game.unlocked.includes("S30");
+      setResults([{
+        id: "li-to-ye-letter",
+        kind: allowed ? "私人书信缓存 · 1封" : "封闭书信元数据",
+        title: "李司贰致叶是",
+        summary: allowed
+          ? "书信解释了憎恶社、杜彻小说与阔南会社之间的命名关系。"
+          : "署名存在；需先读取最早的网站版本。",
+        path: allowed ? ROUTES.liLetter : undefined,
+        unlock: allowed ? ["S30"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "版本未齐",
+      }]);
+      setResultNote(allowed ? "找到一封带站内编辑账号的私人书信。" : "先在阔南会社页面载入全部 5 个旧版本。");
+      return;
+    }
+
+    if (normalized === "李司二") {
+      setResults([{
+        id: "li-si-er-correction",
+        kind: "姓名纠错",
+        title: "是否查找“李司贰”？",
+        summary: "原信署名使用大写数字“贰”。",
+        locked: true,
+        note: "请使用原署名",
+      }]);
+      setResultNote("姓名最后一字不是“二”。");
+      return;
+    }
+
+    if (["玛赫的厨房", "瑪赫的廚房", "玛赫厨房"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S30") || currentPath === ROUTES.liLetter;
+      setResults([{
+        id: "mahe-publication",
+        kind: allowed ? "出版档案＋版权页" : "公开书目",
+        title: "《玛赫的厨房》",
+        summary: allowed
+          ? "杜彻小说，2019年初版；页边保留编辑后台的初始口令规则。"
+          : "书目存在，但与憎恶社命名关系尚未展开。",
+        path: allowed ? ROUTES.mahePublication : undefined,
+        unlock: allowed ? ["S31"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "缺少书信关联",
+      }]);
+      setResultNote(allowed ? "版权页写明：初始口令＝书名拼音首字母＋首版年份。" : "先阅读说明命名来源的书信。");
+      return;
+    }
+
+    if (normalized === "玛赫" || normalized === "瑪赫") {
+      setResults([{
+        id: "mahe-catalog",
+        kind: "出版书目 · 3条",
+        title: "玛赫",
+        summary: "查询范围过宽；请使用书信里的完整小说名。",
+        locked: true,
+      }]);
+      setResultNote("书名还缺少一个空间词。");
+      return;
+    }
+
+    if (["叶主任", "葉主任", "叶是", "葉是"].includes(normalized)) {
+      const hasAccount = game.unlocked.includes("S30");
+      const hasPasswordRule = game.unlocked.includes("S31") || currentPath === ROUTES.mahePublication;
+      const allowed = hasAccount && hasPasswordRule;
+      setResults([{
+        id: "editor-entry",
+        kind: allowed ? "编辑缓存入口" : "编辑人员索引",
+        title: game.editorLoggedIn ? "叶是｜已解锁编辑缓存" : "叶主任／叶是｜后台登录",
+        summary: allowed
+          ? "书信收件人与再版批注共用同一编辑身份。"
+          : "称呼可以互证，但账号或口令规则尚未取得。",
+        path: allowed ? (game.editorLoggedIn ? ROUTES.editorRevisions : ROUTES.editorLogin) : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : hasAccount ? "缺少口令规则" : "缺少账号",
+      }]);
+      setResultNote(allowed ? "登录只保存解锁状态，不保存明文口令。" : "账号来自书信，口令规则来自版权页。");
+      return;
+    }
+
+    if (["元昶", "左君"].includes(normalized)) {
+      const allowed = game.editorLoggedIn || currentPath === ROUTES.editorRevisions || game.unlocked.includes("S32");
+      setResults([{
+        id: "yuanchang-character",
+        kind: allowed ? "小说角色合并档案" : "公开访谈索引",
+        title: "元昶／左君",
+        summary: allowed
+          ? "法名与本名指向同一小说角色；活动年表在初版与再版中被改写。"
+          : "姓名命中访谈，但编辑修订记录尚未开放。",
+        path: allowed ? ROUTES.yuanchang : undefined,
+        unlock: allowed ? ["S33"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "需要编辑缓存",
+      }]);
+      setResultNote(allowed ? "所谓历史显示出作者与编辑共同改写的痕迹。" : "先使用叶是的编辑入口登录。");
+      return;
+    }
+
+    if (["始末的碎点", "始末碎点"].includes(normalized)) {
+      const allowed = game.unlocked.includes("S33") || currentPath === ROUTES.yuanchang;
+      setResults([{
+        id: "fragment-index",
+        kind: allowed ? "加密碎片索引 · Ⅰ—Ⅹ" : "受限文学文件",
+        title: "5.1 始末的碎点",
+        summary: allowed
+          ? "十个编号槽已经定位；解密口令为角色被替换前的旧名。"
+          : "标题存在，但人物年表的修订来源尚未确认。",
+        path: allowed ? ROUTES.recoveredIndex : undefined,
+        locked: !allowed,
+        note: allowed ? "需要口令" : "来源不足",
+      }]);
+      setResultNote(allowed ? "加密索引不会因错误口令清空。" : "先确认元昶与左君的身份映射。");
+      return;
+    }
+
+    if (["赭红门", "赭紅門"].includes(normalized)) {
+      const allowed = game.recovered.length >= 13 && game.recovered.includes("12");
+      setResults([{
+        id: allowed ? "stage-zhuhongmen" : "public-zhuhongmen",
+        kind: allowed ? "结诗＋终场场记" : "当前展览",
+        title: "赭红门",
+        summary: allowed
+          ? "第14份文本已经就位；档案编号将转换为场次编号。"
+          : `结诗存在，尚未就位。当前还缺 ${Math.max(1, 14 - game.recovered.length)} 份文本。`,
+        path: allowed ? ROUTES.stageZhuhongmen : ROUTES.exhibition,
+        unlock: allowed ? ["S35"] : undefined,
+        recover: allowed ? ["14"] : undefined,
+        locked: false,
+      }]);
+      setResultNote(allowed ? "这里不再出现惊吓；页面将回到舞台暖光。" : "公开展览仍可访问，终场需要先恢复13份文本。");
+      return;
+    }
+
+    if (normalized === "诗喃") {
+      const allowed = game.recovered.includes("14") || currentPath === ROUTES.stageZhuhongmen || game.unlocked.includes("S36");
+      setResults([{
+        id: "shinan-performance",
+        kind: allowed ? "航船诗歌社 · 国庆诗歌剧场" : "演出元数据",
+        title: "诗喃",
+        summary: allowed
+          ? "完整剧本、朗读声部与谢幕页已经开放。"
+          : "一场演出的名称。演出内容尚未就位。",
+        path: allowed ? ROUTES.shinan : undefined,
+        unlock: allowed ? ["S36"] : undefined,
+        locked: !allowed,
+        note: allowed ? undefined : "需恢复全部14份文本",
+      }]);
+      setResultNote(allowed ? "档案人物现在回到航船诗歌社的朗读名单。" : "通关前只显示名称，不公开演出归属。");
       return;
     }
 
@@ -1620,6 +1966,43 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         />;
       case ROUTES.stomach:
         return <MedicalPage revealed glyphRevealed onToggleGlyph={() => undefined} />;
+      case ROUTES.kuonanHistory:
+        return <KuonanHistoryPage loaded={game.historyVersionsLoaded} reducedMotion={game.settings.reducedMotion} onLoad={loadOlderSiteVersion} />;
+      case ROUTES.liLetter:
+        return <LiLetterPage />;
+      case ROUTES.mahePublication:
+        return <MahePublicationPage />;
+      case ROUTES.editorLogin:
+        return <EditorLoginPage
+          user={editorUser}
+          password={editorPassword}
+          attempts={editorAttempts}
+          note={editorNote}
+          alreadyUnlocked={game.editorLoggedIn}
+          onUserChange={setEditorUser}
+          onPasswordChange={setEditorPassword}
+          onSubmit={submitEditorLogin}
+          onReopen={() => navigate(ROUTES.editorRevisions)}
+        />;
+      case ROUTES.editorRevisions:
+        return <EditorRevisionsPage />;
+      case ROUTES.yuanchang:
+        return <YuanchangPage />;
+      case ROUTES.recoveredIndex:
+        return <RecoveredIndexPage
+          revealed={game.recovered.includes("12")}
+          password={fragmentPassword}
+          attempts={fragmentAttempts}
+          note={fragmentNote}
+          transformStep={stableStage ? 3 : game.stageTransformStep}
+          onPasswordChange={setFragmentPassword}
+          onSubmit={submitFragmentPassword}
+          onStable={() => { setStableStage(true); setGame((previous) => ({ ...previous, stageTransformStep: 3 })); }}
+        />;
+      case ROUTES.stageZhuhongmen:
+        return <StageZhuhongmenPage />;
+      case ROUTES.shinan:
+        return <ShinanPage />;
       case ROUTES.exhibition:
       default:
         return <ExhibitionPage frameNotice={frameNotice} onInspectFrame={inspectFrame} />;
@@ -1635,27 +2018,27 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, [results, resultNote]);
 
   return (
-    <div className={`game-shell${game.settings.reducedMotion ? " reduce-motion" : ""}`}>
+    <div className={`game-shell${game.settings.reducedMotion ? " reduce-motion" : ""}${stageComplete ? " stage-complete" : stageVocabulary ? " stage-transition" : ""}`}>
       <a className="skip-link" href="#main-content">跳到正文</a>
 
       <header className="site-header">
         <button className="wordmark" type="button" onClick={() => navigate(ROUTES.exhibition)} aria-label="返回憎恶社当期展览">
           <span className="wordmark-mark" aria-hidden="true">憎恶社</span>
-          <span><b>ZENGWU SOCIETY</b><small>作品与旧档案</small></span>
+          <span><b>{stageComplete ? "航船诗歌社" : "ZENGWU SOCIETY"}</b><small>{stageComplete ? "诗喃 · 国庆诗歌剧场" : stageVocabulary ? "剧本与排练缓存" : "作品与旧档案"}</small></span>
         </button>
 
         <nav className="gallery-section-nav" aria-label="画廊栏目">
-          <button type="button" className="is-current" onClick={() => navigate(ROUTES.exhibition)}>展览</button>
-          <span>作品</span>
-          <span>艺术家</span>
-          <span>出版</span>
-          <span>关于</span>
+          <button type="button" className="is-current" onClick={() => navigate(stageComplete ? ROUTES.stageZhuhongmen : ROUTES.exhibition)}>{stageComplete ? "终场" : "展览"}</button>
+          <span>{game.stageTransformStep >= 1 ? "剧本" : "作品"}</span>
+          <span>{stageComplete ? "声音" : game.stageTransformStep >= 2 ? "朗读者" : "艺术家"}</span>
+          <span>{game.stageTransformStep >= 3 ? "场记" : "出版"}</span>
+          <span>{stageComplete ? "演出" : "关于"}</span>
         </nav>
 
         <form className="global-search" onSubmit={handleSearch} role="search">
           <Search aria-hidden="true" />
-          <label className="sr-only" htmlFor="global-query">搜索作品、人名、尺寸或文件标签</label>
-          <input id="global-query" ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索作品、人名、尺寸或文件标签" autoComplete="off" spellCheck={false} aria-describedby="search-instruction" />
+          <label className="sr-only" htmlFor="global-query">{stageVocabulary ? "搜索剧本、朗读者、场记或演出名称" : "搜索作品、人名、尺寸或文件标签"}</label>
+          <input id="global-query" ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={stageVocabulary ? "搜索剧本、朗读者、场记或演出名称" : "搜索作品、人名、尺寸或文件标签"} autoComplete="off" spellCheck={false} aria-describedby="search-instruction" />
           <button type="submit">搜索</button>
           <span className="sr-only" id="search-instruction">线索可能存在于公开导航之外。搜索不会自动清空错误答案。</span>
 
@@ -2404,6 +2787,136 @@ function MedicalPage({ revealed, glyphRevealed, onToggleGlyph }: { revealed: boo
         <p>你讲不出一个完整的故事<br />屏息前最后几个画面<br />以至于毫无干系。</p>
       </RecoveredScript>}
       {revealed && <section className="old-history-reveal"><span>旧站历史／下一条名称</span><h2>阔南会社</h2><p>杜彻与葛东平改造画廊时曾考虑使用的名称。正文尚未进入当前恢复范围。</p><code>NEXT: S29 / METADATA ONLY</code></section>}
+    </article>
+  );
+}
+
+function KuonanHistoryPage({ loaded, reducedMotion, onLoad }: { loaded: number; reducedMotion: boolean; onLoad: () => void }) {
+  const versions = [
+    { id: "V.05", label: "当前公开版", title: "憎恶社", note: "作品与旧档案" },
+    { id: "V.04", label: "装修后缓存", title: "憎恶社画廊", note: "删除旧站命名说明" },
+    { id: "V.03", label: "迁移版本", title: "阔南画廊", note: "站名字段发生改写" },
+    { id: "V.02", label: "内部预览", title: "阔南会社／憎恶社", note: "杜彻提出使用小说中的组织名" },
+    { id: "V.01", label: "最早保存版", title: "阔南会社", note: "画馆是阔南会社。署名：李司贰" },
+  ];
+  return (
+    <article className="kuonan-history-page">
+      <header className="archive-terminal-head"><div><CacheStamp>SITE HISTORY / {loaded} OF 5</CacheStamp><p className="section-kicker">旧站版本向下追溯</p><h1>阔南会社</h1></div><aside><span>已载入</span><b>{loaded}/5</b><p>每次抵达页面底部，只会载入一个更早版本。</p></aside></header>
+      <section className="version-stack" aria-label={`已载入 ${loaded} 个旧版本`}>{versions.slice(0, loaded).map((version, index) => <article key={version.id} className={index === 4 ? "origin-version" : ""}><div><span>{version.id}</span><small>{version.label}</small></div><h2>{version.title}</h2><p>{version.note}</p>{index === 4 && <strong>站内书信索引：李司贰 → 叶是</strong>}</article>)}</section>
+      {loaded < 5 ? <div className="history-loader"><p>{reducedMotion ? "减少动态已开启，请手动载入。" : "继续滚至底部，载入更早版本。"}</p>{reducedMotion && <Button type="button" onClick={onLoad}>载入更早版本（{loaded + 1}/5）</Button>}</div> : <section className="autofill-notice"><span>5/5 · 最早版本已恢复</span><p>署名将写入顶部搜索框，但不会自动提交，也不会覆盖正在输入的文字。</p></section>}
+    </article>
+  );
+}
+
+function LiLetterPage() {
+  return (
+    <article className="letter-page">
+      <header className="letter-meta"><div><CacheStamp>PRIVATE LETTER / CACHE</CacheStamp><p className="section-kicker">站名改写依据</p><h1>李司贰致叶是</h1></div><dl><MetaLine label="收件人">叶是</MetaLine><MetaLine label="缓存账号"><code>editor_ys</code></MetaLine><MetaLine label="日期">20XX.2.20</MetaLine></dl></header>
+      <section className="letter-sheet"><p>叶是：</p><p>前些日子参考你同乡张恋发来的西岩寺主持元昶人物访谈资料，做了几首不太好的诗歌，悉以令作《礼倒僧元昶》，各中民俗相关描写不逮笔力，还望去日指点二三。</p><p>李髪、杜彻上月慨已结婚，夫妇俩托我向你道歉，有关婚礼邀请实在太忙没有寄出。他们也是看到你捎来的赠诗，才记起做邀请函时候忘记写你。</p><p>上月葛东平联合杜彻在 Z 城重新装修了画廊。杜彻执意要以自己小说里的“憎恶社”来命名，我们都觉着不太吉利，最后综合一下，他妥协名字改成了“阔南会社”。</p><p>对了，你应该是看过他的那篇小说的草稿。当时我们说其中诗的部分过于浓重而堪堪难阅，他记了很久，最后索性写得流水账起来。</p><p>半年未见，凭此信代为问安。</p><footer><strong>李司贰</strong><span>20XX.2.20</span></footer></section>
+      <section className="letter-crossref"><span>书信第一次确认</span><p><b>“憎恶社”首先是杜彻小说里的组织名。</b>网站中的人物、画廊和所谓历史，可能同时属于小说、诗剧与编辑改稿。</p><code>NEXT TITLE: 玛赫的厨房</code></section>
+    </article>
+  );
+}
+
+function MahePublicationPage() {
+  return (
+    <article className="publication-page">
+      <header className="publication-cover"><div><span>杜彻 小说</span><h1>玛赫的<br />厨房</h1><p>荷潜艇出版社</p></div><aside><b>2019</b><span>初版</span></aside></header>
+      <section className="copyright-grid"><div><p className="section-kicker">版权页／出版档案</p><dl><MetaLine label="书名">《玛赫的厨房》</MetaLine><MetaLine label="作者">杜彻</MetaLine><MetaLine label="出版">荷潜艇出版社</MetaLine><MetaLine label="首版年份">2019</MetaLine><MetaLine label="再版编辑">叶主任</MetaLine></dl></div><aside className="password-rule-note"><span>页边批注</span><h2>初始口令</h2><p>书名拼音首字母<br /><b>＋</b><br />首版年份</p><code>M H D C ＋ 2019</code><small>页面不会自动复制或填入结果。</small></aside></section>
+      <section className="revision-request"><span>再版修改建议</span><p>“初版小说里涉及到的问题慨已指明，请在本月底将改稿交付荷潜艇编辑部<strong>叶主任</strong>处。”</p></section>
+    </article>
+  );
+}
+
+function EditorLoginPage({ user, password, attempts, note, alreadyUnlocked, onUserChange, onPasswordChange, onSubmit, onReopen }: { user: string; password: string; attempts: number; note: string; alreadyUnlocked: boolean; onUserChange: (value: string) => void; onPasswordChange: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onReopen: () => void }) {
+  return (
+    <article className="editor-gate-page">
+      <header><CacheStamp>EDITOR CACHE / LOCAL</CacheStamp><p className="section-kicker">叶主任／叶是</p><h1>编辑后台</h1><p>这是一处站内虚构缓存。不会连接现实账号，不保存明文口令。</p></header>
+      {alreadyUnlocked ? <section className="login-unlocked"><UnlockKeyhole aria-hidden="true" /><h2>编辑缓存已解锁</h2><p>浏览器只记录“已登录”状态。</p><Button type="button" onClick={onReopen}>重新进入修订记录</Button></section> : <form className="editor-gate-form" onSubmit={onSubmit}><label><span>账号</span><input value={user} onChange={(event) => onUserChange(event.target.value)} autoComplete="off" spellCheck={false} /></label><label><span>口令</span><input value={password} onChange={(event) => onPasswordChange(event.target.value)} type="password" autoComplete="off" /></label><Button type="submit"><LockKeyhole aria-hidden="true" /> 登录编辑缓存</Button><p role="status">{note || `错误次数不限，不锁号${attempts ? `；已尝试 ${attempts} 次` : ""}。`}</p></form>}
+    </article>
+  );
+}
+
+function EditorRevisionsPage() {
+  const [view, setView] = useState<"initial" | "reprint">("reprint");
+  return (
+    <article className="admin-revisions-page">
+      <header className="admin-bar"><div><span>EDITOR CACHE</span><b>叶是</b><small>账号 editor_ys · 已解锁</small></div><div className="version-toggle" role="group" aria-label="切换修订版本"><button type="button" className={view === "initial" ? "is-active" : ""} onClick={() => setView("initial")}>初版</button><button type="button" className={view === "reprint" ? "is-active" : ""} onClick={() => setView("reprint")}>再版批注</button></div></header>
+      <section className="revision-board"><div className="revision-task"><span>REVISION TASK / 04</span><h1>人物年表修订</h1><p>对象：杜彻小说《玛赫的厨房》中的寺院主持。</p></div><article><span>{view === "initial" ? "初版正文" : "再版编辑批注"}</span>{view === "initial" ? <blockquote>“贤太在榻席上深叩一头，<mark>元昶</mark>合手以僧礼回。”</blockquote> : <blockquote>“初版有读者反映<mark>元昶</mark>之故事所陈不够条例清晰，或自行拟写活动年表，或作文本调整。”</blockquote>}</article><article><span>访谈转录</span><blockquote>“<mark>左君</mark>，原谅我称呼你本名，您的佛家法名实在难以念出。”</blockquote></article><aside><span>身份映射待确认</span><h2>元昶 ⇄ 左君</h2><p>一边是法名，一边是被替换前的本名。</p></aside></section>
+    </article>
+  );
+}
+
+function YuanchangPage() {
+  const [edition, setEdition] = useState<"initial" | "edited">("edited");
+  const timeline = [
+    ["1937.5.2", "出生于四川仝城盐商家庭"],
+    ["1950.6.2", "往西康省凉山州寻亲途中跟随剿匪队伍"],
+    ["1953.8", "寻亲未果返乡，后往崧滈寺为僧"],
+    ["1966.7", "蓄发还俗，后来离开内地"],
+    ["1978.10", "返回仝城，于崧滈寺再度出家"],
+    ["1989.11", "年表记录其于医院因旧伤感染去世"],
+  ];
+  return (
+    <article className="character-revision-page">
+      <header className="character-head"><div><CacheStamp>CHARACTER / IDENTITY MERGED</CacheStamp><p className="section-kicker">小说角色与可改写年表</p><h1>元昶 <span>／左君</span></h1><p>法名与本名指向同一角色。这里展示的是小说及编辑版本，不是现实人物档案。</p></div><div className="version-toggle" role="group" aria-label="切换年表版本"><button type="button" className={edition === "initial" ? "is-active" : ""} onClick={() => setEdition("initial")}>初版</button><button type="button" className={edition === "edited" ? "is-active" : ""} onClick={() => setEdition("edited")}>再版</button></div></header>
+      <section className="character-timeline">{timeline.map(([date, event], index) => <div key={date} className={edition === "edited" && [1, 2, 3, 5].includes(index) ? "is-edited" : ""}><time>{date}</time><p>{edition === "initial" && [1, 2, 3, 5].includes(index) ? "［初版此段缺失］" : event}</p>{edition === "edited" && [1, 2, 3, 5].includes(index) && <span>再版补写</span>}</div>)}</section>
+      <section className="fragment-index-preview"><header><span>附件索引</span><b>Ⅰ—Ⅹ</b></header><div>{["Ⅰ","Ⅱ","Ⅲ","Ⅳ","Ⅴ","Ⅵ","Ⅶ","Ⅷ","Ⅸ","Ⅹ"].map((number) => <i key={number}>{number}</i>)}</div><p>标题碎片：始／末／的／碎／点</p><small>解密提示：口令为作者被替换前的旧名。</small></section>
+    </article>
+  );
+}
+
+function RecoveredIndexPage({ revealed, password, attempts, note, transformStep, onPasswordChange, onSubmit, onStable }: { revealed: boolean; password: string; attempts: number; note: string; transformStep: number; onPasswordChange: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onStable: () => void }) {
+  const fragments = [
+    ["Ⅰ. 徐掖", <>下桥转身路过锦蜀饭馆，徐掖因死掉堂妹<br />约朋友坐其外打扑克<br />从口袋褶巴里摸出玉溪，给人散去半盒。</>],
+    ["Ⅱ. 徐惠其一", <>徐惠。去学画或者其他。家父习惯叫<br />这门技术为江南几省的罗网，<br />被着驳彩迷乱青年人底心性——他讲道理如是。</>],
+    ["Ⅲ. 憎恶社其一", <>我们捉对捞取缸中月。刑万肢端槁糙，手浸其中，<br />扒附指缝的颜料污了水体，于倒影上泛泛油光。<br />锌白底尤是多杂。他转头仆入其下。痛饮，隔天肚痛总难耐异常。</>],
+    ["Ⅳ. 徐惠其二", <>绿伞弄蝶憩息的一瞬<br />她睑皮块重，粉底被揉搡到眼角，背阔起而亘落，肋如囊。<br />飞离扑扑，一点三分炽阳布线。</>],
+    ["Ⅴ. 杜南阳·婚姻之一", <>期望的生活在官能层面上那么臃肿，为此<br />一定要在每日餐前最末了几句话时提到：<br />“妻子对于男人的馈赠”“永不可染上情人色彩，这是其一。”</>],
+    ["Ⅵ. 憎恶社其二", <>绵羊铺满中古的月亮，一起倒下<br />像是为此柔软的黑夜准备许久。</>],
+    ["Ⅶ. 杜南阳／徐惠·婚姻之二", <>是忧郁之臀、餐布、扭怩的刀叉一齐亮相。<br />我手法灵敏切下肱骨属于你，今夜啊<br />深蓝之臀的古典抒情也打败了你。</>],
+    ["Ⅷ. 杜南阳的焚烧签字单", <>那些寿命颀长的一代人在高温的导引中再度归去。<br />十六世纪是铁的厄运。英国色的铁。<br />从拼接到西阵织，展出西阵织的画馆是阔南会社。</>],
+    ["Ⅸ. 原稿编号缺页", <>源文件由Ⅷ直接进入Ⅹ；此处保留编号空缺，不擅自补写。</>],
+    ["Ⅹ. 刑万／莉香·婚姻之一", <>他曾经运用了哲辩抚慰了婚姻吗？</>],
+  ];
+  return (
+    <article className={`fragment-stage-page step-${transformStep}`}>
+      <header className="fragment-head"><div><CacheStamp>{revealed ? "RECOVERED SCRIPT / 12" : "ENCRYPTED INDEX / Ⅰ—Ⅹ"}</CacheStamp><p className="section-kicker">{revealed ? "场记正在显影" : "文本解密"}</p><h1>始末的碎点</h1></div>{revealed ? <div className="transform-status"><span>界面转换</span><b>{transformStep}/3</b><Button variant="outline" type="button" onClick={onStable} disabled={transformStep >= 3}>显示稳定版</Button></div> : <form className="fragment-password" onSubmit={onSubmit}><label>作者被替换前的旧名<input value={password} onChange={(event) => onPasswordChange(event.target.value)} autoComplete="off" /></label><Button type="submit">解除十段索引</Button><p role="status">{note || `错误不会清空碎片${attempts ? `；已尝试 ${attempts} 次` : ""}。`}</p></form>}</header>
+      <section className="fragment-grid" aria-label="始末的碎点正文">{fragments.map(([title, copy], index) => <article key={String(title)} className={!revealed ? "is-locked" : ""}><span>{String(index + 1).padStart(2,"0")}</span><h2>{revealed ? title : `碎片 ${String(index + 1).padStart(2,"0")}`}</h2><div className="stable-fragment-copy">{revealed ? copy : "文字层已加密"}</div>{revealed && transformStep < 3 && <div className="glitch-overlay" aria-hidden="true">{index % 2 ? "剧本／声部／入场" : "▒ 场记_恢复中 ▒"}</div>}</article>)}</section>
+      {revealed && <section className="stage-call"><span>SCENE INDEX / 13 OF 14</span><h2>文本已接近就位</h2><p>恢复目录只剩结诗。它与网站最初的当前展览使用同一个标题。</p><strong>下一搜索词：赭红门</strong></section>}
+    </article>
+  );
+}
+
+function StageZhuhongmenPage() {
+  return (
+    <article className="stage-zhuhongmen-page">
+      <header className="stage-warm-head"><div><ArtifactTag>场次 14 / 14</ArtifactTag><p className="section-kicker">结诗 · 合读</p><h1>赭红门</h1></div><aside><span>场记</span><p>文本已齐。<br />所有人请就位。</p></aside></header>
+      <RecoveredScript id="14" section="结诗 · 点意象之歌" title="赭红门" reader="合读">
+        <p>追随潮退之狐。</p><p>将阵羽披挂的海豚此刻要返回海。<br />溺亡在水中央的开刃刀要返回海。<br />而刀刃是藤壶动物的密交。</p><p>破腹产口诀，剖开<br />虎皮鲨胃囊取出的鱼翅，鲜美。<br />那一点断头蛇，咬住了赭红色之门。</p><p>而咬住了赭红色之门的蛇<br />又褪下了麂皮夹克。</p><p>追随退潮之狐的折扇开屏，<br />与海的一般质地的气融贯合一。</p>
+      </RecoveredScript>
+      <section className="reader-call-sheet"><header><span>档案编号已转换为场次编号</span><b>朗读者就位</b></header><div><p>杜万琳 <span>朗读声部</span></p><p>方晚 <span>朗读声部</span></p><p>刑万 <span>朗读声部</span></p><p>徐惠 <span>朗读声部</span></p><p>杜彻 <span>朗读声部</span></p><p>合读 <span>终场</span></p></div></section>
+      <section className="stage-note-final"><span>终场场记</span><h2>演出名：诗喃</h2><p>案件索引到这里停止。下一页不会公布凶手，只会让所有人物回到朗读者的位置。</p></section>
+    </article>
+  );
+}
+
+function ShinanPage() {
+  const [performanceStarted, setPerformanceStarted] = useState(false);
+  const [cue, setCue] = useState(0);
+  const cues = [
+    ["开场", "桌椅轻响。有人试着把麦克风推近。"],
+    ["声部进入", "杜万琳、方晚、刑万、徐惠、杜彻依次站到文本前。"],
+    ["文本合流", "那些曾被当成档案的人名，现在标注为朗读声部。"],
+    ["赭红门", "合读开始：追随潮退之狐。"],
+    ["谢幕", "灯光亮起。观众听见翻页，也听见台上的人仍然活在声音里。"],
+  ];
+  return (
+    <article className="shinan-page">
+      <header className="shinan-hero"><div><span>航船诗歌社 · 国庆诗歌剧场</span><h1>诗喃</h1><p>你恢复的从来不是司法档案，而是一份被拆散、改写并藏进画廊网站的诗剧排练文本。</p></div><div className="poster-placeholder" role="img" aria-label="诗喃原海报授权素材待接入"><span>ORIGINAL POSTER</span><b>《诗喃》海报</b><small>授权原图待接入</small></div></header>
+      {!performanceStarted ? <section className="performance-choice"><div><span>选择终场版本</span><h2>声音不构成通关门槛</h2><p>原成员录音尚未接入。本版先开放完整静音字幕终场；取得授权录音后，可在同一位置替换。</p></div><div><Button type="button" disabled>有声版 · 素材待接入</Button><Button type="button" onClick={() => setPerformanceStarted(true)}>静音字幕版开演</Button></div></section> : <section className="silent-performance"><header><span>静音字幕终场</span><b>{cue + 1}/{cues.length}</b></header><div className="cue-stage"><small>{cues[cue][0]}</small><p>{cues[cue][1]}</p><div className="photo-placeholders" aria-label="活动照片授权素材位"><span>活动照 01<br /><i>授权原图待接入</i></span><span>活动照 02<br /><i>授权原图待接入</i></span><span>活动照 03<br /><i>授权原图待接入</i></span></div></div><footer><Button variant="outline" type="button" onClick={() => setCue((value) => Math.max(0, value - 1))} disabled={cue === 0}>上一场记</Button>{cue < cues.length - 1 ? <Button type="button" onClick={() => setCue((value) => Math.min(cues.length - 1, value + 1))}>下一场记</Button> : <span className="curtain-call">演出结束 · 谢幕</span>}</footer></section>}
+      <section className="shinan-truth"><span>最后一次身份转换</span><div><h2>他们是剧中人，也是朗读者。</h2><p>公墓案、死亡记录、人物年表和新闻缓存属于《诗喃》的剧内文本与舞台道具。现实层只留下航船诗歌社、海报、活动照片与成员声音。</p></div></section>
+      <section className="material-status"><article><span>14/14</span><h3>完整排练文本</h3><p>序诗、五个篇章与结诗已经全部恢复。</p></article><article><span>待接入</span><h3>原始海报与活动照</h3><p>仅使用用户提供并确认可发布的原图。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后仍保留字幕与全文，不要求玩家开启声音。</p></article></section>
     </article>
   );
 }

@@ -134,3 +134,57 @@ test("renders recovered scripts 07, 10, and 11 with the medical clue chain", asy
   assert.match(stomach, /朗读声部：杜万琳/);
   assert.match(stomach, /阔南会社/);
 });
+
+test("renders the version history, letter, publication, and fictional editor gate", async () => {
+  const history = await renderPath("/archive/site-history/kuonan");
+  assert.match(history, /SITE HISTORY \/ 1 OF 5/);
+  assert.match(history, /每次抵达页面底部/);
+
+  const letter = await renderPath("/archive/letters/li-to-ye");
+  assert.match(letter, /李司贰致叶是/);
+  assert.match(letter, /editor_ys/);
+  assert.match(letter, /自己小说里的“憎恶社”/);
+
+  const publication = await renderPath("/publications/mahe-de-chufang");
+  assert.match(publication, /玛赫的/);
+  assert.match(publication, /2019/);
+  assert.match(publication, /M H D C/);
+
+  const login = await renderPath("/admin/editor/login");
+  assert.match(login, /站内虚构缓存/);
+  assert.match(login, /错误次数不限/);
+  assert.match(login, /不保存明文口令/);
+});
+
+test("renders the rewritten character history and encrypted fragment index", async () => {
+  const revisions = await renderPath("/admin/editor/revisions");
+  assert.match(revisions, /元昶/);
+  assert.match(revisions, /左君/);
+  assert.match(revisions, /人物年表修订/);
+
+  const character = await renderPath("/admin/characters/yuanchang");
+  assert.match(character, /小说角色与可改写年表/);
+  assert.match(character, /Ⅰ—Ⅹ/);
+  assert.match(character, /始／末／的／碎／点/);
+
+  const fragments = await renderPath("/stage/recovered-index");
+  assert.match(fragments, /ENCRYPTED INDEX \/ Ⅰ—Ⅹ/);
+  assert.match(fragments, /作者被替换前的旧名/);
+  assert.match(fragments, /错误不会清空碎片/);
+});
+
+test("renders the warm stage reveal and Shinan curtain call without assigning a killer", async () => {
+  const finale = await renderPath("/stage/zhuhongmen");
+  assert.match(finale, /场次 14 \/ 14/);
+  assert.match(finale, /追随潮退之狐/);
+  assert.match(finale, /所有人请就位/);
+  assert.match(finale, /演出名：诗喃/);
+  assert.doesNotMatch(finale, /凶手姓名|责任单位/);
+
+  const shinan = await renderPath("/stage/shinan");
+  assert.match(shinan, /航船诗歌社 · 国庆诗歌剧场/);
+  assert.match(shinan, /静音字幕版开演/);
+  assert.match(shinan, /授权原图待接入/);
+  assert.match(shinan, /他们是剧中人，也是朗读者/);
+  assert.match(shinan, /不构成通关门槛/);
+});
