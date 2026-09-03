@@ -184,7 +184,10 @@ test("renders the warm stage reveal and Shinan curtain call without assigning a 
   const shinan = await renderPath("/stage/shinan");
   assert.match(shinan, /航船诗歌社 · 国庆诗歌剧场/);
   assert.match(shinan, /静音字幕版开演/);
-  assert.match(shinan, /授权原图待接入/);
+  assert.match(shinan, /\/archive\/shinan\/shinan-poster\.webp/);
+  assert.match(shinan, /现场档案 \/ 01—21/);
+  assert.match(shinan, /\/archive\/shinan\/activity\/photo-21\.webp/);
+  assert.doesNotMatch(shinan, /授权原图待接入/);
   assert.match(shinan, /他们是剧中人，也是朗读者/);
   assert.match(shinan, /不构成通关门槛/);
 });

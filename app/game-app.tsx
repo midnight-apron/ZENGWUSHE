@@ -2904,19 +2904,46 @@ function StageZhuhongmenPage() {
 function ShinanPage() {
   const [performanceStarted, setPerformanceStarted] = useState(false);
   const [cue, setCue] = useState(0);
+  const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
+  const activityPhotos = [
+    ["现场投影", "“伪造入门及注意事项”开场画面"],
+    ["黎晏／杜彻", "蒙眼入场"],
+    ["黎晏／杜彻", "朗读现场"],
+    ["叶非／方晚", "吉他与话筒"],
+    ["郁绵／刑万", "朗读现场"],
+    ["郁绵／刑万", "舞台现场"],
+    ["林锐／徐惠", "朗读现场"],
+    ["林锐／徐惠", "舞步与话筒线"],
+    ["观众席", "现场记录"],
+    ["观众席", "现场记录"],
+    ["陳潮／杜万琳", "朗读现场"],
+    ["陳潮／杜万琳", "舞台现场"],
+    ["诗喃现场", "读诗"],
+    ["诗喃现场", "舞台装置"],
+    ["诗喃现场", "表演"],
+    ["诗喃现场", "吉他"],
+    ["诗喃现场", "合读"],
+    ["诗喃现场", "朗读"],
+    ["诗喃现场", "投影与朗读"],
+    ["诗喃现场", "合读"],
+    ["诗喃现场", "全景"],
+  ] as const;
   const cues = [
-    ["开场", "桌椅轻响。有人试着把麦克风推近。"],
-    ["声部进入", "杜万琳、方晚、刑万、徐惠、杜彻依次站到文本前。"],
-    ["文本合流", "那些曾被当成档案的人名，现在标注为朗读声部。"],
-    ["赭红门", "合读开始：追随潮退之狐。"],
-    ["谢幕", "灯光亮起。观众听见翻页，也听见台上的人仍然活在声音里。"],
-  ];
+    { title: "开场", copy: "投影亮起：我已看不见这些太阳。有人试着把麦克风推近。", photos: [0, 1, 2, 3] },
+    { title: "声部进入", copy: "黎晏读杜彻，叶非读方晚。剧中人与朗读者第一次在同一页相遇。", photos: [4, 5, 6, 7, 8] },
+    { title: "文本合流", copy: "郁绵读刑万，林锐读徐惠。那些曾被当成档案的人名，重新成为声部。", photos: [9, 10, 11, 12] },
+    { title: "赭红门", copy: "陳潮读杜万琳。合读开始：追随潮退之狐。", photos: [13, 14, 15, 16] },
+    { title: "谢幕", copy: "灯光亮起。观众听见翻页，也看见台上的人从角色中退场。", photos: [17, 18, 19, 20] },
+  ] as const;
+  const currentCue = cues[cue];
   return (
     <article className="shinan-page">
-      <header className="shinan-hero"><div><span>航船诗歌社 · 国庆诗歌剧场</span><h1>诗喃</h1><p>你恢复的从来不是司法档案，而是一份被拆散、改写并藏进画廊网站的诗剧排练文本。</p></div><div className="poster-placeholder" role="img" aria-label="诗喃原海报授权素材待接入"><span>ORIGINAL POSTER</span><b>《诗喃》海报</b><small>授权原图待接入</small></div></header>
-      {!performanceStarted ? <section className="performance-choice"><div><span>选择终场版本</span><h2>声音不构成通关门槛</h2><p>原成员录音尚未接入。本版先开放完整静音字幕终场；取得授权录音后，可在同一位置替换。</p></div><div><Button type="button" disabled>有声版 · 素材待接入</Button><Button type="button" onClick={() => setPerformanceStarted(true)}>静音字幕版开演</Button></div></section> : <section className="silent-performance"><header><span>静音字幕终场</span><b>{cue + 1}/{cues.length}</b></header><div className="cue-stage"><small>{cues[cue][0]}</small><p>{cues[cue][1]}</p><div className="photo-placeholders" aria-label="活动照片授权素材位"><span>活动照 01<br /><i>授权原图待接入</i></span><span>活动照 02<br /><i>授权原图待接入</i></span><span>活动照 03<br /><i>授权原图待接入</i></span></div></div><footer><Button variant="outline" type="button" onClick={() => setCue((value) => Math.max(0, value - 1))} disabled={cue === 0}>上一场记</Button>{cue < cues.length - 1 ? <Button type="button" onClick={() => setCue((value) => Math.min(cues.length - 1, value + 1))}>下一场记</Button> : <span className="curtain-call">演出结束 · 谢幕</span>}</footer></section>}
+      <header className="shinan-hero"><div><span>航船诗歌社 · 国庆诗歌剧场</span><h1>诗喃</h1><p>你恢复的从来不是司法档案，而是一份被拆散、改写并藏进画廊网站的诗剧排练文本。</p></div><figure className="shinan-poster"><img src={browserPath("/archive/shinan/shinan-poster.webp")} alt="以蒙眼人物黑白网点照片为底图的《诗喃：青年之虚与实》演出海报" /><figcaption><span>演出海报</span><small>据上传原型图生成</small></figcaption></figure></header>
+      {!performanceStarted ? <section className="performance-choice"><div><span>选择终场版本</span><h2>声音不构成通关门槛</h2><p>原成员录音尚未接入。本版先开放完整静音字幕终场；取得授权录音后，可在同一位置替换。</p></div><div><Button type="button" disabled>有声版 · 素材待接入</Button><Button type="button" onClick={() => setPerformanceStarted(true)}>静音字幕版开演</Button></div></section> : <section className="silent-performance"><header><span>静音字幕终场</span><b>{cue + 1}/{cues.length}</b></header><div className="cue-stage"><small>{currentCue.title}</small><p>{currentCue.copy}</p><div className="cue-photos" aria-label={`${currentCue.title}活动照片`}>{currentCue.photos.map((photoIndex) => <button type="button" key={photoIndex} onClick={() => setSelectedPhoto(photoIndex)}><img src={browserPath(`/archive/shinan/activity/photo-${String(photoIndex + 1).padStart(2, "0")}.webp`)} alt={`${activityPhotos[photoIndex][0]}：${activityPhotos[photoIndex][1]}`} /><span>{activityPhotos[photoIndex][0]}</span></button>)}</div></div><footer><Button variant="outline" type="button" onClick={() => setCue((value) => Math.max(0, value - 1))} disabled={cue === 0}>上一场记</Button>{cue < cues.length - 1 ? <Button type="button" onClick={() => setCue((value) => Math.min(cues.length - 1, value + 1))}>下一场记</Button> : <span className="curtain-call">演出结束 · 谢幕</span>}</footer></section>}
       <section className="shinan-truth"><span>最后一次身份转换</span><div><h2>他们是剧中人，也是朗读者。</h2><p>公墓案、死亡记录、人物年表和新闻缓存属于《诗喃》的剧内文本与舞台道具。现实层只留下航船诗歌社、海报、活动照片与成员声音。</p></div></section>
-      <section className="material-status"><article><span>14/14</span><h3>完整排练文本</h3><p>序诗、五个篇章与结诗已经全部恢复。</p></article><article><span>待接入</span><h3>原始海报与活动照</h3><p>仅使用用户提供并确认可发布的原图。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后仍保留字幕与全文，不要求玩家开启声音。</p></article></section>
+      <section className="activity-archive"><header><div><span>现场档案 / 01—21</span><h2>青年之虚与实 · 石狮场</h2></div><p>活动照按原文档出现顺序归档。点击照片可查看完整画面。</p></header><div className="activity-grid">{activityPhotos.map(([title, detail], index) => <button type="button" key={index} onClick={() => setSelectedPhoto(index)}><img src={browserPath(`/archive/shinan/activity/photo-${String(index + 1).padStart(2, "0")}.webp`)} alt={`${title}：${detail}`} loading="lazy" /><span>{String(index + 1).padStart(2, "0")}</span><div><b>{title}</b><small>{detail}</small></div></button>)}</div></section>
+      <section className="material-status"><article><span>14/14</span><h3>完整排练文本</h3><p>序诗、五个篇章与结诗已经全部恢复。</p></article><article><span>已接入</span><h3>演出海报与活动照</h3><p>根据上传原型生成海报，21 张现场照片依文档顺序归档。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后仍保留字幕与全文，不要求玩家开启声音。</p></article></section>
+      {selectedPhoto !== null && <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`活动照片 ${selectedPhoto + 1}`} onClick={() => setSelectedPhoto(null)}><div onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setSelectedPhoto(null)} aria-label="关闭活动照片"><X aria-hidden="true" /></button><img src={browserPath(`/archive/shinan/activity/photo-${String(selectedPhoto + 1).padStart(2, "0")}.webp`)} alt={`${activityPhotos[selectedPhoto][0]}：${activityPhotos[selectedPhoto][1]}`} /><p><span>{String(selectedPhoto + 1).padStart(2, "0")} / 21</span><b>{activityPhotos[selectedPhoto][0]}</b><small>{activityPhotos[selectedPhoto][1]}</small></p></div></div>}
     </article>
   );
 }
