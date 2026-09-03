@@ -59,6 +59,7 @@ test("renders the public gallery directories without leaking locked records", as
   const publications = await renderPath("/publications");
   assert.match(publications, /PUBLICATIONS \/ TEXT/);
   assert.match(publications, /展览手册/);
+  assert.doesNotMatch(publications, /朗读文件|朗读文本/);
   assert.doesNotMatch(publications, /盲之春/);
 });
 

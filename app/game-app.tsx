@@ -434,23 +434,6 @@ const RECOVERED_FILES = [
   { id: "14", title: "结诗：赭红门", source: "终场" },
 ];
 
-const RECOVERED_FILE_ROUTES: Record<string, string> = {
-  "01": ROUTES.recoveredOne,
-  "02": ROUTES.duWanlin,
-  "03": ROUTES.fangWan,
-  "04": ROUTES.wangKeding,
-  "05": ROUTES.xingWan,
-  "06": ROUTES.liXiangDeath,
-  "07": ROUTES.wedding,
-  "08": ROUTES.duCremationSigned,
-  "09": ROUTES.xiyanTemple,
-  "10": ROUTES.taste,
-  "11": ROUTES.stomach,
-  "12": ROUTES.recoveredIndex,
-  "13": ROUTES.wangDeath,
-  "14": ROUTES.stageZhuhongmen,
-};
-
 function buildPublicCatalog(game: GameState) {
   const unlocked = (step: string) => game.unlocked.includes(step);
   const recovered = (id: string) => game.recovered.includes(id);
@@ -481,7 +464,6 @@ function buildPublicCatalog(game: GameState) {
 
   const publications: DirectoryEntry[] = [
     { id: "catalog-zhuhongmen", eyebrow: "展览手册", title: "《赭红门》", summary: "当期展览作品目录与现场记录。", path: ROUTES.exhibition },
-    ...RECOVERED_FILES.filter((file) => recovered(file.id)).map((file) => ({ id: `script-${file.id}`, eyebrow: `朗读文件 / ${file.id}`, title: file.title, summary: `来源：${file.source}`, path: RECOVERED_FILE_ROUTES[file.id], isNew: true })),
     unlocked("S31") && { id: "mahe", eyebrow: "小说 / 2019", title: "《玛赫的厨房》", summary: "杜彻小说的出版档案与版权页。", path: ROUTES.mahePublication, isNew: true },
     unlocked("S33") && { id: "juroutuanfei", eyebrow: "小说集 / 完整卷", title: "《句肉抟飞》", summary: "五个 Section 的完整合订文本；人物与案件材料在这里重新进入同一叙事。", path: ROUTES.juroutuanfei, isNew: true },
     recovered("14") && { id: "shinan-script", eyebrow: "诗剧 / 完整版", title: "《诗喃》排练文本", summary: "序诗、五个篇章与结诗的完整恢复版本。", path: ROUTES.shinan, isNew: true },
@@ -2029,7 +2011,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.news:
         return <DirectoryPage kicker="NEWS / ARCHIVE" title="新闻" intro="场馆公告、公开报道与恢复中的地方档案。只显示玩家已经找到的调查节点。" entries={publicCatalog.news} onOpen={navigate} />;
       case ROUTES.publications:
-        return <DirectoryPage kicker="PUBLICATIONS / TEXT" title="出版物" intro="展览手册、小说出版信息与已经恢复的《目盲》朗读文本。" entries={publicCatalog.publications} onOpen={navigate} />;
+        return <DirectoryPage kicker="PUBLICATIONS / TEXT" title="出版物" intro="展览手册、小说集、小说出版档案与最终开放的诗剧资料。" entries={publicCatalog.publications} onOpen={navigate} />;
       case ROUTES.about:
         return <DirectoryPage kicker="ABOUT / INSTITUTION" title="关于" intro="憎恶社的机构资料及逐步恢复的网站版本历史。" entries={publicCatalog.about} onOpen={navigate} />;
       case ROUTES.artwork:
@@ -2325,7 +2307,7 @@ function GalleryHomePage({ onStart, onOpenDirectory }: { onStart: () => void; on
             { path: ROUTES.exhibitions, index: "01", title: "展览", note: "当前项目与特别计划" },
             { path: ROUTES.people, index: "02", title: "人物", note: "参展者与恢复的人物档案" },
             { path: ROUTES.news, index: "03", title: "新闻", note: "场馆公告与地方记录" },
-            { path: ROUTES.publications, index: "04", title: "出版物", note: "展览手册、小说与朗读文本" },
+            { path: ROUTES.publications, index: "04", title: "出版物", note: "展览手册、小说集与诗剧资料" },
           ].map((item) => (
             <button key={item.path} type="button" onClick={() => onOpenDirectory(item.path)}>
               <span>{item.index}</span><strong>{item.title}</strong><small>{item.note}</small><ArrowUpRight aria-hidden="true" />
