@@ -253,8 +253,8 @@ const HINTS: Record<string, string[]> = {
   ],
   [ROUTES.damagedReader]: [
     "乱码不会阻断线索，可以打开纯文字版本。",
-    "把“看不见”换成一个字，再接上“春天”的“春”。",
-    "搜索：盲之春。",
+    "残留词可以直接组合搜索，不必先完成同义替换。",
+    "搜索：看不见春天。也可以继续推导并搜索：盲之春。",
   ],
   [ROUTES.recoveredOne]: [
     "留意正文之外的页脚、标签与分类残留。",
@@ -1235,7 +1235,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (normalized === "盲之春" || normalized === "盲春") {
+    if (["盲之春", "盲春", "看不见春天", "看不見春天"].includes(normalized)) {
       const allowed = game.frameClicks >= 3 || game.unlocked.includes("S03");
       if (allowed) {
         setResults(null);
