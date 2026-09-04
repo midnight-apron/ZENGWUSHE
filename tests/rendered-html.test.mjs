@@ -64,6 +64,12 @@ test("renders the public gallery directories without leaking locked records", as
 });
 
 test("renders the recovered identity and death-record chapter routes", async () => {
+  const history = await renderPath("/about/history");
+  assert.match(history, /zengwu-early-group\.webp/);
+  assert.match(history, /早期成员及同行者/);
+  assert.match(history, /四名男性成员 · 一名女性同行者/);
+  assert.doesNotMatch(history, /方晚 · 王克定/);
+
   const mergedIdentity = await renderPath("/members/du-wanlin");
   assert.match(mergedIdentity, /杜南阳/);
   assert.match(mergedIdentity, /杜万琳/);

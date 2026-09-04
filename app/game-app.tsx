@@ -2547,6 +2547,14 @@ function HistoryPage({ roleGlitch }: { roleGlitch: boolean }) {
   return (
     <article className="history-page">
       <header className="history-head"><div><p className="section-kicker">旧社团档案 · 组织 / 朗读同名</p><h1>憎恶社</h1><p>一份从现代目录中消失的画社年表，和第二份朗读文件叠在了一起。</p></div><span className="archive-year">20— / 杭州</span></header>
+      <figure className="history-group-photo">
+        <div className="history-group-photo-frame">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={browserPath("/archive/zengwu-early-group.webp")} alt="一张泛黄失焦的五人旧合照：四名男性与一名女性，中央一男一女肩靠得更近，所有人的面容都因相纸老化而模糊" />
+          <span>ZW—01 / FACE LAYER DAMAGED</span>
+        </div>
+        <figcaption><span>社团合照 / 视觉复原层</span><strong>早期成员及同行者</strong><p>四名男性成员 · 一名女性同行者。照片背注的姓名层残损，暂不据此补全名单。</p><small>杭州 · 年份字段缺失</small></figcaption>
+      </figure>
       <section className="history-layout"><div className="timeline"><div className="timeline-item"><span>成立</span><div><b>创办人：杜南阳</b><p>画社以人物、静物练习与集体采风开始活动。</p></div></div><div className="timeline-item"><span>{roleGlitch ? "声部" : "成员"}</span><div><b>杜南阳 · 徐惠 · 刑万</b><p>旧名单和现代成员索引无法完全互相对应。</p></div></div><div className="timeline-item"><span>状态</span><div><b>停止公开活动</b><p>关闭时间与原因字段均为空。</p></div></div></div><aside className="name-card"><span>下一人物索引</span><h2>杜南阳</h2><p>现代成员目录：查无此人</p><code>301 → /members/du＿lin</code></aside></section>
       <section className="script-two" id="script-02"><header><ArtifactTag>已恢复 02 / 14</ArtifactTag><span>瞽人篇 · 1.1</span></header><h2>憎恶社 <small>（杜万琳）</small></h2><div className="script-two-copy"><p>“我听见有人在讲他的画社<br />他的艺术<br />他的徐惠”</p><p>告诉我你对那些旅游地区布置类景色感到烦厌<br />这周末，带你去做艺术采风。<br />画静物——静物你懂吧？</p><p>谁受“憎恶”的启发呢？<br />在杭州喝到干呕，玻璃渣扎破手掌<br />根丛丛地涌血。</p><p>你说：现在画吧，画彼此<br />思多愁苦、呆滞的神色。<br />直到把彼此描成一对好看的词。</p></div></section>
       <section className="prototype-end"><span>旧索引未闭合</span><div><h2>创办人没有出现在现代成员表。</h2><p>从旧年表中的姓名继续搜索。不要先猜他的新名字。</p></div></section>

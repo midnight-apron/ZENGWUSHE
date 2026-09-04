@@ -2091,6 +2091,72 @@ button {
   letter-spacing: .12em;
 }
 
+.history-group-photo {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 0.28fr);
+  gap: clamp(1.5rem, 4vw, 4rem);
+  align-items: end;
+  margin: clamp(3rem, 7vw, 6rem) 0 1rem;
+  padding-bottom: clamp(2rem, 4vw, 3.5rem);
+  border-bottom: 1px solid var(--line);
+}
+
+.history-group-photo-frame {
+  position: relative;
+  padding: clamp(0.45rem, 1.2vw, 0.8rem);
+  background: #b19a76;
+  box-shadow: 0 1.2rem 3rem rgba(35, 29, 20, 0.14);
+  transform: rotate(-0.25deg);
+}
+
+.history-group-photo-frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  filter: sepia(0.1) contrast(0.96);
+}
+
+.history-group-photo-frame > span {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  padding: 0.42rem 0.55rem;
+  background: rgba(23, 22, 18, 0.76);
+  color: #eee9de;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.07em;
+}
+
+.history-group-photo figcaption {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--ink);
+  padding-top: 1rem;
+}
+
+.history-group-photo figcaption > span,
+.history-group-photo figcaption > small {
+  color: var(--ash);
+  font-size: 0.74rem;
+  letter-spacing: 0.07em;
+}
+
+.history-group-photo figcaption > strong {
+  margin: 1.3rem 0 0.7rem;
+  font-family: var(--display-serif);
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  font-weight: 560;
+  line-height: 1;
+}
+
+.history-group-photo figcaption > p {
+  margin: 0 0 1.8rem;
+  color: var(--ash);
+  line-height: 1.75;
+}
+
 .history-layout {
   display: grid;
   grid-template-columns: 1fr minmax(17rem, .45fr);
@@ -7766,6 +7832,14 @@ button {
 }
 
 @media (max-width: 760px) {
+  .history-group-photo {
+    grid-template-columns: 1fr;
+  }
+
+  .history-group-photo-frame {
+    padding: 0.4rem;
+  }
+
   .jurou-publication-head,
   .jurou-reader-note {
     grid-template-columns: 1fr;
