@@ -2498,9 +2498,13 @@ function FangWanPage() {
 
       <section className="person-evidence-grid">
         <div className="biography-sheet"><span>履历摘要</span><p>家中反对他学画。他曾中断学业、在果园劳动，恢复学业后前往杭州。春节留校创作的一幅作品，后来被旧成员称作加入憎恶社的“投名状”。</p><p>毕业后，他开过小卖店，经历再婚；与杜万琳保持往来，后来共同经营画廊。</p></div>
-        <figure className="lost-photo-card" aria-label="旧照片图像层遗失；OCR转录显示招牌为东兴彼得">
-          <div><span>PHOTO LAYER LOST</span><b>图像层不可读取</b><small>文字识别层仍在</small></div>
-          <figcaption><span>OCR / 招牌</span><strong>东兴彼得</strong><p>照片人物以手遮住半张脸。</p></figcaption>
+        <figure className="lost-photo-card" aria-label="旧照片本体遗失；当前图像是根据文字识别层制作的视觉复原">
+          <div className="reconstructed-photo">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={browserPath("/archive/dongxing-peter-sign.webp")} alt="依据文字层复原的上世纪川渝街巷服装店招牌，牌面写着东兴彼得" />
+            <span>VISUAL RECONSTRUCTION</span>
+          </div>
+          <figcaption><span>OCR / 视觉复原</span><strong>东兴彼得</strong><p>原照片人物以手遮住半张脸；当前图像仅复原招牌与店面环境。</p></figcaption>
         </figure>
       </section>
 
@@ -2518,11 +2522,18 @@ function FangWanPage() {
 function DongxingPeterPage() {
   return (
     <article className="photo-record-page">
-      <header className="index-head"><div><p className="section-kicker">城市旧照 · 文字层缓存</p><h1>东兴彼得</h1></div><p>照片本体在迁移中遗失；OCR、替代文字和访客笔记仍可读取。</p></header>
+      <header className="index-head"><div><p className="section-kicker">城市旧照 · 图像复原层</p><h1>东兴彼得</h1></div><p>原照片在迁移中遗失；本页依据OCR、替代文字与访客笔记复原招牌环境。</p></header>
 
       <section className="photo-transcript">
-        <div className="photo-index"><span>DX—P / 04</span><b>扫描状态：IMAGE LOST</b><small>缩放不影响文字层</small></div>
-        <div className="photo-description"><span>替代文字</span><p>一名男子站在“东兴彼得”的招牌下面，以手遮住半张脸。背后可见塑胶模特与店内唯一的内衣柜台。</p></div>
+        <div className="photo-index"><span>DX—P / 04</span><b>IMAGE LOST / RECONSTRUCTED</b><small>视觉复原不等同于原始照片</small></div>
+        <div className="photo-reconstruction">
+          <figure>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={browserPath("/archive/dongxing-peter-sign.webp")} alt="上世纪川渝地区旧式服装店招牌的视觉复原，招牌写着东兴彼得" />
+            <figcaption><span>依据文字层复原</span><small>非原始档案影像</small></figcaption>
+          </figure>
+          <div className="photo-description"><span>原替代文字</span><p>一名男子站在“东兴彼得”的招牌下面，以手遮住半张脸。背后可见塑胶模特与店内唯一的内衣柜台。</p></div>
+        </div>
         <div className="ocr-strip"><span>OCR</span><strong>东兴彼得</strong><i>置信度 98%</i></div>
       </section>
 

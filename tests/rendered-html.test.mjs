@@ -74,6 +74,15 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(wangKeding, /结论：自杀/);
   assert.match(wangKeding, /该结论尚未经过交叉验证/);
 
+  const fangWan = await renderPath("/members/fang-wan");
+  assert.match(fangWan, /dongxing-peter-sign\.webp/);
+  assert.match(fangWan, /VISUAL RECONSTRUCTION/);
+
+  const dongxingPeter = await renderPath("/photos/dongxing-peter");
+  assert.match(dongxingPeter, /图像复原层/);
+  assert.match(dongxingPeter, /dongxing-peter-sign\.webp/);
+  assert.match(dongxingPeter, /非原始档案影像/);
+
   const liXiang = await renderPath("/archive/deaths/lixiang");
   assert.match(liXiang, /死亡过程/);
   assert.match(liXiang, /溺亡/);
