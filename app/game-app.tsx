@@ -2364,6 +2364,14 @@ function ArtworkPage() {
     <article className="record-page">
       <header className="record-header"><div><CacheStamp>RECOVERED CACHE / 01</CacheStamp><p className="section-kicker">撤回作品记录</p><h1>白芍肉</h1><p className="record-subtitle">公开目录没有这件作品，但旧版本仍保留了标题与投诉附件。</p></div><div className="cache-time"><span>最后公开版本</span><b>18:41:07</b><small>索引状态：REMOVED</small></div></header>
       <section className="record-layout"><div className="artwork-absence" aria-label="作品图像已被移除"><span>IMAGE REMOVED</span><b>图像文件已从公开服务器移除</b><small>checksum: 8f—c1—00—lost</small></div><dl className="record-facts"><MetaLine label="作品名">《白芍肉》</MetaLine><MetaLine label="创作者">葛东平</MetaLine><MetaLine label="媒介">布面综合材料</MetaLine><MetaLine label="策展联系人"><span className="redacted">李 泰</span></MetaLine><MetaLine label="目录状态">未入展 / 已撤回</MetaLine></dl></section>
+      <section className="artwork-original-reference">
+        <figure>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={browserPath("/archive/baishaorou-original.webp")} alt="《白芍肉》原作：蓝黑色人物侧身，肩背叠有红色白芍花与我自顾文字" />
+          <figcaption><span>ORIGINAL WORK / SOURCE IMAGE</span><small>原作留存图</small></figcaption>
+        </figure>
+        <div><span>原作图像</span><h2>《白芍肉》</h2><p>蓝黑色人物侧身与红色白芍相叠，肩背保留“我自顾”三字。该图作为原作参考单独归档，不回填被移除的服务器图像，也不替代 A-07 展厅空墙。</p><dl><MetaLine label="创作者">葛东平</MetaLine><MetaLine label="档案关系">原作留存图／撤回作品记录</MetaLine></dl></div>
+      </section>
       <section className="transcript-card"><div><ArtifactTag>投诉转录 / 片段 03</ArtifactTag><span className="audio-off">无音频</span></div><p>“怎么撤我的展品呢？”</p><p className="transcript-loud">“李泰呢？李泰！李泰——”</p><p>记录在此处中断。三次点名均指向同一旧成员索引。</p></section>
     </article>
   );

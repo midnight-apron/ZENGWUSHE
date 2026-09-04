@@ -118,6 +118,18 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
   assert.match(cremation, /他山地方公墓贪污案/);
 });
 
+test("keeps the missing-work clues while showing the separate Baishaorou original", async () => {
+  const exhibition = await renderPath("/exhibitions/zhuhongmen");
+  assert.match(exhibition, /检查西南角空画框/);
+  assert.doesNotMatch(exhibition, /baishaorou-original\.webp/);
+
+  const artwork = await renderPath("/cache/artwork/baishaorou");
+  assert.match(artwork, /IMAGE REMOVED/);
+  assert.match(artwork, /baishaorou-original\.webp/);
+  assert.match(artwork, /原作留存图/);
+  assert.match(artwork, /不回填被移除的服务器图像/);
+});
+
 test("renders the five-person cemetery case without inventing missing deaths", async () => {
   const caseIndex = await renderPath("/archive/case/cemetery");
   assert.match(caseIndex, /CASE INDEX \/ 05 PERSONS/);
