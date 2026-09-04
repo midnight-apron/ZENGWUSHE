@@ -6100,7 +6100,7 @@ button {
   overflow: hidden;
 }
 
-.stone-image-stage img {
+.stone-image-stage > img {
   display: block;
   width: 100%;
   height: 100%;
@@ -6110,8 +6110,23 @@ button {
   filter: saturate(0.6) contrast(1.07);
 }
 
+.stone-image-stage .stone-image-blood {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 2400ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.stone-inspection.is-complete .stone-image-blood,
+.stone-inspection.is-revealing .stone-image-blood {
+  opacity: 0.92;
+}
+
 .stone-hotspots {
   position: absolute;
+  z-index: 2;
   inset: 0;
 }
 
@@ -6152,28 +6167,6 @@ button {
 .base-hotspot {
   right: 12%;
   bottom: 7%;
-}
-
-.seep-line {
-  position: absolute;
-  z-index: 2;
-  top: 63%;
-  left: 47%;
-  width: 0;
-  height: 2px;
-  opacity: 0;
-  background: #8d1117;
-  box-shadow: 0 1px 5px rgba(141, 17, 23, 0.7);
-  transform: rotate(18deg);
-  transform-origin: left center;
-  transition: width 700ms ease, opacity 240ms ease;
-  pointer-events: none;
-}
-
-.stone-inspection.is-complete .seep-line,
-.stone-inspection.is-revealing .seep-line {
-  width: 8.5rem;
-  opacity: 0.9;
 }
 
 .stone-controls {
@@ -6736,7 +6729,7 @@ button {
   }
 
   .stone-image-stage,
-  .stone-image-stage img {
+  .stone-image-stage > img {
     min-height: 27rem;
   }
 

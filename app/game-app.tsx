@@ -2700,17 +2700,19 @@ function XiyanTemplePage({
       <section className={`stone-inspection${completed ? " is-complete" : ""}${revealActive ? " is-revealing" : ""}`}>
         <div className="stone-image-stage">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={browserPath("/archive/stone-head-evidence.webp")} alt="可检查的断裂石质佛头；断口与底座分别设有互动区域" />
-          <span className="seep-line" aria-hidden="true" />
+          <img className="stone-image-clean" src={browserPath("/archive/stone-head-evidence.webp")} alt="可检查的断裂石质佛头；断口与底座分别设有互动区域" />
+          {/* The generated blood-state photograph is aligned with the clean archive image for a true crossfade. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="stone-image-blood" src={browserPath("/archive/stone-head-evidence-blood.webp")} alt="" aria-hidden="true" />
           <div className="stone-hotspots">
             <button className="stone-hotspot break-hotspot" type="button" onClick={() => onInspect("break")} aria-label={`检查佛头断口，已检查 ${breakClicks} 次`}><span>检查断口</span></button>
             <button className="stone-hotspot base-hotspot" type="button" onClick={() => onInspect("base")} disabled={breakClicks < 6} aria-label={`检查石座，已检查 ${baseClicks} 次`}><span>检查石座</span></button>
           </div>
         </div>
         <div className="stone-controls">
-          <div><span>图像检查</span><h2>{completed ? "断口出现一条细红渗痕。" : breakClicks < 6 ? "先确认颈部断口。" : "断口已标记；现在检查石座。"}</h2><p>没有声音、喷溅或闪烁。痕迹只在完成既定顺序后出现。</p></div>
+          <div><span>图像检查</span><h2>{completed ? "暗红色血迹正从佛头断口渗出。" : breakClicks < 6 ? "先确认颈部断口。" : "断口已标记；现在检查石座。"}</h2><p>没有声音、喷溅或闪烁。完成既定顺序后，干燥入库照会缓慢显露渗血状态。</p></div>
           {showCounts && <div className="stone-counts" aria-live="polite"><span>断口 <b>{breakClicks}/6</b></span><span>石座 <b>{baseClicks}/7</b></span></div>}
-          {completed && reducedScares && <p className="static-scare-note">减少惊吓：断口出现一条细红渗痕（静态替代）。</p>}
+          {completed && reducedScares && <p className="static-scare-note">减少惊吓：仅保留缓慢叠化，不伴随闪烁或声响。</p>}
         </div>
       </section>
 

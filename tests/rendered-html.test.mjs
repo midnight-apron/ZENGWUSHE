@@ -91,6 +91,8 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
   assert.match(temple, /六十七尊/);
   assert.match(temple, /检查断口/);
   assert.match(temple, /检查石座/);
+  assert.match(temple, /stone-head-evidence-blood\.webp/);
+  assert.doesNotMatch(temple, /seep-line/);
 
   const supplement = await renderPath("/archive/autopsy/wang-keding-supplement");
   assert.match(supplement, /石像数量－面部伤口数/);
