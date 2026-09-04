@@ -31,4 +31,22 @@ test("preserves the complete Juroutuanfei manuscript in source order", async () 
     "(元昶活动年表，引自杜彻小说《玛赫的厨房》)",
   );
   assert.equal(new Set(blocks.map((block) => block.sourceIndex)).size, 313);
+
+  const sectionStarts = blocks
+    .map((block, index) => block.kind === "section" ? index : -1)
+    .filter((index) => index >= 0);
+  const chapterRanges = sectionStarts.map((start, index) => ({
+    start: index === 0 ? 0 : start,
+    end: sectionStarts[index + 1] ?? blocks.length,
+  }));
+  const serializedBlocks = chapterRanges.flatMap(({ start, end }) => blocks.slice(start, end));
+
+  assert.deepEqual(chapterRanges, [
+    { start: 0, end: 89 },
+    { start: 89, end: 158 },
+    { start: 158, end: 184 },
+    { start: 184, end: 191 },
+    { start: 191, end: 313 },
+  ]);
+  assert.deepEqual(serializedBlocks, blocks, "five independent entries must preserve every source block exactly once");
 });

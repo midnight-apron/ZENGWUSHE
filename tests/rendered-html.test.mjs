@@ -222,11 +222,19 @@ test("renders the rewritten character history and encrypted fragment index", asy
   assert.match(character, /Ⅰ—Ⅹ/);
   assert.match(character, /始／末／的／碎／点/);
 
-  const sealedNovel = await renderPath("/publications/juroutuanfei");
-  assert.match(sealedNovel, /句肉抟飞/);
-  assert.match(sealedNovel, /全文未开放/);
-  assert.match(sealedNovel, /人物索引仍未完成/);
-  assert.doesNotMatch(sealedNovel, /旁观“肱运动”从一开始就很不着落/);
+  const serialIndex = await renderPath("/publications/juroutuanfei");
+  assert.match(serialIndex, /句肉.*抟飞/s);
+  assert.match(serialIndex, /0\/5/);
+  assert.match(serialIndex, /尚无章节开放/);
+  assert.doesNotMatch(serialIndex, /3dm×3dm A\.A\.1/);
+  assert.doesNotMatch(serialIndex, /旁观“肱运动”从一开始就很不着落/);
+
+  for (let section = 1; section <= 5; section += 1) {
+    const sealedSection = await renderPath(`/publications/juroutuanfei/section-${section}`);
+    assert.match(sealedSection, /章节尚未开放/);
+    assert.match(sealedSection, /这个地址不能提前解锁正文/);
+    assert.doesNotMatch(sealedSection, /旁观“肱运动”从一开始就很不着落/);
+  }
 
   const fragments = await renderPath("/stage/recovered-index");
   assert.match(fragments, /ENCRYPTED INDEX \/ Ⅰ—Ⅹ/);
