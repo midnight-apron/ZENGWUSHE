@@ -153,6 +153,10 @@ const ROUTES = {
   jurouSection3: "/publications/juroutuanfei/section-3",
   jurouSection4: "/publications/juroutuanfei/section-4",
   jurouSection5: "/publications/juroutuanfei/section-5",
+  scatteredSemu: "/archive/scattered/se-mu-jue-cao",
+  scatteredTiefangshan: "/archive/scattered/tiefangshan-bu",
+  scatteredZoudi: "/archive/scattered/zoudi-guoji",
+  scatteredNanfuzi: "/archive/scattered/nanfuzi",
   editorLogin: "/admin/editor/login",
   editorRevisions: "/admin/editor/revisions",
   yuanchang: "/admin/characters/yuanchang",
@@ -208,6 +212,10 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.jurouSection3]: "Section.3 鳥首上行功曹歌 A.A.2｜句肉抟飞",
   [ROUTES.jurouSection4]: "Section.4 皮｜句肉抟飞",
   [ROUTES.jurouSection5]: "Section.5 瑪赫的厨房｜句肉抟飞",
+  [ROUTES.scatteredSemu]: "色目掘漕｜独立散页",
+  [ROUTES.scatteredTiefangshan]: "铁房山补｜独立散页",
+  [ROUTES.scatteredZoudi]: "走地国记｜独立散页",
+  [ROUTES.scatteredNanfuzi]: "男腹子｜独立散页",
   [ROUTES.editorLogin]: "叶是｜编辑后台登录",
   [ROUTES.editorRevisions]: "叶是｜编辑缓存",
   [ROUTES.yuanchang]: "元昶／左君｜角色修订页",
@@ -2116,7 +2124,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.about:
         return <DirectoryPage kicker="ABOUT / INSTITUTION" title="关于" intro="憎恶社的机构资料及逐步恢复的网站版本历史。" entries={publicCatalog.about} onOpen={navigate} />;
       case ROUTES.geDongping:
-        return <GeDongpingPage />;
+        return <GeDongpingPage onOpenSupplement={() => navigate(ROUTES.scatteredSemu)} />;
       case ROUTES.artwork:
         return <ArtworkPage />;
       case ROUTES.curator:
@@ -2188,7 +2196,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.shouxiang:
         return <ShouxiangPage />;
       case ROUTES.duChe:
-        return <DuChePage />;
+        return <DuChePage onOpenSupplement={() => navigate(ROUTES.scatteredTiefangshan)} />;
       case ROUTES.wedding:
         return <WeddingPage />;
       case ROUTES.taste:
@@ -2217,6 +2225,14 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         const chapter = JUROUTUANFEI_CHAPTERS.find((item) => item.route === currentPath)!;
         return <JuroutuanfeiChapterPage chapter={chapter} available={chapter.isAvailable(game)} onBack={() => navigate(ROUTES.publications)} onSeries={() => navigate(ROUTES.juroutuanfei)} />;
       }
+      case ROUTES.scatteredSemu:
+        return <IndependentTextPage title="色目掘漕" placement="葛东平人物补遗" src="/archive/scattered/se-mu-jue-cao.html" available onBack={() => navigate(ROUTES.geDongping)} />;
+      case ROUTES.scatteredTiefangshan:
+        return <IndependentTextPage title="铁房山补" placement="杜彻／铁房山关联散页" src="/archive/scattered/tiefangshan-bu.html" available={game.unlocked.includes("S24")} onBack={() => navigate(ROUTES.duChe)} />;
+      case ROUTES.scatteredZoudi:
+        return <IndependentTextPage title="走地国记" placement="终局叙事补遗" src="/archive/scattered/zoudi-guoji.html" available={game.recovered.includes("12")} lateDisclosure onBack={() => navigate(ROUTES.recoveredIndex)} />;
+      case ROUTES.scatteredNanfuzi:
+        return <IndependentTextPage title="男腹子" placement="终局叙事补遗" src="/archive/scattered/nanfuzi.html" available={game.recovered.includes("12")} lateDisclosure onBack={() => navigate(ROUTES.recoveredIndex)} />;
       case ROUTES.editorLogin:
         return <EditorLoginPage
           user={editorUser}
@@ -2243,6 +2259,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
           onPasswordChange={setFragmentPassword}
           onSubmit={submitFragmentPassword}
           onStable={() => { setStableStage(true); setGame((previous) => ({ ...previous, stageTransformStep: 3 })); }}
+          onOpenSupplement={navigate}
         />;
       case ROUTES.stageZhuhongmen:
         return <StageZhuhongmenPage />;
@@ -2470,7 +2487,7 @@ function ExhibitionPage({ frameNotice, onInspectFrame }: { frameNotice: boolean;
   );
 }
 
-function GeDongpingPage() {
+function GeDongpingPage({ onOpenSupplement }: { onOpenSupplement: () => void }) {
   return (
     <article className="person-page ge-dongping-page">
       <header className="person-masthead">
@@ -2486,6 +2503,7 @@ function GeDongpingPage() {
         </figure>
         <div><span>文本摘录</span><h2>刺青</h2><blockquote><p>葛东平赤着上身，膀处小块一朵白芍站着，两簇窄叶。花下纹三字“我自顾”。言语中大有铭记着现代艺术失败的大创痛。但那花绣却实在美得逃出戏谑：</p><p>刺青。肉上生花，墨色的细线条与粗棱角穿插，团团从从，交亘几组颜色不同，仿似死了，仿似开得艳一时，素泠一时。频繁地抖动肩胛，字体扯皮扯筋肉变形，明体作宋。当是值得漂亮二字。刺扎的边角血隐隐继续敛光。对于非姣好肉之辩，针灼皮下图样猛然变化，冬天凝起，咕哝一紧，白白生生地教它多出大小皴痕来，如是古时候受用墨刑的罪人，脸上在这般季节结霜了。</p></blockquote></div>
       </section>
+      <button className="independent-text-link" type="button" onClick={onOpenSupplement}><span>独立散页 · 非《句肉抟飞》</span><b>篇目一：色目掘漕</b><small>葛东平人物补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
     </article>
   );
 }
@@ -2868,6 +2886,11 @@ function XiyanTemplePage({
 
       <section className="xiyan-archive"><span>旧照转录</span><p>“六十七个等身像放在院墙，摆做一排。从主殿一直列到寝房。”</p><code>67 → 6 / 7</code></section>
 
+      <section className="independent-leaf-prologue">
+        <header><span>独立散页 · 非《句肉抟飞》</span><h2>辣火趴在寺里各处五瓣。</h2></header>
+        <div><p>土蟹掐妙诀，<br />它说：荼<br />我说之于清蒸<br />顾了秋火过急</p><p>它说“格子” 沉下游泳，<br />同钳子舀汤浇壳。<br />也说毘。倏地脱力</p><p>腹子翻热我重复格子。<br />它游远，汤面圆圈同心。</p><p>我说：西岩寺。</p></div>
+      </section>
+
       {completed && (
         <RecoveredScript id="09" section="句肉篇 · 3.2" title="浣石" reader="方晚">
           <p>之后两年我一直想起<br />合伙做生意前的日子<br />那时还没接受政府的招标项目<br />得空就沿着西岩寺外小路<br />走一个上午。人们不知道<br />周末了无人烟的西岩寺<br />为何总有履印刻蚀在<br />寺门外一圈复叠一圈。</p>
@@ -3083,12 +3106,13 @@ function ShouxiangPage() {
   );
 }
 
-function DuChePage() {
+function DuChePage({ onOpenSupplement }: { onOpenSupplement: () => void }) {
   const [loginNote, setLoginNote] = useState("");
   return (
     <article className="person-page du-che-page">
       <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子。前一代人物离世之后，他仍留在公墓系统与画廊往来中。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮／李髪</MetaLine></dl></header>
       <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。画廊并非主要收入来源，他经一位世伯介绍，成为他山市公墓系统中的负责人。</p><p>家庭档案显示，他在前一代人物死亡之后继续留在这一系统。现有文本只呈现这段职业延续，不推定他承担案件责任。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名在两个来源中分别写作“李髮”与“李髪”。</p><code>INDEX: LI_髮 / LI_髪</code></aside></section>
+      <button className="independent-text-link" type="button" onClick={onOpenSupplement}><span>独立散页 · 非《句肉抟飞》</span><b>篇目二：铁房山补</b><small>杜彻、李髮与铁房山的三则补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
       <Dialog>
         <DialogTrigger asChild><button className="editor-login-link" type="button">编辑登录</button></DialogTrigger>
         <DialogContent className="editor-login-dialog"><DialogHeader><DialogTitle>旧站编辑登录</DialogTitle><DialogDescription>登录入口仍在，但本页没有提供账号或密码。</DialogDescription></DialogHeader><form onSubmit={(event) => { event.preventDefault(); setLoginNote("凭据不完整，编辑缓存未开放。输入内容没有被保存。"); }}><label>账号<input name="archive-user" autoComplete="off" /></label><label>密码<input name="archive-password" type="password" autoComplete="off" /></label><Button type="submit">登录后台</Button><p role="status">{loginNote}</p></form></DialogContent>
@@ -3266,6 +3290,37 @@ function JuroutuanfeiChapterPage({ chapter, available, onBack, onSeries }: { cha
   );
 }
 
+function IndependentTextPage({ title, placement, src, available, lateDisclosure = false, onBack }: { title: string; placement: string; src: string; available: boolean; lateDisclosure?: boolean; onBack: () => void }) {
+  const [frameHeight, setFrameHeight] = useState(900);
+
+  if (!available) {
+    return (
+      <article className="independent-text-page is-locked">
+        <header><CacheStamp>INDEPENDENT LEAF / SEALED</CacheStamp><p className="section-kicker">独立散页 · 非《句肉抟飞》</p><h1>{title}</h1></header>
+        <section><LockKeyhole aria-hidden="true" /><h2>这份散页尚未进入当前叙事层。</h2><p>继续完成相关人物与文本解密；直接输入地址不会提前显示正文。</p><Button type="button" variant="outline" onClick={onBack}>返回上一层档案</Button></section>
+      </article>
+    );
+  }
+
+  return (
+    <article className="independent-text-page">
+      <header><div><CacheStamp>INDEPENDENT LEAF / COMPLETE</CacheStamp><p className="section-kicker">独立散页 · 非《句肉抟飞》</p><h1>{title}</h1><p>{placement}</p></div><aside><span>呈现原则</span><p>{lateDisclosure ? "终局开放的主观叙事文本，不替代案卷中的责任判断。" : "依据人物与地点关系归档；正文保持完整，不拆散为线索。"}</p></aside></header>
+      <section className="independent-text-source"><span>馆藏来源</span><p>独立文本《辣火趴在寺里各处五瓣》；不并入《句肉抟飞》连载。</p></section>
+      <iframe
+        className="independent-text-frame"
+        src={browserPath(src)}
+        title={`${title}完整正文`}
+        style={{ height: frameHeight }}
+        onLoad={(event) => {
+          const measured = event.currentTarget.contentDocument?.documentElement.scrollHeight;
+          if (measured) setFrameHeight(measured + 8);
+        }}
+      />
+      <footer><span>END OF INDEPENDENT LEAF</span><Button type="button" variant="outline" onClick={onBack}>返回上一层档案</Button></footer>
+    </article>
+  );
+}
+
 function EditorLoginPage({ user, password, attempts, note, alreadyUnlocked, onUserChange, onPasswordChange, onSubmit, onReopen }: { user: string; password: string; attempts: number; note: string; alreadyUnlocked: boolean; onUserChange: (value: string) => void; onPasswordChange: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onReopen: () => void }) {
   return (
     <article className="editor-gate-page">
@@ -3304,7 +3359,7 @@ function YuanchangPage() {
   );
 }
 
-function RecoveredIndexPage({ revealed, password, attempts, note, transformStep, onPasswordChange, onSubmit, onStable }: { revealed: boolean; password: string; attempts: number; note: string; transformStep: number; onPasswordChange: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onStable: () => void }) {
+function RecoveredIndexPage({ revealed, password, attempts, note, transformStep, onPasswordChange, onSubmit, onStable, onOpenSupplement }: { revealed: boolean; password: string; attempts: number; note: string; transformStep: number; onPasswordChange: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onStable: () => void; onOpenSupplement: (path: string) => void }) {
   const fragments = [
     ["Ⅰ. 徐掖", <>下桥转身路过锦蜀饭馆，徐掖因死掉堂妹<br />约朋友坐其外打扑克<br />从口袋褶巴里摸出玉溪，给人散去半盒。</>],
     ["Ⅱ. 徐惠其一", <>徐惠。去学画或者其他。家父习惯叫<br />这门技术为江南几省的罗网，<br />被着驳彩迷乱青年人底心性——他讲道理如是。</>],
@@ -3321,6 +3376,7 @@ function RecoveredIndexPage({ revealed, password, attempts, note, transformStep,
     <article className={`fragment-stage-page step-${transformStep}`}>
       <header className="fragment-head"><div><CacheStamp>{revealed ? "RECOVERED SCRIPT / 12" : "ENCRYPTED INDEX / Ⅰ—Ⅹ"}</CacheStamp><p className="section-kicker">{revealed ? "场记正在显影" : "文本解密"}</p><h1>始末的碎点</h1></div>{revealed ? <div className="transform-status"><span>界面转换</span><b>{transformStep}/3</b><Button variant="outline" type="button" onClick={onStable} disabled={transformStep >= 3}>显示稳定版</Button></div> : <form className="fragment-password" onSubmit={onSubmit}><label>作者被替换前的旧名<input value={password} onChange={(event) => onPasswordChange(event.target.value)} autoComplete="off" /></label><Button type="submit">解除十段索引</Button><p role="status">{note || `错误不会清空碎片${attempts ? `；已尝试 ${attempts} 次` : ""}。`}</p></form>}</header>
       <section className="fragment-grid" aria-label="始末的碎点正文">{fragments.map(([title, copy], index) => <article key={String(title)} className={!revealed ? "is-locked" : ""}><span>{String(index + 1).padStart(2,"0")}</span><h2>{revealed ? title : `碎片 ${String(index + 1).padStart(2,"0")}`}</h2><div className="stable-fragment-copy">{revealed ? copy : "文字层已加密"}</div>{revealed && transformStep < 3 && <div className="glitch-overlay" aria-hidden="true">{index % 2 ? "剧本／声部／入场" : "▒ 场记_恢复中 ▒"}</div>}</article>)}</section>
+      {revealed && <section className="late-supplement-shelf"><header><span>独立散页 · 非《句肉抟飞》</span><h2>终局叙事补遗</h2><p>这两份文本含有比案卷结论更直接的主观叙述，因此只在“始末的碎点”解密后开放；它们作为文学文本呈现，不替代案件索引中的责任判断。</p></header><div><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredZoudi)}><span>篇目三</span><b>走地国记</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredNanfuzi)}><span>篇目四</span><b>男腹子</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button></div></section>}
       {revealed && <section className="stage-call"><span>SCENE INDEX / 13 OF 14</span><h2>文本已接近就位</h2><p>恢复目录只剩结诗。它与网站最初的当前展览使用同一个标题。</p><strong>下一搜索词：赭红门</strong></section>}
     </article>
   );

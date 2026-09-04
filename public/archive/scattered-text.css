@@ -1,0 +1,72 @@
+:root {
+  color-scheme: light;
+  --ink: #171410;
+  --paper: #f0eadc;
+  --paper-deep: #e1d5c1;
+  --accent: #8f1712;
+  --rule: rgba(23, 20, 16, 0.25);
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--paper-deep);
+  color: var(--ink);
+  font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
+}
+
+body {
+  width: min(760px, calc(100% - 32px));
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: clamp(42px, 8vw, 92px) clamp(24px, 7vw, 74px) 110px;
+  background:
+    linear-gradient(rgba(255,255,255,.18), rgba(255,255,255,.18)),
+    repeating-linear-gradient(0deg, transparent 0 27px, rgba(50, 37, 25, .035) 28px),
+    var(--paper);
+  box-shadow: 0 0 54px rgba(30, 20, 12, .18);
+  line-height: 2;
+  letter-spacing: .045em;
+}
+
+body::before {
+  content: "独立散页 · 非《句肉抟飞》";
+  display: block;
+  margin-bottom: 42px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--accent);
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+#title-block-header { display: none; }
+
+p { margin: 0 0 1.25em; }
+
+p:first-of-type strong {
+  display: block;
+  margin-bottom: 1.4em;
+  color: var(--accent);
+  font-size: clamp(26px, 5vw, 42px);
+  font-weight: 500;
+  line-height: 1.25;
+  letter-spacing: .08em;
+}
+
+em { color: #51483e; }
+
+strong {
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  body {
+    width: 100%;
+    padding: 34px 20px 80px;
+    box-shadow: none;
+    font-size: 15px;
+  }
+}
