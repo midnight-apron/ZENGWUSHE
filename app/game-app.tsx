@@ -114,6 +114,7 @@ const ROUTES = {
   publications: "/publications",
   about: "/about",
   exhibition: "/exhibitions/zhuhongmen",
+  geDongping: "/members/ge-dongping",
   artwork: "/cache/artwork/baishaorou",
   curator: "/cache/curator/li-tai",
   dimensions: "/cross-index/3dm-3dm",
@@ -163,6 +164,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.publications]: "出版物｜憎恶社",
   [ROUTES.about]: "关于｜憎恶社",
   [ROUTES.exhibition]: "赭红门｜当期展览",
+  [ROUTES.geDongping]: "葛东平｜人物档案",
   [ROUTES.artwork]: "白芍肉｜撤回作品缓存",
   [ROUTES.curator]: "李泰｜旧成员缓存",
   [ROUTES.dimensions]: "3dm×3dm｜尺寸交叉索引",
@@ -234,6 +236,10 @@ const HINTS: Record<string, string[]> = {
     "两条记录有同一个尺寸，其中一条没有标题。",
     "规格里的数字也可能是动作次数。",
     "连续点击空画框中心 3 次。",
+  ],
+  [ROUTES.geDongping]: [
+    "这是公开人物条目；附图与文字只作为葛东平的人物材料出现。",
+    "作品撤回线索仍需从展厅记录与搜索框继续追查。",
   ],
   [ROUTES.damagedReader]: [
     "乱码不会阻断线索，可以打开纯文字版本。",
@@ -439,7 +445,7 @@ function buildPublicCatalog(game: GameState) {
   const recovered = (id: string) => game.recovered.includes(id);
 
   const people: DirectoryEntry[] = [
-    { id: "ge-dongping", eyebrow: "参展者 / 公开资料", title: "葛东平", summary: "《赭红门》当期展览参展者；其访客意见被收录在展厅记录中。" },
+    { id: "ge-dongping", eyebrow: "参展者 / 人物档案", title: "葛东平", summary: "《赭红门》当期展览相关人物；人物附图与文本摘录现已归档。", path: ROUTES.geDongping, isNew: true },
     unlocked("S02") && { id: "li-tai", eyebrow: "旧成员缓存", title: "李泰", summary: "撤回作品记录中的策展与编辑人员。", path: ROUTES.curator, isNew: true },
     unlocked("S06") && { id: "du-nanyang", eyebrow: "人物档案", title: "杜南阳", summary: "旧成员页与社团合照中的同一人物。", path: ROUTES.duNanyangOld, isNew: true },
     unlocked("S07") && { id: "du-wanlin", eyebrow: "合并人物档案", title: "杜万琳", summary: "创作者、家属关系与多份朗读文件的交叉节点。", path: ROUTES.duWanlin, isNew: true },
@@ -1087,6 +1093,18 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     if (!normalized) {
       setResults([]);
       setResultNote("先输入一个作品名、人名、尺寸或文件标签。");
+      return;
+    }
+
+    if (normalized === "葛东平") {
+      setResults([{
+        id: "ge-dongping",
+        kind: "公开人物档案 · 1条",
+        title: "葛东平",
+        summary: "《赭红门》当期展览相关人物；附有一份图像材料与文本摘录。",
+        path: ROUTES.geDongping,
+      }]);
+      setResultNote("找到一份公开人物条目。");
       return;
     }
 
@@ -2014,6 +2032,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         return <DirectoryPage kicker="PUBLICATIONS / TEXT" title="出版物" intro="展览手册、小说集、小说出版档案与最终开放的诗剧资料。" entries={publicCatalog.publications} onOpen={navigate} />;
       case ROUTES.about:
         return <DirectoryPage kicker="ABOUT / INSTITUTION" title="关于" intro="憎恶社的机构资料及逐步恢复的网站版本历史。" entries={publicCatalog.about} onOpen={navigate} />;
+      case ROUTES.geDongping:
+        return <GeDongpingPage />;
       case ROUTES.artwork:
         return <ArtworkPage />;
       case ROUTES.curator:
@@ -2359,19 +2379,31 @@ function ExhibitionPage({ frameNotice, onInspectFrame }: { frameNotice: boolean;
   );
 }
 
+function GeDongpingPage() {
+  return (
+    <article className="person-page ge-dongping-page">
+      <header className="person-masthead">
+        <div><CacheStamp>PERSON / PUBLIC FILE</CacheStamp><p className="section-kicker">参展相关人物</p><h1>葛东平</h1><p>《赭红门》当期展览相关人物。其访客意见、人物附图与文本摘录分别保存在不同记录层。</p></div>
+        <dl className="person-quick-facts"><MetaLine label="身份">参展者／艺术工作者</MetaLine><MetaLine label="公开关联">《赭红门》</MetaLine><MetaLine label="档案">图像材料 GD—01</MetaLine></dl>
+      </header>
+
+      <section className="ge-dongping-archive">
+        <figure>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={browserPath("/archive/ge-dongping-figure.webp")} alt="葛东平人物附图：蓝黑色人物侧身，肩背叠有红色白芍花与我自顾文字" />
+          <figcaption><span>FIGURE / GD—01</span><small>人物附图</small></figcaption>
+        </figure>
+        <div><span>文本摘录</span><h2>刺青</h2><blockquote><p>葛东平赤着上身，膀处小块一朵白芍站着，两簇窄叶。花下纹三字“我自顾”。言语中大有铭记着现代艺术失败的大创痛。但那花绣却实在美得逃出戏谑：</p><p>刺青。肉上生花，墨色的细线条与粗棱角穿插，团团从从，交亘几组颜色不同，仿似死了，仿似开得艳一时，素泠一时。频繁地抖动肩胛，字体扯皮扯筋肉变形，明体作宋。当是值得漂亮二字。刺扎的边角血隐隐继续敛光。对于非姣好肉之辩，针灼皮下图样猛然变化，冬天凝起，咕哝一紧，白白生生地教它多出大小皴痕来，如是古时候受用墨刑的罪人，脸上在这般季节结霜了。</p></blockquote></div>
+      </section>
+    </article>
+  );
+}
+
 function ArtworkPage() {
   return (
     <article className="record-page">
       <header className="record-header"><div><CacheStamp>RECOVERED CACHE / 01</CacheStamp><p className="section-kicker">撤回作品记录</p><h1>白芍肉</h1><p className="record-subtitle">公开目录没有这件作品，但旧版本仍保留了标题与投诉附件。</p></div><div className="cache-time"><span>最后公开版本</span><b>18:41:07</b><small>索引状态：REMOVED</small></div></header>
       <section className="record-layout"><div className="artwork-absence" aria-label="作品图像已被移除"><span>IMAGE REMOVED</span><b>图像文件已从公开服务器移除</b><small>checksum: 8f—c1—00—lost</small></div><dl className="record-facts"><MetaLine label="作品名">《白芍肉》</MetaLine><MetaLine label="创作者">葛东平</MetaLine><MetaLine label="媒介">布面综合材料</MetaLine><MetaLine label="策展联系人"><span className="redacted">李 泰</span></MetaLine><MetaLine label="目录状态">未入展 / 已撤回</MetaLine></dl></section>
-      <section className="artwork-original-reference">
-        <figure>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={browserPath("/archive/baishaorou-original.webp")} alt="《白芍肉》原作：蓝黑色人物侧身，肩背叠有红色白芍花与我自顾文字" />
-          <figcaption><span>ORIGINAL WORK / SOURCE IMAGE</span><small>原作留存图</small></figcaption>
-        </figure>
-        <div><span>原作图像</span><h2>《白芍肉》</h2><p>蓝黑色人物侧身与红色白芍相叠，肩背保留“我自顾”三字。该图作为原作参考单独归档，不回填被移除的服务器图像，也不替代 A-07 展厅空墙。</p><dl><MetaLine label="创作者">葛东平</MetaLine><MetaLine label="档案关系">原作留存图／撤回作品记录</MetaLine></dl></div>
-      </section>
       <section className="transcript-card"><div><ArtifactTag>投诉转录 / 片段 03</ArtifactTag><span className="audio-off">无音频</span></div><p>“怎么撤我的展品呢？”</p><p className="transcript-loud">“李泰呢？李泰！李泰——”</p><p>记录在此处中断。三次点名均指向同一旧成员索引。</p></section>
     </article>
   );

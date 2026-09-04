@@ -4890,7 +4890,7 @@ button {
   box-shadow: none;
 }
 
-.artwork-original-reference {
+.ge-dongping-archive {
   display: grid;
   grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1fr);
   gap: clamp(2rem, 6vw, 6rem);
@@ -4901,21 +4901,21 @@ button {
   border-bottom: 1px solid var(--line);
 }
 
-.artwork-original-reference figure {
+.ge-dongping-archive figure {
   position: relative;
   margin: 0;
   padding: clamp(0.8rem, 2vw, 1.4rem);
   background: #1c2934;
 }
 
-.artwork-original-reference figure img {
+.ge-dongping-archive figure img {
   display: block;
   width: 100%;
   max-height: 52rem;
   object-fit: contain;
 }
 
-.artwork-original-reference figcaption {
+.ge-dongping-archive figcaption {
   position: absolute;
   right: 1.6rem;
   bottom: 1.6rem;
@@ -4928,24 +4928,24 @@ button {
   border: 1px solid rgba(238, 233, 223, 0.44);
 }
 
-.artwork-original-reference figcaption span {
+.ge-dongping-archive figcaption span {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.68rem;
   letter-spacing: 0.08em;
 }
 
-.artwork-original-reference figcaption small {
+.ge-dongping-archive figcaption small {
   color: #c7c1b7;
   font-size: 0.7rem;
 }
 
-.artwork-original-reference > div > span {
+.ge-dongping-archive > div > span {
   color: var(--blood);
   font-size: 0.78rem;
   letter-spacing: 0.08em;
 }
 
-.artwork-original-reference h2 {
+.ge-dongping-archive h2 {
   margin: 1rem 0 2rem;
   font-size: clamp(2.8rem, 6vw, 6rem);
   font-weight: 540;
@@ -4953,20 +4953,17 @@ button {
   letter-spacing: -0.06em;
 }
 
-.artwork-original-reference > div > p {
-  max-width: 35rem;
+.ge-dongping-archive blockquote {
+  max-width: 39rem;
+  margin: 0;
   color: var(--ash);
-  line-height: 1.85;
 }
 
-.artwork-original-reference dl {
-  margin: 2.5rem 0 0;
-  border-top: 1px solid var(--line);
-}
-
-.artwork-original-reference .meta-line {
-  grid-template-columns: 7rem 1fr;
-  padding: 0.9rem 0;
+.ge-dongping-archive blockquote p {
+  margin: 0 0 1.25rem;
+  font-family: var(--display-serif);
+  font-size: clamp(1rem, 1.45vw, 1.16rem);
+  line-height: 1.95;
 }
 
 .record-facts .meta-line {
@@ -7091,16 +7088,16 @@ button {
     margin-top: 2.5rem;
   }
 
-  .artwork-original-reference {
+  .ge-dongping-archive {
     grid-template-columns: 1fr;
   }
 
-  .artwork-original-reference figure {
+  .ge-dongping-archive figure {
     width: min(100%, 34rem);
     margin: 0 auto;
   }
 
-  .artwork-original-reference figcaption {
+  .ge-dongping-archive figcaption {
     right: 1.2rem;
     bottom: 1.2rem;
     align-items: flex-start;
