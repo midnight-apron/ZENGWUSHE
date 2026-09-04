@@ -2710,7 +2710,7 @@ function XiyanTemplePage({
           </div>
         </div>
         <div className="stone-controls">
-          <div><span>图像检查</span><h2>{completed ? "暗红色血迹正从佛头断口渗出。" : breakClicks < 6 ? "先确认颈部断口。" : "断口已标记；现在检查石座。"}</h2><p>没有声音、喷溅或闪烁。完成既定顺序后，干燥入库照会缓慢显露渗血状态。</p></div>
+          <div><span>图像检查</span><h2>{completed ? "佛头七窍正在渗出暗红血迹。" : breakClicks < 6 ? "先确认颈部断口。" : "断口已标记；现在检查石座。"}</h2><p>没有声音、喷溅或闪烁。完成既定顺序后，干燥入库照会缓慢显露七窍出血状态。</p></div>
           {showCounts && <div className="stone-counts" aria-live="polite"><span>断口 <b>{breakClicks}/6</b></span><span>石座 <b>{baseClicks}/7</b></span></div>}
           {completed && reducedScares && <p className="static-scare-note">减少惊吓：仅保留缓慢叠化，不伴随闪烁或声响。</p>}
         </div>
