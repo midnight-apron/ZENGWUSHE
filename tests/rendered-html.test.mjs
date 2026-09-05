@@ -37,7 +37,26 @@ test("renders the gallery homepage and missing-work entrance", async () => {
   assert.match(html, /赭红门/);
   assert.match(html, /展品丢失/);
   assert.match(html, /\/gallery\/zhuhongmen-hall\.webp/);
+  assert.match(html, /VIEWING ROOM \/ 画作赏析/);
+  assert.match(html, /乔凡尼·阿尔诺芬尼夫妇像/);
+  assert.match(html, /维纳斯的诞生/);
+  assert.match(html, /\/gallery\/renaissance\/arnolfini\.webp/);
+  assert.doesNotMatch(html, /INDEX \/ 公开目录/);
+  assert.doesNotMatch(html, /从公开页面开始查找/);
   assert.match(html, /搜索作品、人名、尺寸或文件标签/);
+});
+
+test("keeps the breakup interstitial and Xu Hui sketch behind their intended triggers", async () => {
+  const source = await import("node:fs/promises").then(({ readFile }) =>
+    readFile(new URL("../app/game-app.tsx", import.meta.url), "utf8"),
+  );
+
+  assert.match(source, /currentPath !== ROUTES\.history/);
+  assert.match(source, /J04-collapse-image/);
+  assert.match(source, /collapseImageActive/);
+  assert.match(source, /archive\/zengwu-collapse\.webp/);
+  assert.match(source, /gallery\/xu-hui-sketch\.webp/);
+  assert.match(source, /work\.interactive \? \(/);
 });
 
 test("renders the public gallery directories without leaking locked records", async () => {

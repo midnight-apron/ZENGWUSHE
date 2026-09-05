@@ -653,6 +653,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [supplementPasswordNote, setSupplementPasswordNote] = useState("");
   const [deathScareActive, setDeathScareActive] = useState(false);
   const [deathScareTextVisible, setDeathScareTextVisible] = useState(false);
+  const [collapseImageActive, setCollapseImageActive] = useState(false);
   const [editorUser, setEditorUser] = useState("");
   const [editorPassword, setEditorPassword] = useState("");
   const [editorAttempts, setEditorAttempts] = useState(0);
@@ -664,6 +665,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const skipScareRef = useRef<HTMLButtonElement>(null);
   const skipDeathScareRef = useRef<HTMLButtonElement>(null);
+  const collapseImageRef = useRef<HTMLButtonElement>(null);
 
   const currentPath = displayPath(path);
   const currentHints = HINTS[currentPath] ?? HINTS[ROUTES.exhibition];
@@ -717,6 +719,14 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     navigate(ROUTES.wangDeath);
     window.setTimeout(() => searchInputRef.current?.focus(), 0);
   }, [mutateGame, navigate]);
+
+  const dismissCollapseImage = useCallback(() => {
+    setCollapseImageActive(false);
+    setGame((previous) => ({
+      ...previous,
+      scaresSeen: unique([...previous.scaresSeen, "J04-collapse-image"]),
+    }));
+  }, []);
 
   useEffect(() => {
     const initialize = window.setTimeout(() => {
@@ -908,6 +918,33 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       window.clearTimeout(timer);
     };
   }, [currentPath, game.scaresSeen, game.settings.reducedMotion]);
+
+  useEffect(() => {
+    const roleGlitchFinished = game.scaresSeen.includes("role-glitch");
+    const collapseImageSeen = game.scaresSeen.includes("J04-collapse-image");
+    if (currentPath !== ROUTES.history || !roleGlitchFinished || collapseImageSeen) return;
+
+    if (game.settings.reducedScares) {
+      const skip = window.setTimeout(() => {
+        setGame((previous) => ({
+          ...previous,
+          scaresSeen: unique([...previous.scaresSeen, "J04-collapse-image"]),
+        }));
+      }, 0);
+      return () => window.clearTimeout(skip);
+    }
+
+    const reveal = window.setTimeout(
+      () => setCollapseImageActive(true),
+      game.settings.reducedMotion ? 0 : 180,
+    );
+    return () => window.clearTimeout(reveal);
+  }, [currentPath, game.scaresSeen, game.settings.reducedMotion, game.settings.reducedScares]);
+
+  useEffect(() => {
+    if (!collapseImageActive) return;
+    collapseImageRef.current?.focus();
+  }, [collapseImageActive]);
 
   useEffect(() => {
     if (!scareActive) return;
@@ -2112,7 +2149,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   function renderPage() {
     switch (currentPath) {
       case ROUTES.home:
-        return <GalleryHomePage onStart={() => navigate(ROUTES.exhibition)} onOpenDirectory={navigate} />;
+        return <GalleryHomePage onStart={() => navigate(ROUTES.exhibition)} />;
       case ROUTES.exhibitions:
         return <DirectoryPage kicker="PROGRAM / EXHIBITIONS" title="展览" intro="正在展出的项目与从旧版本中恢复的特别计划。未被发现的条目不会出现在公开目录中。" entries={publicCatalog.exhibitions} onOpen={navigate} />;
       case ROUTES.people:
@@ -2395,11 +2432,85 @@ export function GameApp({ initialPath }: { initialPath: string }) {
           </article>
         </div>
       )}
+
+      {collapseImageActive && (
+        <div className="collapse-image-layer" role="dialog" aria-modal="true" aria-label="憎恶社停止活动后的四散意象">
+          <button ref={collapseImageRef} type="button" onClick={dismissCollapseImage} aria-label="关闭四散意象并继续查看旧社团档案">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={browserPath("/archive/zengwu-collapse.webp")} alt="深蓝色水面般的背景中，白色飞鸟向四处散开，一只红鸟停留在中央下方" />
+            <span>点击画面继续</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-function GalleryHomePage({ onStart, onOpenDirectory }: { onStart: () => void; onOpenDirectory: (path: string) => void }) {
+const RENAISSANCE_WORKS = [
+  {
+    id: "arnolfini",
+    title: "乔凡尼·阿尔诺芬尼夫妇像",
+    artist: "扬·凡·艾克",
+    year: "1434",
+    collection: "伦敦国家美术馆",
+    image: "/gallery/renaissance/arnolfini.webp",
+    alt: "扬·凡·艾克画作《乔凡尼·阿尔诺芬尼夫妇像》",
+    note: "凸面镜、吊灯与室内织物，把双人肖像变成一间关于观看与见证的房间。",
+    interactive: true,
+  },
+  {
+    id: "birth-of-venus",
+    title: "维纳斯的诞生",
+    artist: "桑德罗·波提切利",
+    year: "约 1485",
+    collection: "乌菲齐美术馆",
+    image: "/gallery/renaissance/birth-of-venus.webp",
+    alt: "桑德罗·波提切利画作《维纳斯的诞生》",
+    note: "海风、衣褶与贝壳，让神话人物在平面化的节奏中抵达岸边。",
+  },
+  {
+    id: "primavera",
+    title: "春",
+    artist: "桑德罗·波提切利",
+    year: "约 1480",
+    collection: "乌菲齐美术馆",
+    image: "/gallery/renaissance/primavera.webp",
+    alt: "桑德罗·波提切利画作《春》",
+    note: "花木、身体与寓意人物，被编织成一座难以一次读完的花园。",
+  },
+  {
+    id: "lady-with-ermine",
+    title: "抱银鼠的女子",
+    artist: "列奥纳多·达·芬奇",
+    year: "约 1489—1490",
+    collection: "恰尔托雷斯基博物馆",
+    image: "/gallery/renaissance/lady-with-ermine.webp",
+    alt: "列奥纳多·达·芬奇画作《抱银鼠的女子》",
+    note: "身体转向和视线错位，使静止的肖像保留了刚刚发生过的动作。",
+  },
+  {
+    id: "castiglione",
+    title: "巴尔达萨雷·卡斯蒂廖内肖像",
+    artist: "拉斐尔",
+    year: "约 1514—1515",
+    collection: "卢浮宫",
+    image: "/gallery/renaissance/castiglione.webp",
+    alt: "拉斐尔画作《巴尔达萨雷·卡斯蒂廖内肖像》",
+    note: "灰、黑与肉色的克制关系，把人物的身份暂时退到目光之后。",
+  },
+  {
+    id: "goldsmith",
+    title: "金匠在他的店铺",
+    artist: "彼得鲁斯·克里斯蒂",
+    year: "1449",
+    collection: "大都会艺术博物馆",
+    image: "/gallery/renaissance/goldsmith.webp",
+    alt: "彼得鲁斯·克里斯蒂画作《金匠在他的店铺》",
+    note: "镜面、金属和玻璃，把商业空间处理成一场细密的物质观看。",
+  },
+] as const;
+
+function GalleryHomePage({ onStart }: { onStart: () => void }) {
   return (
     <article className="gallery-home">
       <section className="gallery-home-hero" aria-labelledby="current-exhibition-title">
@@ -2428,19 +2539,49 @@ function GalleryHomePage({ onStart, onOpenDirectory }: { onStart: () => void; on
         <div className="missing-work-mark" aria-hidden="true"><span>A—07</span><i>未确认位置</i></div>
       </section>
 
-      <section className="gallery-home-index" aria-label="站点栏目">
-        <header><p>INDEX / 公开目录</p><h2>从公开页面开始查找。</h2></header>
-        <div>
-          {[
-            { path: ROUTES.exhibitions, index: "01", title: "展览", note: "当前项目与特别计划" },
-            { path: ROUTES.people, index: "02", title: "人物", note: "参展者与恢复的人物档案" },
-            { path: ROUTES.news, index: "03", title: "新闻", note: "场馆公告与地方记录" },
-            { path: ROUTES.publications, index: "04", title: "出版物", note: "展览手册、小说集与诗剧资料" },
-          ].map((item) => (
-            <button key={item.path} type="button" onClick={() => onOpenDirectory(item.path)}>
-              <span>{item.index}</span><strong>{item.title}</strong><small>{item.note}</small><ArrowUpRight aria-hidden="true" />
-            </button>
-          ))}
+      <section className="gallery-appreciation" aria-labelledby="gallery-appreciation-title">
+        <header>
+          <p>VIEWING ROOM / 画作赏析</p>
+          <div><h2 id="gallery-appreciation-title">凝视一幅画，直到它交出另一张脸。</h2><span>文艺复兴与早期尼德兰绘画选</span></div>
+        </header>
+
+        <div className="renaissance-grid">
+          {RENAISSANCE_WORKS.map((work, index) => {
+            const image = <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={browserPath(work.image)} alt={work.alt} />
+              {work.interactive ? <i>DETAIL / 可查看</i> : null}
+            </>;
+            return (
+              <figure key={work.id} className={`renaissance-card renaissance-card-${index + 1}${work.interactive ? " is-interactive" : ""}`}>
+                {work.interactive ? (
+                  <Dialog>
+                    <DialogTrigger asChild><button type="button" className="renaissance-image-button" aria-label={`查看《${work.title}》的馆藏细节`}>{image}</button></DialogTrigger>
+                    <DialogContent className="xu-hui-sketch-dialog">
+                      <div className="xu-hui-sketch-image">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={browserPath("/gallery/xu-hui-sketch.webp")} alt="泛黄纸张上的徐惠炭笔肖像手稿" />
+                      </div>
+                      <div className="xu-hui-sketch-copy">
+                        <DialogHeader>
+                          <p>馆藏图像交叉索引 / 未登记</p>
+                          <DialogTitle>徐惠</DialogTitle>
+                          <DialogDescription>一张夹在旧图录里的素描手稿。纸张背面只留下人物名，没有作者、年代与入藏编号。</DialogDescription>
+                        </DialogHeader>
+                        <span>此图不属于《乔凡尼·阿尔诺芬尼夫妇像》，也未被登记为扬·凡·艾克作品。</span>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                ) : image}
+                <figcaption>
+                  <span>{String(index + 1).padStart(2, "0")} / {work.collection}</span>
+                  <h3>{work.title}</h3>
+                  <b>{work.artist} · {work.year}</b>
+                  <p>{work.note}</p>
+                </figcaption>
+              </figure>
+            );
+          })}
         </div>
       </section>
     </article>
