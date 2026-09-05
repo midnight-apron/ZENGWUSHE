@@ -38,6 +38,8 @@ test("renders the gallery homepage and missing-work entrance", async () => {
   assert.match(html, /展品丢失/);
   assert.match(html, /\/gallery\/zhuhongmen-hall\.webp/);
   assert.match(html, /VIEWING ROOM \/ 画作赏析/);
+  assert.match(html, /文艺复兴与早期尼德兰绘画选/);
+  assert.doesNotMatch(html, /凝视一幅画，直到它交出另一张脸/);
   assert.match(html, /乔凡尼·阿尔诺芬尼夫妇像/);
   assert.match(html, /维纳斯的诞生/);
   assert.match(html, /\/gallery\/renaissance\/arnolfini\.webp/);

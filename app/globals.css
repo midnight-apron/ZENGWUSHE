@@ -267,12 +267,6 @@
   letter-spacing: -0.045em;
 }
 
-.gallery-appreciation > header div > span {
-  color: var(--ash);
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-}
-
 .renaissance-grid {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));

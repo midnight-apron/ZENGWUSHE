@@ -2542,7 +2542,7 @@ function GalleryHomePage({ onStart }: { onStart: () => void }) {
       <section className="gallery-appreciation" aria-labelledby="gallery-appreciation-title">
         <header>
           <p>VIEWING ROOM / 画作赏析</p>
-          <div><h2 id="gallery-appreciation-title">凝视一幅画，直到它交出另一张脸。</h2><span>文艺复兴与早期尼德兰绘画选</span></div>
+          <div><h2 id="gallery-appreciation-title">文艺复兴与早期尼德兰绘画选</h2></div>
         </header>
 
         <div className="renaissance-grid">
