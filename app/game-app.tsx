@@ -365,9 +365,9 @@ const HINTS: Record<string, string[]> = {
     "搜索：杜彻。",
   ],
   [ROUTES.duChe]: [
-    "人物页写出杜彻结婚对象的名字；两种字形都在来源中出现。",
-    "“髮”与“髪”指向同一个人。简体字只会给出纠错提示。",
-    "搜索：李髮或李髪。也可以先搜索：刍味。",
+    "人物页写出杜彻结婚对象的名字。",
+    "她的姓名是李髮；简体字只会给出纠错提示。",
+    "搜索：李髮。也可以先搜索：刍味。",
   ],
   [ROUTES.wedding]: [
     "婚礼档案不是这一支线唯一的朗读文件；杜彻本人也有一个声部。",
@@ -1684,14 +1684,14 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (["李髮", "李髪"].includes(normalized)) {
+    if (normalized === "李髮") {
       const allowed = game.unlocked.includes("S24") || currentPath === ROUTES.duChe;
       setResults([{
         id: "du-li-wedding",
         kind: allowed ? "婚礼档案＋朗读文件" : "人物关系元数据",
         title: "杜彻与李髮｜婚礼档案",
         summary: allowed
-          ? "叙事来源同时使用李髮与李髪；附朗读文件07《舞》。"
+          ? "李髮与杜彻的婚礼档案；附朗读文件07《舞》。"
           : "人物名存在，家庭关系尚未与杜彻档案互证。",
         path: allowed ? ROUTES.wedding : undefined,
         unlock: allowed ? ["S25"] : undefined,
@@ -1699,7 +1699,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         locked: !allowed,
         note: allowed ? undefined : "关系未确认",
       }]);
-      setResultNote(allowed ? "两种字形已合并为同一份婚礼档案。" : "先打开杜彻的人物档案。");
+      setResultNote(allowed ? "找到李髮与杜彻的婚礼档案。" : "先打开杜彻的人物档案。");
       return;
     }
 
@@ -1707,8 +1707,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       setResults([{
         id: "li-fa-suggestion",
         kind: "姓名纠错",
-        title: "是否查找“李髮”或“李髪”？",
-        summary: "原始来源保留异体字；简体写法不直接打开档案。",
+        title: "是否查找“李髮”？",
+        summary: "人物档案使用繁体姓名；简体写法不直接打开档案。",
         locked: true,
         note: "请使用来源字形",
       }]);
@@ -1816,7 +1816,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         locked: !allowed,
         note: allowed ? undefined : medicalComplete ? "缺少 07《舞》" : "证据不足",
       }]);
-      setResultNote(allowed ? "找到五层旧站历史；最早版本仍在页面底部。" : medicalComplete ? "回到杜彻档案，查找李髮或李髪。" : "先恢复《刍胃》的完整文字层。");
+      setResultNote(allowed ? "找到五层旧站历史；最早版本仍在页面底部。" : medicalComplete ? "回到杜彻档案，查找李髮。" : "先恢复《刍胃》的完整文字层。");
       return;
     }
 
@@ -3251,8 +3251,8 @@ function DuChePage({ onOpenSupplement }: { onOpenSupplement: () => void }) {
   const [loginNote, setLoginNote] = useState("");
   return (
     <article className="person-page du-che-page">
-      <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子。前一代人物离世之后，他仍留在公墓系统与画廊往来中。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮／李髪</MetaLine></dl></header>
-      <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。画廊并非主要收入来源，他经一位世伯介绍，成为他山市公墓系统中的负责人。</p><p>家庭档案显示，他在前一代人物死亡之后继续留在这一系统。现有文本只呈现这段职业延续，不推定他承担案件责任。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名在两个来源中分别写作“李髮”与“李髪”。</p><code>INDEX: LI_髮 / LI_髪</code></aside></section>
+      <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子。前一代人物离世之后，他仍留在公墓系统与画廊往来中。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮</MetaLine></dl></header>
+      <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。画廊并非主要收入来源，他经一位世伯介绍，成为他山市公墓系统中的负责人。</p><p>家庭档案显示，他在前一代人物死亡之后继续留在这一系统。现有文本只呈现这段职业延续，不推定他承担案件责任。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名：李髮。</p><code>INDEX: LI_髮</code></aside></section>
       <button className="independent-text-link" type="button" onClick={onOpenSupplement}><span>独立散页 · 非《句肉抟飞》</span><b>篇目二：铁房山补</b><small>杜彻、李髮与铁房山的三则补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
       <Dialog>
         <DialogTrigger asChild><button className="editor-login-link" type="button">编辑登录</button></DialogTrigger>
@@ -3263,11 +3263,10 @@ function DuChePage({ onOpenSupplement }: { onOpenSupplement: () => void }) {
 }
 
 function WeddingPage() {
-  const [variant, setVariant] = useState<"髮" | "髪">("髮");
   return (
     <article className="wedding-page">
-      <header className="wedding-head"><div><CacheStamp>WEDDING ARCHIVE / 07</CacheStamp><p className="section-kicker">家庭公告与城市舞台指示</p><h1>杜彻 × 李{variant}</h1><p>两种字形来自不同文本层，人物关系完全一致。</p></div><div className="variant-toggle" role="group" aria-label="切换李髮姓名字形"><span>来源字形</span><button type="button" className={variant === "髮" ? "is-active" : ""} onClick={() => setVariant("髮")}>李髮</button><button type="button" className={variant === "髪" ? "is-active" : ""} onClick={() => setVariant("髪")}>李髪</button></div></header>
-      <section className="wedding-record"><div><span>婚礼记录</span><p>“杜彻婚礼办得足够气派。”婚礼档案把画廊、公墓工作与新家庭放进同一个时间切面。</p></div><div><span>人物关系</span><p>杜彻：杜万琳与徐惠之子。李{variant}：杜彻的结婚对象。</p></div></section>
+      <header className="wedding-head"><div><CacheStamp>WEDDING ARCHIVE / 07</CacheStamp><p className="section-kicker">家庭公告与城市舞台指示</p><h1>杜彻 × 李髮</h1></div></header>
+      <section className="wedding-record"><div><span>婚礼记录</span><p>“杜彻婚礼办得足够气派。”婚礼档案把画廊、公墓工作与新家庭放进同一个时间切面。</p></div><div><span>人物关系</span><p>杜彻：杜万琳与徐惠之子。李髮：杜彻的结婚对象。</p></div></section>
       <RecoveredScript id="07" section="瞽人篇 · 2.2" title="舞" reader="徐惠">
         <p>斗转直下的黑<br />负重之湿<br />还有云此间将要有雨</p>
         <p>去到新康路<br />扔掉雨具<br />像这样左脚<br />轻曼地踏在双实线<br />像这样右脚<br />跨过排水口</p>
@@ -3333,7 +3332,7 @@ function LiLetterPage() {
   return (
     <article className="letter-page">
       <header className="letter-meta"><div><CacheStamp>PRIVATE LETTER / CACHE</CacheStamp><p className="section-kicker">站名改写依据</p><h1>李司贰致叶是</h1></div><dl><MetaLine label="收件人">叶是</MetaLine><MetaLine label="缓存账号"><code>editor_ys</code></MetaLine><MetaLine label="日期">20XX.2.20</MetaLine></dl></header>
-      <section className="letter-sheet"><p>叶是：</p><p>前些日子参考你同乡张恋发来的西岩寺主持元昶人物访谈资料，做了几首不太好的诗歌，悉以令作《礼倒僧元昶》，各中民俗相关描写不逮笔力，还望去日指点二三。</p><p>李髪、杜彻上月慨已结婚，夫妇俩托我向你道歉，有关婚礼邀请实在太忙没有寄出。他们也是看到你捎来的赠诗，才记起做邀请函时候忘记写你。</p><p>上月葛东平联合杜彻在 Z 城重新装修了画廊。杜彻执意要以自己小说里的“憎恶社”来命名，我们都觉着不太吉利，最后综合一下，他妥协名字改成了“阔南会社”。</p><p>对了，你应该是看过他的那篇小说的草稿。当时我们说其中诗的部分过于浓重而堪堪难阅，他记了很久，最后索性写得流水账起来。</p><p>半年未见，凭此信代为问安。</p><footer><strong>李司贰</strong><span>20XX.2.20</span></footer></section>
+      <section className="letter-sheet"><p>叶是：</p><p>前些日子参考你同乡张恋发来的西岩寺主持元昶人物访谈资料，做了几首不太好的诗歌，悉以令作《礼倒僧元昶》，各中民俗相关描写不逮笔力，还望去日指点二三。</p><p>李髮、杜彻上月慨已结婚，夫妇俩托我向你道歉，有关婚礼邀请实在太忙没有寄出。他们也是看到你捎来的赠诗，才记起做邀请函时候忘记写你。</p><p>上月葛东平联合杜彻在 Z 城重新装修了画廊。杜彻执意要以自己小说里的“憎恶社”来命名，我们都觉着不太吉利，最后综合一下，他妥协名字改成了“阔南会社”。</p><p>对了，你应该是看过他的那篇小说的草稿。当时我们说其中诗的部分过于浓重而堪堪难阅，他记了很久，最后索性写得流水账起来。</p><p>半年未见，凭此信代为问安。</p><footer><strong>李司贰</strong><span>20XX.2.20</span></footer></section>
       <section className="letter-crossref"><span>书信第一次确认</span><p><b>“憎恶社”首先是杜彻小说里的组织名。</b>网站中的人物、画廊和所谓历史，可能同时属于小说、诗剧与编辑改稿。</p><code>NEXT TITLE: 玛赫的厨房</code></section>
     </article>
   );

@@ -190,7 +190,8 @@ test("renders the cached news, cemetery mirror, and Du Che profile", async () =>
 
   const duChe = await renderPath("/members/du-che");
   assert.match(duChe, /杜万琳与徐惠之子/);
-  assert.match(duChe, /李髮／李髪/);
+  assert.match(duChe, /<dt>配偶<\/dt><dd>李髮<\/dd>/);
+  assert.doesNotMatch(duChe, /\u674e\u9aea/);
   assert.match(duChe, /编辑登录/);
 });
 

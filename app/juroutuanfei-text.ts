@@ -840,7 +840,7 @@ export const JUROUTUANFEI_TEXT: JuroutuanfeiTextBlock[] =
   {
     "sourceIndex": 165,
     "kind": "body",
-    "text": "因为李髪精致胚子摄住整场人，那些怜又嫉恨又 发抖的心理阔南这片人从没油然生生出来。"
+    "text": "因为李髮精致胚子摄住整场人，那些怜又嫉恨又 发抖的心理阔南这片人从没油然生生出来。"
   },
   {
     "sourceIndex": 166,
@@ -855,7 +855,7 @@ export const JUROUTUANFEI_TEXT: JuroutuanfeiTextBlock[] =
   {
     "sourceIndex": 168,
     "kind": "body",
-    "text": "李髪安安静静婚纱里飞行器一直旋转，她成鹭冬 天迁徙翅膀折裂，同行鸟友说："
+    "text": "李髮安安静静婚纱里飞行器一直旋转，她成鹭冬 天迁徙翅膀折裂，同行鸟友说："
   },
   {
     "sourceIndex": 169,
@@ -930,7 +930,7 @@ export const JUROUTUANFEI_TEXT: JuroutuanfeiTextBlock[] =
   {
     "sourceIndex": 183,
     "kind": "body",
-    "text": "杜彻顾着抽烟，雾里廖廖缠他喉结，就这块的胡 茬柔软，让他时刻想做鸟，脑子里胡乱流淌叽喳。李 髪在婚房转环，婚纱中飞行器逐渐偃火成叠叠褶皱。 他是想抱起一体雪白，兜起圈，层层步进她周遭。"
+    "text": "杜彻顾着抽烟，雾里廖廖缠他喉结，就这块的胡 茬柔软，让他时刻想做鸟，脑子里胡乱流淌叽喳。李髮在婚房转环，婚纱中飞行器逐渐偃火成叠叠褶皱。 他是想抱起一体雪白，兜起圈，层层步进她周遭。"
   },
   {
     "sourceIndex": 184,
@@ -951,7 +951,7 @@ export const JUROUTUANFEI_TEXT: JuroutuanfeiTextBlock[] =
   {
     "sourceIndex": 187,
     "kind": "body",
-    "text": "李髪杜彻上月慨已结婚，夫妇俩托我向你道歉有 关婚礼邀请实在太忙没有寄出，他们也是看到你捎来 的赠诗才记起做邀请函时候忘记写你。献上诚挚道歉 同时感谢你的诗，它依旧动人。"
+    "text": "李髮杜彻上月慨已结婚，夫妇俩托我向你道歉有 关婚礼邀请实在太忙没有寄出，他们也是看到你捎来 的赠诗才记起做邀请函时候忘记写你。献上诚挚道歉 同时感谢你的诗，它依旧动人。"
   },
   {
     "sourceIndex": 188,

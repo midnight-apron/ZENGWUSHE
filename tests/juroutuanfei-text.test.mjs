@@ -14,7 +14,7 @@ test("preserves the complete Juroutuanfei manuscript in source order", async () 
 
   const blocks = JSON.parse(match[1]);
   assert.equal(blocks.length, 313);
-  assert.equal(blocks.map((block) => block.text).join("").length, 13781);
+  assert.equal(blocks.map((block) => block.text).join("").length, 13780);
   assert.deepEqual(
     blocks.filter((block) => block.kind === "section").map((block) => block.text),
     [
