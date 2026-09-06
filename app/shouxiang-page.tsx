@@ -5,7 +5,7 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const STAFF = [
-  { name: "杜彻", role: "负责人", duty: "园区事务协调", detail: "经一位世伯介绍进入他山市公墓系统。旧站将他的家庭资料与婚礼通告收在同一人员索引下。", hours: "办公室接待时间见当周公告" },
+
   { name: "陈守安", role: "园务主管", duty: "公共区域与值班安排", detail: "负责步道巡查、雨季排水和节日值班。平时随身带一本巡园记录，遇到损坏的路牌会先记下位置，再交给维护组。", hours: "周一至周五 08:30—16:30" },
   { name: "林素贞", role: "服务接待", duty: "来访登记与物品借用", detail: "在南门服务室接待来访家属，协助查询园区位置，并管理轮椅、雨伞和手推车。借用物品请在离园前归还原处。", hours: "每日 08:00—17:00" },
   { name: "周树平", role: "绿化养护", duty: "树木、草坪与花坛", detail: "负责松柏修枝与草坪养护。新栽区域会拉起矮绳，浇水后的石阶较滑，请沿干燥步道通行。", hours: "周一至周六 07:30—15:30" },
@@ -32,7 +32,7 @@ export function ShouxiangPage({ imageUrl }: { imageUrl: string }) {
       <TabsList className="cemetery-nav" aria-label="陵园栏目"><TabsTrigger value="staff">管理人员</TabsTrigger><TabsTrigger value="services">园区服务</TabsTrigger><TabsTrigger value="graves">墓形展示</TabsTrigger><TabsTrigger value="directions">来园路线</TabsTrigger></TabsList>
       <TabsContent value="staff" className="cemetery-panel"><h2>工作人员名录</h2><p>点击姓名查看分工与接待安排。</p>
         <div className="cemetery-table-scroll"><table><thead><tr><th>姓名</th><th>职务</th><th>工作内容</th></tr></thead><tbody>{STAFF.map((person) => <tr key={person.name}><th scope="row"><button type="button" onClick={() => setStaff(person)}>{person.name}</button></th><td>{person.role}</td><td>{person.duty}</td></tr>)}</tbody></table></div>
-        <div className="old-responsible"><span>人员索引</span><b>杜彻</b><p>家庭资料、婚礼通告另列于同名人物档案。</p></div>
+        <div className="old-responsible"><span>来访与文学索引</span><b>杜彻</b><p>《刍味》写到世伯承办的寿享陵园，以及他向杜彻谈起的“死后的住处”。相关文字与家庭资料另列于杜彻的同名档案。</p></div>
       </TabsContent>
       <TabsContent value="services" className="cemetery-panel"><h2>园区服务</h2><p>接待时间 08:00—17:00；临时调整以南门公告栏为准。</p><Accordion type="single" collapsible>{SERVICES.map((service) => <AccordionItem key={service.id} value={service.id}><AccordionTrigger>{service.title}</AccordionTrigger><AccordionContent><p>{service.text}</p></AccordionContent></AccordionItem>)}</Accordion></TabsContent>
       <TabsContent value="graves" className="cemetery-panel"><h2>墓形展示</h2><p>园区样式图录 · 选择下方名称查看说明。</p>

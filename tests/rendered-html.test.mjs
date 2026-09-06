@@ -198,13 +198,17 @@ test("renders the cached news, cemetery mirror, and Du Che profile", async () =>
   const cemetery = await renderPath("/mirror/shouxiang/staff");
   assert.match(cemetery, /shouxiang\.invalid/);
   assert.match(cemetery, /杜彻/);
-  assert.match(cemetery, /负责人/);
+  assert.match(cemetery, /来访与文学索引/);
+  assert.doesNotMatch(cemetery, /杜彻<[^>]*>.*?负责人/);
 
   const duChe = await renderPath("/members/du-che");
   assert.match(duChe, /杜万琳与徐惠之子/);
   assert.match(duChe, /<dt>配偶<\/dt><dd>李髮<\/dd>/);
   assert.doesNotMatch(duChe, /\u674e\u9aea/);
   assert.match(duChe, /编辑登录/);
+  assert.match(duChe, /朗读文件索引/);
+  assert.match(duChe, /刍味/);
+  assert.doesNotMatch(duChe, /成为他山市公墓系统中的负责人/);
 });
 
 test("renders recovered scripts 07, 10, and 11 with the medical clue chain", async () => {
@@ -243,7 +247,7 @@ test("renders the version history, letter, publication, and fictional editor gat
   const publication = await renderPath("/publications/mahe-de-chufang");
   assert.match(publication, /玛赫的/);
   assert.match(publication, /2019/);
-  assert.match(publication, /M H D C/);
+  assert.match(publication, /M H D C F/);
 
   const login = await renderPath("/admin/editor/login");
   assert.match(login, /站内虚构缓存/);

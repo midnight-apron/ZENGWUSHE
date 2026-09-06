@@ -368,8 +368,8 @@ const HINTS: Record<string, string[]> = {
     "搜索：寿享陵园。",
   ],
   [ROUTES.shouxiang]: [
-    "旧站人员目录里有一位年轻负责人，家庭关系链接仍可用。",
-    "负责人的姓名是杜彻。",
+    "旧站还留着一条与来访者有关的文学索引。",
+    "世伯曾向杜彻介绍寿享陵园，索引保留了他的姓名。",
     "搜索：杜彻。",
   ],
   [ROUTES.duChe]: [
@@ -410,7 +410,7 @@ const HINTS: Record<string, string[]> = {
   [ROUTES.mahePublication]: [
     "版权页给出首版年份，页边给出口令组合规则。",
     "把书名拼音首字母放在 2019 前面。",
-    "搜索叶主任或叶是；后台口令是 MHDC2019。",
+    "搜索叶主任或叶是；后台口令是 MHDCF2019。",
   ],
   [ROUTES.juroutuanfei]: [
     "《句肉抟飞》改为随调查进度出现的章节连载。",
@@ -425,7 +425,7 @@ const HINTS: Record<string, string[]> = {
   [ROUTES.editorLogin]: [
     "账号在李司贰书信的收件元数据里。",
     "口令规则在《玛赫的厨房》版权页：首字母＋2019。",
-    "账号 editor_ys；口令 MHDC2019。",
+    "账号 editor_ys；口令 MHDCF2019。",
   ],
   [ROUTES.editorRevisions]: [
     "后台批注里有一个法名，访谈里有一个本名。",
@@ -546,7 +546,7 @@ function buildPublicCatalog(game: GameState) {
     unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: isUnvisited(ROUTES.wangKeding) },
     unlocked("S11") && { id: "xing-wan", eyebrow: "异名合并", title: "刑万／刑某", summary: "社团合照与新闻匿名记录指向的同一人物。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
     unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、刑万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
-    unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭关系与寿享陵园旧站履历的交叉人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
+    unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭资料与寿享陵园相关文学记录中的人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
     unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: isUnvisited(ROUTES.editorRevisions) },
     unlocked("S33") && { id: "yuanchang", eyebrow: "小说角色", title: "元昶／左君", summary: "法名与本名已合并为同一个小说角色。", path: ROUTES.yuanchang, isNew: isUnvisited(ROUTES.yuanchang) },
   ].filter(Boolean) as DirectoryEntry[];
@@ -1077,7 +1077,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         kind: allowed ? "旧网站镜像 · 人员目录" : "失效网站元数据",
         title: "寿享陵园｜旧站人员页",
         summary: allowed
-          ? "失效站点的文字层仍可读取；负责人字段链接到杜彻。"
+          ? "旧站的文学索引仍可读取，其中提到世伯向杜彻介绍陵园。"
           : "旧域名存在于缓存，但尚未取得新闻版本差异。",
         path: allowed ? ROUTES.shouxiang : undefined,
         unlock: allowed ? ["S23"] : undefined,
@@ -1092,17 +1092,17 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       const allowed = game.unlocked.includes("S23") || currentPath === ROUTES.shouxiang;
       setResults([{
         id: "du-che",
-        kind: allowed ? "人物档案 · 家庭／职业交叉" : "旧站负责人",
+        kind: allowed ? "人物档案 · 家庭／作品索引" : "旧站文学索引",
         title: "杜彻",
         summary: allowed
-          ? "杜万琳与徐惠之子；经世伯介绍进入他山市公墓系统。"
-          : "姓名出现在一份失效陵园人员目录中。",
+          ? "杜万琳与徐惠之子；《刍味》写到世伯向他介绍陵园。"
+          : "姓名出现在陵园旧站的一条文学索引中。",
         path: allowed ? ROUTES.duChe : undefined,
         unlock: allowed ? ["S24"] : undefined,
         locked: !allowed,
         note: allowed ? undefined : "履历未恢复",
       }]);
-      setResultNote(allowed ? "家庭与职业字段指向同一人物。" : "先取得旧陵园网页的完整人员目录。");
+      setResultNote(allowed ? "家庭资料与文学索引指向同一人物。" : "先查看陵园旧站保留的文学索引。");
       return;
     }
 
@@ -1166,7 +1166,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         locked: true,
         note: "来源不足",
       }]);
-      setResultNote(allowed ? "检索同时命中一个同音标题。" : "先确认寿享陵园的负责人。");
+      setResultNote(allowed ? "检索同时命中一个同音标题。" : "先查看寿享陵园中与杜彻有关的文学索引。");
       return;
     }
 
@@ -1188,7 +1188,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       return;
     }
 
-    if (["阿尔茨海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"].includes(normalized)) {
+    if (["阿尔茨海默病", "阿尔茨海默症", "阿尔兹海默症", "阿尔兹海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"].includes(normalized)) {
       const allowed = game.unlocked.includes("S27") || currentPath === ROUTES.medical;
       setResults([{
         id: "chuwei-stomach",
@@ -1335,7 +1335,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       return;
     }
 
-    if (["元昶", "左君"].includes(normalized)) {
+    if (["元昶", "礼倒僧元昶", "左君"].includes(normalized)) {
       const allowed = game.editorLoggedIn || currentPath === ROUTES.editorRevisions || game.unlocked.includes("S32");
       setResults([{
         id: "yuanchang-character",
@@ -1570,9 +1570,9 @@ const SEARCH_TERMS = [
   ["焚烧签字单", "火化单", "火化签字单"],
   ["他山地方公墓贪污案", "他山公墓贪污案", "地方公墓贪污案"], ["寿享陵园", "寿享陵園"],
   ["杜彻", "杜徹"], ["李髮"], ["刍味", "芻味"], ["刍胃", "芻胃"],
-  ["阿尔茨海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"],
+  ["阿尔茨海默病", "阿尔茨海默症", "阿尔兹海默症", "阿尔兹海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"],
   ["阔南会社", "闊南會社"], ["李司贰"], ["玛赫的厨房", "瑪赫的廚房", "玛赫厨房"],
-  ["叶主任", "葉主任", "叶是", "葉是"], ["元昶", "左君"], ["句肉抟飞", "句肉抟飛"],
+  ["叶主任", "葉主任", "叶是", "葉是"], ["元昶", "礼倒僧元昶", "左君"], ["句肉抟飞", "句肉抟飛"],
   ["始末的碎点", "始末碎点"], ["赭红门", "赭紅門"], ["诗喃"],
 ];
 
@@ -1616,6 +1616,59 @@ export function searchStatus(outcome: SearchOutcome) {
   return outcome.results?.length ? "待解锁" : "未命中";
 }
 
+export function getProgressHint(game: GameState) {
+  const has = (n: number) => game.unlocked.includes(`S${String(n).padStart(2, "0")}`);
+  const seen = (path: string) => game.visited.includes(path);
+  const from = (id: string, path: string, hints = HINTS[path]) => ({ id, path, hints });
+  if (has(36)) return from("complete", ROUTES.shinan);
+  if (game.recovered.includes("14")) return from("curtain", ROUTES.stageZhuhongmen);
+  if (game.recovered.includes("12")) return from("final-poem", ROUTES.recoveredIndex, ["主要文本已恢复，接下来是终场场记。", "回到当期展览的名称。", "搜索：赭红门。"]);
+  if (has(33)) return seen(ROUTES.recoveredIndex) ? from("fragment-password", ROUTES.recoveredIndex) : from("fragment-index", ROUTES.yuanchang);
+  if (has(32) || game.editorLoggedIn) return from("character", ROUTES.editorRevisions);
+  if (has(31)) return from("editor-password", ROUTES.editorLogin);
+  if (has(30)) return from("book", ROUTES.liLetter);
+  if (has(29)) return game.historyVersionsLoaded >= 5
+    ? from("letter", ROUTES.kuonanHistory, ["最早的网站版本已经恢复，留意其中的署名。", "那封信的作者是李司贰。", "搜索：李司贰。"])
+    : from("old-versions", ROUTES.kuonanHistory);
+  if (has(28) && !game.recovered.includes("07")) return from("missing-wedding", ROUTES.duChe, ["病历已恢复，但下一份旧站历史还缺婚礼材料。", "回看杜彻人物页的家庭公告，核对新娘姓名。", "搜索：李髮，打开婚礼记录。"]);
+  if (has(28)) return from("old-site", ROUTES.stomach);
+  if (has(27)) return from("diagnosis", ROUTES.medical);
+  if (has(26) || game.recovered.includes("10")) return from("stomach", ROUTES.taste);
+  if (has(25) || game.recovered.includes("07")) return from("taste", ROUTES.wedding);
+  if (has(24)) return from("du-che-records", ROUTES.duChe);
+  if (has(23)) return from("du-che", ROUTES.shouxiang);
+  if (has(22)) return from("cemetery-site", ROUTES.xingNews);
+  if (has(21)) return from("news-cache", ROUTES.cemeteryCase);
+  if (has(20)) return from("case-index", ROUTES.duCremationSigned);
+  if (has(19)) return from("signature", ROUTES.duCremation);
+  if (has(18) || game.recovered.includes("13")) return from("burning-form", ROUTES.wangDeath);
+  if (has(17)) return from("egret", ROUTES.wangSupplement, ["补充页已经解密，继续读页边的文学索引。", "标签是一种白色水鸟。", "搜索：野生白鹭。"]);
+  if (has(16) || game.routeTrips >= 3) return seen(ROUTES.wangSupplement)
+    ? from("supplement-password", ROUTES.wangSupplement)
+    : from("finger", ROUTES.phoenixRoute, ["路线回溯已完成，伤口批注多出了一处缺失部位。", "用批注中的部位名称查补充附件。", "搜索：右小手指。"]);
+  if (has(15)) return seen(ROUTES.phoenixRoute) ? from("river", ROUTES.phoenixRoute)
+    : from("reservoir", ROUTES.xiyanTemple, ["石像检查已完成，隐藏层给出了漂流终点。", "接着核对河流附件。", "搜索：凤凰水库。"]);
+  if (has(14)) return seen(ROUTES.xiyanTemple) ? from("stone-inspection", ROUTES.xiyanTemple) : from("temple", ROUTES.stoneHead);
+  if (has(13)) return from("stone", ROUTES.wangAutopsy);
+  if (has(12)) return from("autopsy", ROUTES.liXiangDeath);
+  if (has(11)) return from("li-xiang", ROUTES.xingWan);
+  if (has(10)) return from("xing-wan", ROUTES.wangKeding);
+  if (has(9)) return from("wang", ROUTES.dongxingPeter);
+  if (has(8)) return from("photo", ROUTES.fangWan);
+  if (has(7)) return from("fang", ROUTES.duWanlin);
+  if (has(6)) return from("du-wanlin", ROUTES.duNanyangOld);
+  if (has(5)) return from("du-nanyang", ROUTES.history);
+  if (has(4) || game.recovered.includes("01")) return from("society", ROUTES.recoveredOne);
+  if (has(3) || game.frameClicks >= 3) return from("spring", ROUTES.damagedReader);
+  if (has(2)) return seen(ROUTES.dimensions) ? from("frame", ROUTES.dimensions) : from("dimensions", ROUTES.curator);
+  if (has(1)) return from("curator", ROUTES.artwork);
+  return from("missing-work", ROUTES.exhibition);
+}
+
+export function matchesEditorCredentials(user: string, password: string) {
+  return user.trim().toLowerCase() === "editor_ys" && password.trim().toLowerCase() === "mhdcf2019";
+}
+
 export function GameApp({ initialPath }: { initialPath: string }) {
   const [path, setPath] = useState(initialPath);
   const [game, setGame] = useState<GameState>(DEFAULT_STATE);
@@ -1625,7 +1678,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [resultNote, setResultNote] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
-  const [hintLevel, setHintLevel] = useState(0);
+  const [hintLevels, setHintLevels] = useState<Record<string, number>>({});
   const [frameNotice, setFrameNotice] = useState(false);
   const [plainText, setPlainText] = useState(false);
   const [scareActive, setScareActive] = useState(false);
@@ -1653,7 +1706,9 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const collapseImageRef = useRef<HTMLButtonElement>(null);
 
   const currentPath = displayPath(path);
-  const currentHints = HINTS[currentPath] ?? HINTS[ROUTES.exhibition];
+  const currentHint = getProgressHint(game);
+  const currentHints = currentHint.hints;
+  const hintLevel = Math.min(hintLevels[currentHint.id] ?? 0, currentHints.length - 1);
   const stageComplete = game.recovered.includes("14");
   const stageVocabulary = game.recovered.includes("12");
   const publicCatalog = useMemo(() => buildPublicCatalog(game), [game]);
@@ -1865,7 +1920,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       [ROUTES.kuonanHistory]: { unlock: unlocksThrough(29), recover: recoveredTwelve },
       [ROUTES.liLetter]: { unlock: unlocksThrough(30), recover: recoveredTwelve },
       [ROUTES.mahePublication]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
-      [ROUTES.editorLogin]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
       [ROUTES.editorRevisions]: { unlock: unlocksThrough(32), recover: recoveredTwelve },
       [ROUTES.yuanchang]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
       [ROUTES.recoveredIndex]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
@@ -1882,7 +1936,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         editorLoggedIn: currentPath === ROUTES.editorRevisions || currentPath === ROUTES.yuanchang || currentPath === ROUTES.recoveredIndex || currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? true : previous.editorLoggedIn,
         stageTransformStep: currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? Math.max(previous.stageTransformStep, 3) : previous.stageTransformStep,
       }));
-      setHintLevel(0);
     }, 0);
     document.title = `${PAGE_TITLES[currentPath] ?? "憎恶社"}｜憎恶社`;
     window.scrollTo({ top: 0, behavior: game.settings.reducedMotion ? "auto" : "smooth" });
@@ -2145,8 +2198,12 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   function submitEditorLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const userMatches = editorUser.trim().toLowerCase() === "editor_ys";
-    const passwordMatches = editorPassword.trim().toLowerCase() === "mhdc2019";
+    const passwordMatches = matchesEditorCredentials(editorUser, editorPassword);
     if (userMatches && passwordMatches) {
+      if (!game.unlocked.includes("S31") && !game.editorLoggedIn) {
+        setEditorNote("凭据已识别；请先找到李司贰书信与《玛赫的厨房》出版档案，再核对修订记录。");
+        return;
+      }
       setGame((previous) => ({
         ...previous,
         editorLoggedIn: true,
@@ -2196,8 +2253,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }
 
   function markWrong(message: string, fallbackResults: SearchResult[] = []) {
-    const nextCount = (wrongAttempts[currentPath] ?? 0) + 1;
-    setWrongAttempts((previous) => ({ ...previous, [currentPath]: nextCount }));
+    const nextCount = (wrongAttempts[currentHint.id] ?? 0) + 1;
+    setWrongAttempts((previous) => ({ ...previous, [currentHint.id]: nextCount }));
     setResults(fallbackResults);
     setResultNote(nextCount >= 3 ? `${message} 提示：${currentHints[0]}` : message);
   }
@@ -2320,7 +2377,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.shouxiang:
         return <ShouxiangPage imageUrl={browserPath("/archive/shouxiang-memorials.webp")} />;
       case ROUTES.duChe:
-        return <DuChePage onOpenSupplement={() => navigate(ROUTES.scatteredTiefangshan)} />;
+        return <DuChePage onOpenSupplement={() => navigate(ROUTES.scatteredTiefangshan)} onOpenEditor={() => navigate(ROUTES.editorLogin)} />;
       case ROUTES.wedding:
         return <WeddingPage />;
       case ROUTES.taste:
@@ -2491,9 +2548,9 @@ export function GameApp({ initialPath }: { initialPath: string }) {
           <Dialog>
             <DialogTrigger asChild><Button variant="ghost" size="icon" className="header-icon" aria-label="打开线索"><HelpCircle aria-hidden="true" /></Button></DialogTrigger>
             <DialogContent className="hint-dialog">
-              <DialogHeader><DialogTitle>当前线索</DialogTitle><DialogDescription>提示分三级递进；第三条会直接给出答案或动作。</DialogDescription></DialogHeader>
+              <DialogHeader><DialogTitle>调查进度提示</DialogTitle><DialogDescription>按尚未完成的调查步骤提示。线索来源：{PAGE_TITLES[currentHint.path] ?? "展厅记录"}。返回旧页面不会重置提示。</DialogDescription></DialogHeader>
               <div className="hint-sheet"><span>提示 {hintLevel + 1}/3</span><p>{currentHints[hintLevel]}</p></div>
-              <Button variant="outline" onClick={() => setHintLevel((level) => Math.min(2, level + 1))} disabled={hintLevel >= 2}>{hintLevel >= 2 ? "已显示最终提示" : "再给我一点提示"}</Button>
+              <Button variant="outline" onClick={() => setHintLevels((levels) => ({ ...levels, [currentHint.id]: Math.min(currentHints.length - 1, hintLevel + 1) }))} disabled={hintLevel >= 2}>{hintLevel >= 2 ? "已显示最终提示" : "再给我一点提示"}</Button>
             </DialogContent>
           </Dialog>
 
@@ -3139,8 +3196,8 @@ function XiyanTemplePage({
       <section className="xiyan-archive"><span>旧照转录</span><p>“六十七个等身像放在院墙，摆做一排。从主殿一直列到寝房。”</p><code>67 → 6 / 7</code></section>
 
       <section className="independent-leaf-prologue">
-        <header><span>独立散页 · 非《句肉抟飞》</span><h2>辣火趴在寺里各处五瓣。</h2></header>
-        <div><p>土蟹掐妙诀，<br />它说：荼<br />我说之于清蒸<br />顾了秋火过急</p><p>它说“格子” 沉下游泳，<br />同钳子舀汤浇壳。<br />也说毘。倏地脱力</p><p>腹子翻热我重复格子。<br />它游远，汤面圆圈同心。</p><p>我说：西岩寺。</p></div>
+        <header><span>独立散页 · 非《句肉抟飞》</span><h2>西岩大火</h2></header>
+        <div><p>辣火趴在寺里各处五瓣。</p><p>土蟹掐妙诀，<br />它说：荼<br />我说之于清蒸<br />顾了秋火过急</p><p>它说“格子” 沉下游泳，<br />同钳子舀汤浇壳。<br />也说毘。倏地脱力</p><p>腹子翻热我重复格子。<br />它游远，汤面圆圈同心。</p><p>我说：西岩寺。</p></div>
       </section>
 
       {completed && (
@@ -3358,17 +3415,15 @@ function XingNewsPage() {
   );
 }
 
-function DuChePage({ onOpenSupplement }: { onOpenSupplement: () => void }) {
-  const [loginNote, setLoginNote] = useState("");
+function DuChePage({ onOpenSupplement, onOpenEditor }: { onOpenSupplement: () => void; onOpenEditor: () => void }) {
   return (
     <article className="person-page du-che-page">
-      <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子。前一代人物离世之后，他仍留在公墓系统与画廊往来中。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮</MetaLine></dl></header>
-      <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。画廊并非主要收入来源，他经一位世伯介绍，成为他山市公墓系统中的负责人。</p><p>家庭档案显示，他在前一代人物死亡之后继续留在这一系统。现有文本只呈现这段职业延续，不推定他承担案件责任。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名：李髮。</p><code>INDEX: LI_髮</code></aside></section>
+      <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子，写作并经营画廊；世伯曾向他介绍寿享陵园。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮</MetaLine></dl></header>
+      <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。他在《刍味》中写到席间的世伯，以及对方承办的寿享陵园。</p><p>世伯向他谈起陵园与“死后的住处”。酒桌上的话题由婚姻转向死亡，那些没有问出口的话留在了诗里。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名：李髮。</p><code>INDEX: LI_髮</code></aside></section>
       <button className="independent-text-link" type="button" onClick={onOpenSupplement}><span>独立散页 · 非《句肉抟飞》</span><b>篇目二：铁房山补</b><small>杜彻、李髮与铁房山的三则补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
-      <Dialog>
-        <DialogTrigger asChild><button className="editor-login-link" type="button">编辑登录</button></DialogTrigger>
-        <DialogContent className="editor-login-dialog"><DialogHeader><DialogTitle>旧站编辑登录</DialogTitle><DialogDescription>登录入口仍在，但本页没有提供账号或密码。</DialogDescription></DialogHeader><form onSubmit={(event) => { event.preventDefault(); setLoginNote("凭据不完整，编辑缓存未开放。输入内容没有被保存。"); }}><label>账号<input name="archive-user" autoComplete="off" /></label><label>密码<input name="archive-password" type="password" autoComplete="off" /></label><Button type="submit">登录后台</Button><p role="status">{loginNote}</p></form></DialogContent>
-      </Dialog>
+      <section className="version-history"><span>朗读文件索引 · 杜彻</span><div><h2>刍味</h2><p>一次席间谈话，世伯说起他承办的寿享陵园。杜彻把那些酒意、味觉与没有问出口的话写进这首诗。</p><p>搜索“刍味”，查看朗读文本。</p></div></section>
+      <button className="editor-login-link" type="button" onClick={onOpenEditor}>编辑登录</button>
+      <p className="editor-source-note">账号线索在李司贰书信的缓存信息里；口令线索在《玛赫的厨房》版权页。可以先沿“刍味”的文字继续寻找。</p>
     </article>
   );
 }
@@ -3377,7 +3432,7 @@ function WeddingPage() {
   return (
     <article className="wedding-page">
       <header className="wedding-head"><div><CacheStamp>WEDDING ARCHIVE / 07</CacheStamp><p className="section-kicker">家庭公告与城市舞台指示</p><h1>杜彻 × 李髮</h1></div></header>
-      <section className="wedding-record"><div><span>婚礼记录</span><p>“杜彻婚礼办得足够气派。”婚礼档案把画廊、公墓工作与新家庭放进同一个时间切面。</p></div><div><span>人物关系</span><p>杜彻：杜万琳与徐惠之子。李髮：杜彻的结婚对象。</p></div></section>
+      <section className="wedding-record"><div><span>婚礼记录</span><p>“杜彻婚礼办得足够气派。”婚礼档案把画廊往来与新家庭放进同一个时间切面。</p></div><div><span>人物关系</span><p>杜彻：杜万琳与徐惠之子。李髮：杜彻的结婚对象。</p></div></section>
       <RecoveredScript id="07" section="瞽人篇 · 2.2" title="舞" reader="徐惠">
         <p>斗转直下的黑<br />负重之湿<br />还有云此间将要有雨</p>
         <p>去到新康路<br />扔掉雨具<br />像这样左脚<br />轻曼地踏在双实线<br />像这样右脚<br />跨过排水口</p>
@@ -3453,7 +3508,7 @@ function MahePublicationPage() {
   return (
     <article className="publication-page">
       <header className="publication-cover"><div><span>杜彻 小说</span><h1>玛赫的<br />厨房</h1><p>荷潜艇出版社</p></div><aside><b>2019</b><span>初版</span></aside></header>
-      <section className="copyright-grid"><div><p className="section-kicker">版权页／出版档案</p><dl><MetaLine label="书名">《玛赫的厨房》</MetaLine><MetaLine label="作者">杜彻</MetaLine><MetaLine label="出版">荷潜艇出版社</MetaLine><MetaLine label="首版年份">2019</MetaLine><MetaLine label="再版编辑">叶主任</MetaLine></dl></div><aside className="password-rule-note"><span>页边批注</span><h2>初始口令</h2><p>书名拼音首字母<br /><b>＋</b><br />首版年份</p><code>M H D C ＋ 2019</code><small>页面不会自动复制或填入结果。</small></aside></section>
+      <section className="copyright-grid"><div><p className="section-kicker">版权页／出版档案</p><dl><MetaLine label="书名">《玛赫的厨房》</MetaLine><MetaLine label="作者">杜彻</MetaLine><MetaLine label="出版">荷潜艇出版社</MetaLine><MetaLine label="首版年份">2019</MetaLine><MetaLine label="再版编辑">叶主任</MetaLine></dl></div><aside className="password-rule-note"><span>页边批注</span><h2>初始口令</h2><p>书名拼音首字母<br /><b>＋</b><br />首版年份</p><code>M H D C F ＋ 2019</code><small>页面不会自动复制或填入结果。</small></aside></section>
       <section className="revision-request"><span>再版修改建议</span><p>“初版小说里涉及到的问题慨已指明，请在本月底将改稿交付荷潜艇编辑部<strong>叶主任</strong>处。”</p></section>
     </article>
   );
@@ -3556,7 +3611,7 @@ function IndependentTextPage({ title, placement, src, available, lateDisclosure 
   return (
     <article className="independent-text-page">
       <header><div><CacheStamp>INDEPENDENT LEAF / COMPLETE</CacheStamp><p className="section-kicker">独立散页 · 非《句肉抟飞》</p><h1>{title}</h1><p>{placement}</p></div><aside><span>呈现原则</span><p>{lateDisclosure ? "终局开放的主观叙事文本，不替代案卷中的责任判断。" : "依据人物与地点关系归档；正文保持完整，不拆散为线索。"}</p></aside></header>
-      <section className="independent-text-source"><span>馆藏来源</span><p>独立文本《辣火趴在寺里各处五瓣》；不并入《句肉抟飞》连载。</p></section>
+      <section className="independent-text-source"><span>馆藏来源</span><p>独立文本《{title}》；不并入《句肉抟飞》连载。</p></section>
       <iframe
         className="independent-text-frame"
         src={browserPath(src)}
@@ -3576,6 +3631,7 @@ function EditorLoginPage({ user, password, attempts, note, alreadyUnlocked, onUs
   return (
     <article className="editor-gate-page">
       <header><CacheStamp>EDITOR CACHE / LOCAL</CacheStamp><p className="section-kicker">叶主任／叶是</p><h1>编辑后台</h1><p>这是一处站内虚构缓存。不会连接现实账号，不保存明文口令。</p></header>
+      <aside className="password-rule-note"><h2>找回编辑凭据</h2><p>账号：李司贰书信中标记为“缓存账号”的一行。</p><p>口令：《玛赫的厨房》五个字的拼音首字母，加上版权页的首版年份；“房”的首字母也要计入。</p><p>若还未找到书信，可先从杜彻人物页的《刍味》继续调查。</p></aside>
       {alreadyUnlocked ? <section className="login-unlocked"><UnlockKeyhole aria-hidden="true" /><h2>编辑缓存已解锁</h2><p>浏览器只记录“已登录”状态。</p><Button type="button" onClick={onReopen}>重新进入修订记录</Button></section> : <form className="editor-gate-form" onSubmit={onSubmit}><label><span>账号</span><input value={user} onChange={(event) => onUserChange(event.target.value)} autoComplete="off" spellCheck={false} /></label><label><span>口令</span><input value={password} onChange={(event) => onPasswordChange(event.target.value)} type="password" autoComplete="off" /></label><Button type="submit"><LockKeyhole aria-hidden="true" /> 登录编辑缓存</Button><p role="status">{note || `错误次数不限，不锁号${attempts ? `；已尝试 ${attempts} 次` : ""}。`}</p></form>}
     </article>
   );

@@ -7,7 +7,7 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const vite = await createServer({ appType: "custom", configFile: false, root,
   resolve: { alias: { "@": root } }, server: { middlewareMode: true } });
 after(() => vite.close());
-const { resolveGameSearch: search, rememberSearch, searchStatus } = await vite.ssrLoadModule("/app/game-app.tsx");
+const { resolveGameSearch: search, rememberSearch, searchStatus, getProgressHint, matchesEditorCredentials } = await vite.ssrLoadModule("/app/game-app.tsx");
 const state = (overrides = {}) => ({ unlocked: [], recovered: [], visited: [], routeTrips: 0,
   frameClicks: 0, historyVersionsLoaded: 1, editorLoggedIn: false, ...overrides });
 const run = (query, overrides) => search(query, state(overrides), "/");
@@ -84,4 +84,34 @@ test("public cemetery news does not unlock the late case index", () => {
   const ready = run("他山地方公墓贪污案", { unlocked: ["S20"] });
   assert.equal(ready.results[0].path, "/archive/case/cemetery");
   assert.equal(searchStatus(run("公墓", { unlocked: ["S19"] })), "待解锁");
+});
+
+
+test("hints follow the unresolved frontier and preserve the missing wedding branch", () => {
+  const game = state({ unlocked: Array.from({ length: 17 }, (_, i) => `S${String(i + 1).padStart(2, "0")}`) });
+  assert.equal(getProgressHint(game).id, "egret");
+  game.visited.push("/", "/members/fang-wan", "/cache/artwork/baishaorou");
+  assert.equal(getProgressHint(game).id, "egret");
+  assert.match(getProgressHint(game).hints[2], /野生白鹭/);
+  const late = state({ unlocked: ["S28"], recovered: ["10", "11"] });
+  assert.equal(getProgressHint(late).id, "missing-wedding");
+  late.recovered.push("07");
+  assert.equal(getProgressHint(late).id, "old-site");
+  assert.equal(getProgressHint(state({ unlocked: ["S31"] })).id, "editor-password");
+});
+
+test("all requested diagnosis aliases and the full monk title share their gates", () => {
+  for (const term of ["阿尔茨海默症", "阿尔兹海默症", "阿尔兹海默病"]) {
+    assert.equal(searchStatus(run(term)), "待解锁");
+    assert.deepEqual(run(term, { unlocked: ["S27"] }), run("阿尔茨海默病", { unlocked: ["S27"] }));
+  }
+  assert.equal(searchStatus(run("礼倒僧元昶")), "待解锁");
+  assert.deepEqual(run("礼倒僧元昶", { editorLoggedIn: true, unlocked: ["S32"] }), run("元昶", { editorLoggedIn: true, unlocked: ["S32"] }));
+});
+
+test("editor password includes the final title initial F", () => {
+  assert.equal(matchesEditorCredentials("editor_ys", "mhdcf2019"), true);
+  assert.equal(matchesEditorCredentials(" editor_ys ", "MHDCF2019"), true);
+  assert.equal(matchesEditorCredentials("editor_ys", "mhdc2019"), false);
+  assert.equal(matchesEditorCredentials("unknown", "mhdcf2019"), false);
 });
