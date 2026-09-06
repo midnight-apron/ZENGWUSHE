@@ -34,6 +34,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ShouxiangPage } from "./shouxiang-page";
 import { Switch } from "@/components/ui/switch";
 import { JUROUTUANFEI_TEXT, type JuroutuanfeiTextBlock } from "./juroutuanfei-text";
 
@@ -116,6 +117,7 @@ const ROUTES = {
   exhibitions: "/exhibitions",
   people: "/people",
   news: "/news",
+  cemeteryReport: "/news/cemetery-report",
   publications: "/publications",
   about: "/about",
   exhibition: "/exhibitions/zhuhongmen",
@@ -171,6 +173,7 @@ const ROUTES = {
 };
 
 const PAGE_TITLES: Record<string, string> = {
+  [ROUTES.cemeteryReport]: "他山地方公墓贪污案｜旧闻",
   [ROUTES.home]: "憎恶社｜当代艺术与出版",
   [ROUTES.exhibitions]: "展览｜憎恶社",
   [ROUTES.people]: "人物｜憎恶社",
@@ -198,8 +201,8 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.phoenixRoute]: "凤凰水库｜河流路线",
   [ROUTES.wangSupplement]: "王克定｜尸检补充",
   [ROUTES.wangDeath]: "王克定之死｜已恢复",
-  [ROUTES.duCremation]: "杜万琳｜火化单",
-  [ROUTES.duCremationSigned]: "杜万琳｜完整火化单",
+  [ROUTES.duCremation]: "杜万琳｜焚烧签字单",
+  [ROUTES.duCremationSigned]: "杜万琳｜完整焚烧签字单",
   [ROUTES.cemeteryCase]: "他山地方公墓贪污案｜参与者索引",
   [ROUTES.xingNews]: "刑某｜新闻缓存",
   [ROUTES.shouxiang]: "寿享陵园｜旧站人员页",
@@ -342,15 +345,15 @@ const HINTS: Record<string, string[]> = {
   [ROUTES.wangDeath]: [
     "版本历史还连接着另一名参与者的死亡手续。",
     "《始末的碎点》把这道手续称为“焚烧签字单”。",
-    "搜索：火化单。",
+    "搜索：焚烧签字单。",
   ],
   [ROUTES.duCremation]: [
-    "代签人并非杜家直系亲属，遮挡层只露出“方＿”。",
-    "回想谁最早赶到医院，又在诗中承认代签。",
-    "搜索：方晚署名。",
+    "代签栏只露出“方＿”，到院记录里写着他的名字。",
+    "签字单让这个人的档案多出了一份记录；再搜一次他的名字。",
+    "搜索：方晚。",
   ],
   [ROUTES.duCremationSigned]: [
-    "火化单与项目往来共享了一个完整案名。",
+    "焚烧签字单与项目往来共享了一个完整案名。",
     "下一章将把五个人放回同一份项目索引。",
     "搜索：他山地方公墓贪污案。",
   ],
@@ -459,7 +462,7 @@ const RECOVERED_FILES = [
   { id: "05", title: "1.4 在兰道（刑万）", source: "刑万合并档案" },
   { id: "06", title: "2.1 溺水的莉香（刑万）", source: "莉香溺亡记录" },
   { id: "07", title: "2.2 舞（徐惠）", source: "婚礼档案" },
-  { id: "08", title: "3.1 自白（方晚）", source: "完整火化单" },
+  { id: "08", title: "3.1 自白（方晚）", source: "完整焚烧签字单" },
   { id: "09", title: "3.2 浣石（方晚）", source: "西岩寺石像档案" },
   { id: "10", title: "4.1 刍味（杜彻）", source: "寿享陵园" },
   { id: "11", title: "4.2 刍胃（杜万琳）", source: "医学删除页" },
@@ -549,6 +552,7 @@ function buildPublicCatalog(game: GameState) {
   ].filter(Boolean) as DirectoryEntry[];
 
   const news: DirectoryEntry[] = [
+    { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "一则关于公墓项目款项的旧报道。原网页现只保留简讯，随文材料未能打开。", path: ROUTES.cemeteryReport },
     { id: "current-exhibition", eyebrow: "展览动态", title: "《赭红门》开放公告", summary: "憎恶社二层主厅当期展览及观展信息。", path: ROUTES.exhibition },
     { id: "missing-notice", eyebrow: "场馆告示", title: "关于 A-07 展品状态的说明", summary: "西南角展品未能在闭馆复核中确认位置。", path: ROUTES.exhibition },
     recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: isUnvisited(ROUTES.wangDeath) },
@@ -810,9 +814,15 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       return;
     }
 
-    if (normalized === "方晚" || normalized === "fangwan") {
-      const allowed = game.unlocked.includes("S07") || currentPath === ROUTES.duWanlin;
-      setResults([{
+    if (["方晚", "fangwan", "方晚署名", "方晚代签", "方晚火化单", "方晚焚烧签字单"].includes(normalized)) {
+      const hasForm = game.unlocked.includes("S19") || game.unlocked.includes("S20") || currentPath === ROUTES.duCremation || currentPath === ROUTES.duCremationSigned;
+      const allowed = hasForm || game.unlocked.includes("S07") || currentPath === ROUTES.duWanlin;
+      setResults([...(hasForm ? [{
+        id: "du-cremation-signed", kind: "新增记录 · 代签人已确认",
+        title: "方晚｜代签记录与《自白》",
+        summary: "与焚烧签字单上的署名相符。打开完整单据及方晚留下的文字。",
+        path: ROUTES.duCremationSigned, unlock: ["S20"], recover: ["08"],
+      }] : []), {
         id: "fang-wan",
         kind: allowed ? "人物档案＋朗读文件" : "匿名履历 · 1条",
         title: allowed ? "方晚" : "［姓名缺失］",
@@ -825,7 +835,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         locked: !allowed,
         note: allowed ? undefined : "关系未确认",
       }]);
-      setResultNote(allowed ? "人物履历与无名同乡记录完全重合。" : "先确认这份履历与哪名旧成员相连。");
+      setResultNote(hasForm ? "焚烧签字单关联出一份新记录，原人物档案仍可回看。" : allowed ? "人物履历与无名同乡记录完全重合。" : "先确认这份履历与哪名旧成员相连。");
       return;
     }
 
@@ -1024,12 +1034,12 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       return;
     }
 
-    if (["火化单", "焚烧签字单", "火化签字单"].includes(normalized)) {
+    if (["焚烧签字单", "火化单", "火化签字单"].includes(normalized)) {
       const allowed = game.recovered.includes("13") || currentPath === ROUTES.wangDeath;
       setResults([{
         id: "du-cremation",
         kind: allowed ? "死亡手续扫描件 · 1份" : "受限文件元数据",
-        title: "杜万琳｜火化单",
+        title: "杜万琳｜焚烧签字单",
         summary: allowed
           ? "姓名与火化状态可读；代签栏仍被遮挡。"
           : "文件名存在于版本历史；来源文件尚未恢复。",
@@ -1039,29 +1049,6 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         note: allowed ? undefined : "来源不足",
       }]);
       setResultNote(allowed ? "找到一份纸边焦黑的手续扫描件。" : "先恢复把这份手续写入版本历史的文学文件。");
-      return;
-    }
-
-    if (["方晚署名", "方晚火化单", "方晚代签"].includes(normalized)) {
-      const hasProcedure = game.unlocked.includes("S19") || currentPath === ROUTES.duCremation;
-      const hasPerson = game.visited.includes(ROUTES.fangWan);
-      const allowed = hasProcedure && hasPerson;
-      setResults([{
-        id: "du-cremation-signed",
-        kind: allowed ? "完整文字层＋朗读文件" : "人物／手续交叉结果",
-        title: allowed ? "杜万琳｜完整火化单" : "方晚 × 火化单",
-        summary: allowed
-          ? "代签栏遮挡已解除；附朗读文件08《自白》。"
-          : hasProcedure
-            ? "手续已找到，但需先查看方晚人物档案确认关系。"
-            : "人物档案存在；相关死亡手续尚未开放。",
-        path: allowed ? ROUTES.duCremationSigned : undefined,
-        unlock: allowed ? ["S20"] : undefined,
-        recover: allowed ? ["08"] : undefined,
-        locked: !allowed,
-        note: allowed ? undefined : "交叉证据不足",
-      }]);
-      setResultNote(allowed ? "人物履历与手续代签栏互相补全。" : "必须同时看过人物档案和遮挡版手续。");
       return;
     }
 
@@ -1079,7 +1066,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         locked: !allowed,
         note: allowed ? undefined : "证据不足",
       }]);
-      setResultNote(allowed ? "个人档案已汇入同一项目索引。" : "先恢复完整火化单与方晚的自白。");
+      setResultNote(allowed ? "个人档案已汇入同一项目索引。" : "先恢复完整焚烧签字单与方晚的自白。");
       return;
     }
 
@@ -1574,13 +1561,13 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
 const SEARCH_TERMS = [
   ["葛东平"], ["白芍肉"], ["李泰", "litai"], ["3dmx3dm", "3x3dm", "3dm3dm"],
   ["盲之春", "盲春", "看不见春天", "看不見春天"], ["憎恶社", "憎恶"],
-  ["杜南阳"], ["杜万琳"], ["方晚", "fangwan"], ["东兴彼得"], ["王克定", "王克订"],
+  ["杜南阳"], ["杜万琳"], ["方晚", "fangwan", "方晚署名", "方晚代签", "方晚火化单", "方晚焚烧签字单"], ["东兴彼得"], ["王克定", "王克订"],
   ["刑万", "刑萬", "刑某"], ["莉香", "莉香溺水"],
   ["尸检报告", "王克定尸检", "王克定认尸", "认尸记录"],
   ["石立人", "石立人头", "石人头", "佛头"], ["西岩寺", "西岩寺院"],
   ["凤凰水库", "凤凰水庫", "鳳凰水庫"],
   ["右小手指", "右手小指", "小指", "尸检补充", "尸检补充报告"], ["野生白鹭"],
-  ["火化单", "焚烧签字单", "火化签字单"], ["方晚署名", "方晚火化单", "方晚代签"],
+  ["焚烧签字单", "火化单", "火化签字单"],
   ["他山地方公墓贪污案", "他山公墓贪污案", "地方公墓贪污案"], ["寿享陵园", "寿享陵園"],
   ["杜彻", "杜徹"], ["李髮"], ["刍味", "芻味"], ["刍胃", "芻胃"],
   ["阿尔茨海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"],
@@ -2253,7 +2240,9 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.people:
         return <DirectoryPage kicker="PEOPLE / INDEX" title="人物" intro="参展者、编辑、旧成员与文本中的相关人物。搜索所得的新人物将在这里更新。" entries={publicCatalog.people} onOpen={navigate} />;
       case ROUTES.news:
-        return <DirectoryPage kicker="NEWS / ARCHIVE" title="新闻" intro="场馆公告、公开报道与恢复中的地方档案。只显示玩家已经找到的调查节点。" entries={publicCatalog.news} onOpen={navigate} />;
+        return <DirectoryPage kicker="NEWS / ARCHIVE" title="新闻" intro="场馆公告、地方旧闻与陆续恢复的后续报道。" entries={publicCatalog.news} onOpen={navigate} />;
+      case ROUTES.cemeteryReport:
+        return <CemeteryReportPage />;
       case ROUTES.publications:
         return <DirectoryPage kicker="PUBLICATIONS / TEXT" title="出版物" intro="展览手册、小说集、小说出版档案与最终开放的诗剧资料。" entries={publicCatalog.publications} onOpen={navigate} />;
       case ROUTES.about:
@@ -2329,7 +2318,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.xingNews:
         return <XingNewsPage />;
       case ROUTES.shouxiang:
-        return <ShouxiangPage />;
+        return <ShouxiangPage imageUrl={browserPath("/archive/shouxiang-memorials.webp")} />;
       case ROUTES.duChe:
         return <DuChePage onOpenSupplement={() => navigate(ROUTES.scatteredTiefangshan)} />;
       case ROUTES.wedding:
@@ -3273,7 +3262,7 @@ function WangDeathPage() {
         <p>有人指明当今是看不见君王，也看不见臣属。<br />如同是歌剧里刺耳的女角色，<br />这个偌大的城池，古称是什么<br />还有些旧人，如扇骨一样重迭的身影。</p>
         <p>你应该反思，为年青时狂暴的诗篇<br />有些不恰当的日子，他一头跳进老城河<br />以至于和谁又忘了这座城市<br />谁记得的，众人默不作声，全权算作祭奠。</p>
       </RecoveredScript>
-      <section className="version-history"><span>版本历史</span><div><h2>下一份手续发生在另一名参与者死后。</h2><p>相关诗文将它称为“焚烧签字单”；档案分类使用更日常的名称。</p></div><code>FORM INDEX AVAILABLE</code></section>
+      <section className="version-history"><span>版本历史</span><div><h2>下一份手续发生在另一名参与者死后。</h2><p>版本记录留下一份“焚烧签字单”。用这份单据的名称继续查找。</p></div><code>FORM INDEX AVAILABLE</code></section>
     </article>
   );
 }
@@ -3288,7 +3277,7 @@ function DuCremationPage({ revealed }: { revealed: boolean }) {
 
       <section className="cremation-layout">
         <div className="cremation-sheet burnt-edge">
-          <header><span>火化签字单／转录件</span><code>DW-FORM-01</code></header>
+          <header><span>焚烧签字单／转录件</span><code>DW-FORM-01</code></header>
           <dl><MetaLine label="死者">杜万琳</MetaLine><MetaLine label="死亡日期">未记载</MetaLine><MetaLine label="医院">未记载</MetaLine><MetaLine label="表面记录">病逝／肝病相关</MetaLine><MetaLine label="遗体处置">已火化</MetaLine><MetaLine label="家属状态">儿子在外；妻子留家</MetaLine></dl>
           <div className="signature-field"><span>代家属签字</span><b className={revealed ? "signature-reveal" : "signature-mask"}>{revealed ? "方晚" : "方＿"}</b><small>{revealed ? "与到院记录、诗文声部交叉确认" : "第二字被纸面灼痕覆盖"}</small></div>
         </div>
@@ -3306,17 +3295,28 @@ function DuCremationPage({ revealed }: { revealed: boolean }) {
             <p>徐惠哭至力竭很早便离开。<br />我代为家属在火化单署名<br />想到签下一个代号这门事儿<br />便裁定你惶惶的一生——<br />另一代号——自此变成土壤。</p>
             <p>簇拥着喝得烂醉像以前一样<br />轻蔑地悲悼一条命的垂死<br />我们放弃审视各自毫无活性的肝脏<br />当天夜里织合一道谎言瞒过自己<br />杯酒相撞，庆幸仍活在世上。</p>
           </RecoveredScript>
-          <section className="case-name-reveal"><span>案件名称／首次完整出现</span><h2>他山地方公墓贪污案</h2><p>五名参与者的档案由此被编入同一索引。使用完整案名继续搜索。</p><code>NEXT: CASE / CEMETERY / 05 PERSONS</code></section>
+          <section className="case-name-reveal"><span>旧闻关联／补充材料已开放</span><h2>他山地方公墓贪污案</h2><p>这份单据被夹在同一叠项目资料中，封面上的案名与新闻栏那则旧闻一致。现在可以用完整案名检索补充档案。</p><code>NEXT: CASE / CEMETERY / 05 PERSONS</code></section>
         </>
       )}
     </article>
   );
 }
 
+function CemeteryReportPage() {
+  return <article className="news-cache-page">
+    <header className="news-cache-head"><div><CacheStamp>NEWS / PUBLIC ARCHIVE</CacheStamp><p className="section-kicker">地方旧闻</p><h1>他山晚讯</h1></div><span>社会简讯 · 剪报存档</span></header>
+    <section className="news-paper"><div className="news-masthead"><b>他山晚讯</b><span>旧版网页摘录</span></div>
+      <h2>他山地方公墓贪污案</h2>
+      <div className="news-copy"><p>本报讯　他山地方公墓项目有关款项的去向引发争议，相关账目及经办材料已被调阅。此事在当地被称为“他山地方公墓贪污案”。</p><p>原报道篇幅很短，未附完整的人员名单。网页末尾曾列有数份相关材料，现仅留下附件位置。</p><p>本栏保留这则旧闻，后续消息待补。</p></div>
+      <aside className="cache-difference"><span>随文材料</span><p>附件暂缺。现有报道不足以核对具体人物与事件经过。</p></aside>
+    </section>
+  </article>;
+}
+
 function CemeteryCasePage() {
   const participants = [
-    { name: "杜万琳", alias: "旧名：杜南阳", relation: "项目参与者；与画廊、家庭手续相互交叉", record: "火化单／方晚代签", death: "已故；表面记录为病逝、肝病相关，遗体已火化" },
-    { name: "方晚", alias: "", relation: "项目参与者；杜万琳同乡、同学与画廊合伙人", record: "旧成员履历／火化单代签", death: "已故；死亡过程未公开" },
+    { name: "杜万琳", alias: "旧名：杜南阳", relation: "曾参与公墓项目；另有画廊活动及身后事记录", record: "焚烧签字单／方晚代签", death: "已故；表面记录为病逝、肝病相关，遗体已火化" },
+    { name: "方晚", alias: "", relation: "项目参与者；杜万琳同乡、同学与画廊合伙人", record: "旧成员履历／焚烧签字单代签", death: "已故；死亡过程未公开" },
     { name: "王克定", alias: "", relation: "项目参与者；旧社团关系者", record: "认尸、尸检与物证补充", death: "已故；遭杀害，自杀现场系伪造" },
     { name: "刑万", alias: "新闻匿名：刑某", relation: "项目参与者；旧社团名单与新闻缓存重合", record: "公开新闻／旧合照", death: "已故；死亡过程未公开" },
     { name: "莉香", alias: "", relation: "项目参与者；杜家亲属、刑万关联人", record: "亲属卡／河流档案", death: "已故；溺亡" },
@@ -3354,18 +3354,6 @@ function XingNewsPage() {
         <div className="news-copy"><p>报道正文未公开完整姓名，案由之外的犯罪事实、审判结果与死亡因果均不在本页扩写。</p><p>人物交叉索引：<strong>{cached ? "刑万（新闻匿名：刑某）" : "刑某"}</strong></p></div>
         {cached && <aside className="cache-difference"><span>CACHE ONLY</span><p><del>关联材料：内部人员栏已移除</del></p><p>后来材料残留：世伯承办的<strong>寿享陵园</strong>。</p></aside>}
       </section>
-    </article>
-  );
-}
-
-function ShouxiangPage() {
-  return (
-    <article className="old-web-page">
-      <div className="old-browser-bar"><span>网页存档</span><code>http://shouxiang.invalid/staff/index.htm</code><b>最后抓取：20—</b></div>
-      <header className="old-site-head"><div className="broken-old-logo" role="img" aria-label="寿享陵园旧标志图片加载失败"><span>IMG</span></div><div><h1>寿享陵园</h1><p>让思念有处安放</p></div><nav aria-label="旧网站导航"><span>首页</span><span>园区介绍</span><b>人员名单</b><span>联系我们</span></nav></header>
-      <div className="old-marquee">通知：旧站停止维护，图片与联系方式均已失效。文字层由网页缓存保留。</div>
-      <section className="old-staff-layout"><aside><h2>栏目导航</h2><ul><li>管理人员</li><li>园区服务</li><li>墓型展示</li><li>来园路线</li></ul><div className="broken-ad"><span>IMAGE NOT FOUND</span><p>陵园全景图</p></div></aside><div className="old-staff-list"><h2>工作人员名录</h2><table><thead><tr><th>姓名</th><th>职务</th><th>资料</th></tr></thead><tbody><tr><td><strong>杜彻</strong></td><td>负责人</td><td>家庭关系／婚礼通告可查</td></tr><tr><td>［字段损坏］</td><td>园务</td><td>图片失效</td></tr><tr><td>［字段损坏］</td><td>维护</td><td>联系方式已清除</td></tr></tbody></table><div className="old-responsible"><span>本页负责人</span><b>杜彻</b><p>经一位世伯介绍进入他山市公墓系统；旧站把他的家庭资料与婚礼通告放在同一人员索引下。</p></div></div></section>
-      <footer className="old-site-foot">Copyright 20— 寿享陵园 · 本镜像使用无效示例域名，不提供现实联系方式</footer>
     </article>
   );
 }

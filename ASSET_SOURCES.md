@@ -10,3 +10,5 @@ The six historical works used in the homepage viewing room are public-domain rep
 - `goldsmith.webp` — Petrus Christus, *A Goldsmith in His Shop* (1449), [Wikimedia Commons](https://commons.wikimedia.org/wiki/File:A_Goldsmith_in_his_Shop_MET_DT711.jpg)
 
 The fictional Xu Hui sketch was generated specifically for this project. The breakup interstitial preserves the user-supplied `封底.png` composition and only converts it to WebP for delivery.
+
+`public/archive/shouxiang-memorials.webp` is an AI-generated fictional cemetery catalog photograph created for the interactive Shouxiang archive. It depicts three blank marker styles and no real cemetery or person.

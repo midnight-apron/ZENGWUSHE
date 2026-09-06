@@ -75,7 +75,11 @@ test("renders the public gallery directories without leaking locked records", as
   const news = await renderPath("/news");
   assert.match(news, /NEWS \/ ARCHIVE/);
   assert.match(news, /关于 A-07 展品状态的说明/);
-  assert.doesNotMatch(news, /他山地方公墓贪污案/);
+  assert.match(news, /他山地方公墓贪污案/);
+  assert.doesNotMatch(news, /五名参与者|死亡过程已/);
+  const report = await renderPath("/news/cemetery-report");
+  assert.match(report, /随文材料/);
+  assert.doesNotMatch(report, /杜万琳|方晚|王克定|莉香|刑万/);
 
   const publications = await renderPath("/publications");
   assert.match(publications, /PUBLICATIONS \/ TEXT/);

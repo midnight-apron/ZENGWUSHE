@@ -60,3 +60,28 @@ test("history deduplicates, persists as JSON, and follows changing unlock state"
   assert.deepEqual(rememberSearch(history, "  "), history);
   assert.equal(rememberSearch(Array.from({ length: 50 }, (_, i) => `词${i}`), "新词").length, 50);
 });
+
+
+test("Fang Wan gains a new signed record only after the unsigned form is opened", () => {
+  const before = run("方晚", { unlocked: ["S07"], visited: ["/members/fang-wan"] });
+  assert.equal(before.results.length, 1);
+  assert.equal(before.results[0].path, "/members/fang-wan");
+  const after = run("方晚", { unlocked: ["S19"] });
+  assert.equal(after.results.length, 2);
+  const signed = after.results.find((row) => row.id === "du-cremation-signed");
+  assert.equal(signed.path, "/archive/forms/cremation-du-complete");
+  assert.deepEqual(signed.unlock, ["S20"]);
+  assert.deepEqual(signed.recover, ["08"]);
+  assert.equal(run("焚烧签字单", { recovered: ["13"] }).results[0].path, "/archive/forms/cremation-du");
+  assert.equal(searchStatus(run("焚烧签字单")), "待解锁");
+});
+
+test("public cemetery news does not unlock the late case index", () => {
+  const game = state({ unlocked: ["S19"] });
+  const fromNews = search("他山地方公墓贪污案", game, "/news/cemetery-report");
+  assert.equal(searchStatus(fromNews), "待解锁");
+  assert.equal(fromNews.results[0].path, undefined);
+  const ready = run("他山地方公墓贪污案", { unlocked: ["S20"] });
+  assert.equal(ready.results[0].path, "/archive/case/cemetery");
+  assert.equal(searchStatus(run("公墓", { unlocked: ["S19"] })), "待解锁");
+});

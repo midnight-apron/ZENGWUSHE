@@ -8399,3 +8399,29 @@ button {
 .search-history-list button > span { overflow-wrap: anywhere; min-width: 0; }
 .search-history-list b { flex-shrink: 0; color: var(--ash); font-size: 0.875rem; font-weight: 400; }
 .search-history-list b.is-valid { color: var(--blood); font-weight: 700; }
+
+/* Preserved old-site palette with functional archive navigation. */
+.shouxiang-interactive .old-word-seal { border: 1px double #d9dec7; padding: .6rem; font-family: SimSun, serif; font-size: 1.5rem; text-align: center; }
+.shouxiang-interactive .old-marquee, .shouxiang-interactive .old-site-head p { font-size: .875rem; }
+.cemetery-tabs { gap: 0; }
+.cemetery-nav[data-slot="tabs-list"] { display: flex; flex-wrap: wrap; width: 100%; height: auto; padding: .6rem; border-radius: 0; background: #d8d6c5; border-bottom: 1px solid #817d70; gap: .4rem; }
+.cemetery-nav [data-slot="tabs-trigger"] { border-radius: 0; min-height: 2.75rem; padding: .6rem 1rem; color: #25231d; font-size: 1rem; }
+.cemetery-nav [data-slot="tabs-trigger"][data-state="active"] { background: #5c684b; color: #fffbe9; }
+.cemetery-panel { padding: clamp(1rem, 4vw, 2.5rem); min-width: 0; }
+.cemetery-panel h2 { margin: 0 0 1rem; font-size: 1.5rem; font-family: SimSun, serif; color: #394330; }
+.cemetery-panel h3 { font-size: 1.2rem; margin: 1rem 0 .6rem; }
+.cemetery-panel p, .cemetery-panel li, .cemetery-person-dialog p { font-size: 1rem; line-height: 1.85; }
+.cemetery-panel p { margin: .6rem 0 1rem; }
+.cemetery-table-scroll { overflow-x: auto; }
+.cemetery-panel table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+.cemetery-panel th, .cemetery-panel td { text-align: left; padding: .8rem; border: 1px solid #9e9a8a; }
+.cemetery-panel thead { background: #d9d9c9; }
+.cemetery-panel th button { min-height: 2.75rem; text-decoration: underline; color: #304a28; cursor: pointer; }
+.cemetery-panel [data-slot="accordion-trigger"] { font-size: 1rem; }
+.cemetery-catalog-image { display: block; width: 100%; height: auto; border: 4px solid #d3d0bf; }
+.cemetery-subtabs [data-slot="tabs-list"] { display: flex; flex-wrap: wrap; width: 100%; height: auto; gap: .4rem; margin: 1rem 0; background: #d9d9c9; border-radius: 0; }
+.cemetery-subtabs [data-slot="tabs-trigger"] { min-height: 2.75rem; white-space: normal; padding: .6rem; border-radius: 0; font-size: .95rem; color: #25231d; }
+.cemetery-subtabs [data-slot="tabs-trigger"][data-state="active"] { background: #fffdf1; }
+.cemetery-panel ol { padding-left: 1.5rem; list-style: decimal; }
+.cemetery-panel button:focus-visible { outline: 2px solid #394330; outline-offset: 3px; }
+@media (max-width: 600px) { .cemetery-nav [data-slot="tabs-trigger"] { flex-basis: 40%; } .cemetery-panel th, .cemetery-panel td { padding: .5rem; } }
