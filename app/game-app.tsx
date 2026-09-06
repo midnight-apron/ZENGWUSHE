@@ -20,6 +20,7 @@ import {
   HelpCircle,
   LockKeyhole,
   Search,
+  History,
   Settings2,
   UnlockKeyhole,
   X,
@@ -49,6 +50,7 @@ type GameState = {
   unlocked: string[];
   recovered: string[];
   visited: string[];
+  searchHistory: string[];
   frameClicks: number;
   stoneBreakClicks: number;
   stoneBaseClicks: number;
@@ -73,6 +75,8 @@ type SearchResult = {
   recover?: string[];
   locked?: boolean;
   note?: string;
+  action?: "mang" | "wang";
+  searchTerm?: string;
 };
 
 type DirectoryEntry = {
@@ -84,10 +88,11 @@ type DirectoryEntry = {
   isNew?: boolean;
 };
 
-const DEFAULT_STATE: GameState = {
+export const DEFAULT_STATE: GameState = {
   unlocked: [],
   recovered: [],
   visited: [],
+  searchHistory: [],
   frameClicks: 0,
   stoneBreakClicks: 0,
   stoneBaseClicks: 0,
@@ -633,591 +638,20 @@ function ArtifactTag({ children }: { children: ReactNode }) {
   return <span className="artifact-tag">{children}</span>;
 }
 
-export function GameApp({ initialPath }: { initialPath: string }) {
-  const [path, setPath] = useState(initialPath);
-  const [game, setGame] = useState<GameState>(DEFAULT_STATE);
-  const [hydrated, setHydrated] = useState(false);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[] | null>(null);
-  const [resultNote, setResultNote] = useState("");
-  const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
-  const [hintLevel, setHintLevel] = useState(0);
-  const [frameNotice, setFrameNotice] = useState(false);
-  const [plainText, setPlainText] = useState(false);
-  const [scareActive, setScareActive] = useState(false);
-  const [scareTextVisible, setScareTextVisible] = useState(false);
-  const [roleGlitch, setRoleGlitch] = useState(false);
-  const [stoneRevealActive, setStoneRevealActive] = useState(false);
-  const [supplementPassword, setSupplementPassword] = useState("");
-  const [supplementPasswordVisible, setSupplementPasswordVisible] = useState(false);
-  const [supplementPasswordAttempts, setSupplementPasswordAttempts] = useState(0);
-  const [supplementPasswordNote, setSupplementPasswordNote] = useState("");
-  const [deathScareActive, setDeathScareActive] = useState(false);
-  const [deathScareTextVisible, setDeathScareTextVisible] = useState(false);
-  const [collapseImageActive, setCollapseImageActive] = useState(false);
-  const [editorUser, setEditorUser] = useState("");
-  const [editorPassword, setEditorPassword] = useState("");
-  const [editorAttempts, setEditorAttempts] = useState(0);
-  const [editorNote, setEditorNote] = useState("");
-  const [fragmentPassword, setFragmentPassword] = useState("");
-  const [fragmentAttempts, setFragmentAttempts] = useState(0);
-  const [fragmentNote, setFragmentNote] = useState("");
-  const [stableStage, setStableStage] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const skipScareRef = useRef<HTMLButtonElement>(null);
-  const skipDeathScareRef = useRef<HTMLButtonElement>(null);
-  const collapseImageRef = useRef<HTMLButtonElement>(null);
+type SearchOutcome = { results: SearchResult[] | null; note: string; action?: "mang" | "wang"; wrong?: boolean };
 
-  const currentPath = displayPath(path);
-  const currentHints = HINTS[currentPath] ?? HINTS[ROUTES.exhibition];
-  const stageComplete = game.recovered.includes("14");
-  const stageVocabulary = game.recovered.includes("12");
-  const publicCatalog = useMemo(() => buildPublicCatalog(game), [game]);
-  const currentNavigationSection = getNavigationSection(currentPath);
-  const isGalleryHome = currentPath === ROUTES.home;
-  const isDirectoryPage = [ROUTES.exhibitions, ROUTES.people, ROUTES.news, ROUTES.publications, ROUTES.about].includes(currentPath);
-
-  const mutateGame = useCallback((unlock: string[] = [], recover: string[] = []) => {
-    setGame((previous) => ({
-      ...previous,
-      unlocked: unique([...previous.unlocked, ...unlock]),
-      recovered: unique([...previous.recovered, ...recover]),
-    }));
-  }, []);
-
-  const navigate = useCallback((nextPath: string) => {
-    const cleanPath = displayPath(nextPath);
-    window.history.pushState({}, "", browserPath(nextPath));
-    setPath(cleanPath);
-    setResults(null);
-    setResultNote("");
-    setQuery("");
-    setFrameNotice(false);
-    setPlainText(false);
-    setSupplementPassword("");
-    setSupplementPasswordVisible(false);
-    setSupplementPasswordAttempts(0);
-    setSupplementPasswordNote("");
-    setEditorPassword("");
-    setEditorNote("");
-    setFragmentPassword("");
-    setFragmentAttempts(0);
-    setFragmentNote("");
-    setStableStage(false);
-  }, []);
-
-  const finishMangRecovery = useCallback(() => {
-    setScareActive(false);
-    setScareTextVisible(false);
-    mutateGame(["S03", "S04"], ["01"]);
-    navigate(ROUTES.recoveredOne);
-  }, [mutateGame, navigate]);
-
-  const finishWangRecovery = useCallback(() => {
-    setDeathScareActive(false);
-    setDeathScareTextVisible(false);
-    mutateGame(["S18"], ["13"]);
-    navigate(ROUTES.wangDeath);
-    window.setTimeout(() => searchInputRef.current?.focus(), 0);
-  }, [mutateGame, navigate]);
-
-  const dismissCollapseImage = useCallback(() => {
-    setCollapseImageActive(false);
-    setGame((previous) => ({
-      ...previous,
-      scaresSeen: unique([...previous.scaresSeen, "J04-collapse-image"]),
-    }));
-  }, []);
-
-  useEffect(() => {
-    const initialize = window.setTimeout(() => {
-      const stored = window.localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored) as Partial<GameState>;
-          setGame({
-            ...DEFAULT_STATE,
-            ...parsed,
-            settings: { ...DEFAULT_STATE.settings, ...(parsed.settings ?? {}) },
-          });
-        } catch {
-          window.localStorage.removeItem(STORAGE_KEY);
-        }
-      } else if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        setGame((previous) => ({
-          ...previous,
-          settings: { ...previous.settings, reducedMotion: true },
-        }));
-      }
-      setHydrated(true);
-    }, 0);
-
-    const onPopState = () => {
-      setPath(displayPath(window.location.pathname));
-      setResults(null);
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => {
-      window.clearTimeout(initialize);
-      window.removeEventListener("popstate", onPopState);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
-  }, [game, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated) return;
-    const unlocksThrough = (step: number) => Array.from({ length: step }, (_, index) => `S${String(index + 1).padStart(2, "0")}`);
-    const recoveredTwelve = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "13"];
-    const arrival: Record<string, { unlock?: string[]; recover?: string[] }> = {
-      [ROUTES.artwork]: { unlock: ["S01"] },
-      [ROUTES.curator]: { unlock: ["S01", "S02"] },
-      [ROUTES.dimensions]: { unlock: ["S01", "S02"] },
-      [ROUTES.damagedReader]: { unlock: ["S01", "S02", "S03"] },
-      [ROUTES.recoveredOne]: {
-        unlock: ["S01", "S02", "S03", "S04"],
-        recover: ["01"],
-      },
-      [ROUTES.history]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05"],
-        recover: ["01", "02"],
-      },
-      [ROUTES.duNanyangOld]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06"],
-        recover: ["01", "02"],
-      },
-      [ROUTES.duWanlin]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07"],
-        recover: ["01", "02"],
-      },
-      [ROUTES.fangWan]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08"],
-        recover: ["01", "02", "03"],
-      },
-      [ROUTES.dongxingPeter]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09"],
-        recover: ["01", "02", "03"],
-      },
-      [ROUTES.wangKeding]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10"],
-        recover: ["01", "02", "03", "04"],
-      },
-      [ROUTES.xingWan]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11"],
-        recover: ["01", "02", "03", "04", "05"],
-      },
-      [ROUTES.liXiangDeath]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12"],
-        recover: ["01", "02", "03", "04", "05", "06"],
-      },
-      [ROUTES.wangAutopsy]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13"],
-        recover: ["01", "02", "03", "04", "05", "06"],
-      },
-      [ROUTES.stoneHead]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14"],
-        recover: ["01", "02", "03", "04", "05", "06"],
-      },
-      [ROUTES.xiyanTemple]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14"],
-        recover: ["01", "02", "03", "04", "05", "06"],
-      },
-      [ROUTES.phoenixRoute]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15"],
-        recover: ["01", "02", "03", "04", "05", "06", "09"],
-      },
-      [ROUTES.wangSupplement]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16"],
-        recover: ["01", "02", "03", "04", "05", "06", "09"],
-      },
-      [ROUTES.wangDeath]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18"],
-        recover: ["01", "02", "03", "04", "05", "06", "09", "13"],
-      },
-      [ROUTES.duCremation]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19"],
-        recover: ["01", "02", "03", "04", "05", "06", "09", "13"],
-      },
-      [ROUTES.duCremationSigned]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
-      },
-      [ROUTES.cemeteryCase]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
-      },
-      [ROUTES.xingNews]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
-      },
-      [ROUTES.shouxiang]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
-      },
-      [ROUTES.duChe]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
-      },
-      [ROUTES.wedding]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S25"],
-        recover: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "13"],
-      },
-      [ROUTES.taste]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "13"],
-      },
-      [ROUTES.medical]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26", "S27"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "13"],
-      },
-      [ROUTES.stomach]: {
-        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26", "S27", "S28"],
-        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "11", "13"],
-      },
-      [ROUTES.kuonanHistory]: { unlock: unlocksThrough(29), recover: recoveredTwelve },
-      [ROUTES.liLetter]: { unlock: unlocksThrough(30), recover: recoveredTwelve },
-      [ROUTES.mahePublication]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
-      [ROUTES.editorLogin]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
-      [ROUTES.editorRevisions]: { unlock: unlocksThrough(32), recover: recoveredTwelve },
-      [ROUTES.yuanchang]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
-      [ROUTES.recoveredIndex]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
-      [ROUTES.stageZhuhongmen]: { unlock: unlocksThrough(35), recover: [...recoveredTwelve, "12", "14"] },
-      [ROUTES.shinan]: { unlock: unlocksThrough(36), recover: [...recoveredTwelve, "12", "14"] },
-    };
-    const effect = arrival[currentPath];
-    const syncArrival = window.setTimeout(() => {
-      setGame((previous) => ({
-        ...previous,
-        unlocked: unique([...previous.unlocked, ...(effect?.unlock ?? [])]),
-        recovered: unique([...previous.recovered, ...(effect?.recover ?? [])]),
-        visited: unique([...previous.visited, currentPath]),
-        editorLoggedIn: currentPath === ROUTES.editorRevisions || currentPath === ROUTES.yuanchang || currentPath === ROUTES.recoveredIndex || currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? true : previous.editorLoggedIn,
-        stageTransformStep: currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? Math.max(previous.stageTransformStep, 3) : previous.stageTransformStep,
-      }));
-      setHintLevel(0);
-    }, 0);
-    document.title = `${PAGE_TITLES[currentPath] ?? "憎恶社"}｜憎恶社`;
-    window.scrollTo({ top: 0, behavior: game.settings.reducedMotion ? "auto" : "smooth" });
-    return () => window.clearTimeout(syncArrival);
-  }, [currentPath, hydrated, game.settings.reducedMotion]);
-
-  useEffect(() => {
-    if (currentPath !== ROUTES.history || game.scaresSeen.includes("role-glitch")) return;
-    const start = window.setTimeout(() => setRoleGlitch(true), 0);
-    const timer = window.setTimeout(() => {
-      setRoleGlitch(false);
-      setGame((previous) => ({
-        ...previous,
-        scaresSeen: unique([...previous.scaresSeen, "role-glitch"]),
-      }));
-    }, game.settings.reducedMotion ? 120 : 1100);
-    return () => {
-      window.clearTimeout(start);
-      window.clearTimeout(timer);
-    };
-  }, [currentPath, game.scaresSeen, game.settings.reducedMotion]);
-
-  useEffect(() => {
-    const roleGlitchFinished = game.scaresSeen.includes("role-glitch");
-    const collapseImageSeen = game.scaresSeen.includes("J04-collapse-image");
-    if (currentPath !== ROUTES.history || !roleGlitchFinished || collapseImageSeen) return;
-
-    if (game.settings.reducedScares) {
-      const skip = window.setTimeout(() => {
-        setGame((previous) => ({
-          ...previous,
-          scaresSeen: unique([...previous.scaresSeen, "J04-collapse-image"]),
-        }));
-      }, 0);
-      return () => window.clearTimeout(skip);
-    }
-
-    const reveal = window.setTimeout(
-      () => setCollapseImageActive(true),
-      game.settings.reducedMotion ? 0 : 180,
-    );
-    return () => window.clearTimeout(reveal);
-  }, [currentPath, game.scaresSeen, game.settings.reducedMotion, game.settings.reducedScares]);
-
-  useEffect(() => {
-    if (!collapseImageActive) return;
-    collapseImageRef.current?.focus();
-  }, [collapseImageActive]);
-
-  useEffect(() => {
-    if (!scareActive) return;
-    skipScareRef.current?.focus();
-    const reveal = window.setTimeout(
-      () => setScareTextVisible(true),
-      game.settings.reducedMotion ? 0 : 450,
-    );
-    const enter = window.setTimeout(
-      () => finishMangRecovery(),
-      game.settings.reducedMotion ? 120 : 1750,
-    );
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") finishMangRecovery();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.clearTimeout(reveal);
-      window.clearTimeout(enter);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [scareActive, finishMangRecovery, game.settings.reducedMotion]);
-
-  useEffect(() => {
-    if (!deathScareActive) return;
-    skipDeathScareRef.current?.focus();
-    const reveal = window.setTimeout(
-      () => setDeathScareTextVisible(true),
-      game.settings.reducedMotion ? 0 : 160,
-    );
-    const enter = window.setTimeout(
-      () => finishWangRecovery(),
-      game.settings.reducedMotion ? 180 : 1760,
-    );
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") finishWangRecovery();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.clearTimeout(reveal);
-      window.clearTimeout(enter);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [deathScareActive, finishWangRecovery, game.settings.reducedMotion]);
-
-  useEffect(() => {
-    if (!hydrated || currentPath !== ROUTES.phoenixRoute || game.routeTrips >= 3) return;
-
-    const inspectRoutePosition = () => {
-      const page = document.documentElement;
-      const atBottom = window.innerHeight + window.scrollY >= page.scrollHeight - 32;
-      const atTop = window.scrollY <= 32;
-
-      if (atBottom && !game.routeReachedBottom) {
-        setGame((previous) => previous.routeReachedBottom
-          ? previous
-          : { ...previous, routeReachedBottom: true });
-        return;
-      }
-
-      if (atTop && game.routeReachedBottom) {
-        setGame((previous) => {
-          if (!previous.routeReachedBottom) return previous;
-          const nextTrips = Math.min(3, previous.routeTrips + 1);
-          return {
-            ...previous,
-            routeTrips: nextTrips,
-            routeReachedBottom: false,
-            unlocked: nextTrips === 3
-              ? unique([...previous.unlocked, "S16"])
-              : previous.unlocked,
-          };
-        });
-      }
-    };
-
-    window.addEventListener("scroll", inspectRoutePosition, { passive: true });
-    inspectRoutePosition();
-    return () => window.removeEventListener("scroll", inspectRoutePosition);
-  }, [currentPath, game.routeReachedBottom, game.routeTrips, hydrated]);
-
-  useEffect(() => {
-    if (!hydrated || currentPath !== ROUTES.kuonanHistory || game.historyVersionsLoaded >= 5 || game.settings.reducedMotion) return;
-    const loadAtBottom = () => {
-      const page = document.documentElement;
-      if (window.innerHeight + window.scrollY < page.scrollHeight - 24) return;
-      setGame((previous) => ({
-        ...previous,
-        historyVersionsLoaded: Math.min(5, previous.historyVersionsLoaded + 1),
-      }));
-    };
-    window.addEventListener("scroll", loadAtBottom, { passive: true });
-    return () => window.removeEventListener("scroll", loadAtBottom);
-  }, [currentPath, game.historyVersionsLoaded, game.settings.reducedMotion, hydrated]);
-
-  useEffect(() => {
-    if (currentPath !== ROUTES.kuonanHistory || game.historyVersionsLoaded < 5 || game.historyAutofillDone || query.trim()) return;
-    const fill = window.setTimeout(() => {
-      setQuery("李司贰");
-      setGame((previous) => ({ ...previous, historyAutofillDone: true }));
-      searchInputRef.current?.focus();
-    }, game.settings.reducedMotion ? 0 : 650);
-    return () => window.clearTimeout(fill);
-  }, [currentPath, game.historyAutofillDone, game.historyVersionsLoaded, game.settings.reducedMotion, query]);
-
-  useEffect(() => {
-    if (!game.recovered.includes("12") || game.stageTransformStep === 0 || game.stageTransformStep >= 3) return;
-    const advance = window.setTimeout(() => {
-      setGame((previous) => ({ ...previous, stageTransformStep: Math.min(3, previous.stageTransformStep + 1) }));
-    }, game.settings.reducedMotion ? 100 : 4000);
-    return () => window.clearTimeout(advance);
-  }, [game.recovered, game.settings.reducedMotion, game.stageTransformStep]);
-
-  function triggerMangRecovery() {
-    if (game.settings.reducedScares || game.scaresSeen.includes("J01")) {
-      finishMangRecovery();
-      return;
-    }
-    setGame((previous) => ({
-      ...previous,
-      scaresSeen: unique([...previous.scaresSeen, "J01"]),
-    }));
-    setScareTextVisible(false);
-    setScareActive(true);
-  }
-
-  function triggerWangRecovery() {
-    if (game.settings.reducedScares || game.scaresSeen.includes("J03")) {
-      finishWangRecovery();
-      return;
-    }
-    setGame((previous) => ({
-      ...previous,
-      scaresSeen: unique([...previous.scaresSeen, "J03"]),
-    }));
-    setDeathScareTextVisible(false);
-    setDeathScareActive(true);
-  }
-
-  function inspectStone(part: "break" | "base") {
-    if (currentPath !== ROUTES.xiyanTemple || game.unlocked.includes("S15")) return;
-
-    if (part === "break") {
-      const nextBreakClicks = Math.min(6, game.stoneBreakClicks + 1);
-      setGame((previous) => ({ ...previous, stoneBreakClicks: nextBreakClicks }));
-      return;
-    }
-
-    if (game.stoneBreakClicks < 6) return;
-    const nextBaseClicks = Math.min(7, game.stoneBaseClicks + 1);
-    const completed = nextBaseClicks === 7;
-    setGame((previous) => ({
-      ...previous,
-      stoneBaseClicks: nextBaseClicks,
-      unlocked: completed ? unique([...previous.unlocked, "S15"]) : previous.unlocked,
-      recovered: completed ? unique([...previous.recovered, "09"]) : previous.recovered,
-      scaresSeen: completed ? unique([...previous.scaresSeen, "J02"]) : previous.scaresSeen,
-    }));
-
-    if (completed && !game.settings.reducedScares && !game.scaresSeen.includes("J02")) {
-      setStoneRevealActive(true);
-      window.setTimeout(() => setStoneRevealActive(false), 900);
-    }
-  }
-
-  function moveAlongRoute(destination: "top" | "bottom") {
-    if (currentPath === ROUTES.phoenixRoute && game.routeTrips < 3) {
-      setGame((previous) => {
-        if (destination === "bottom") {
-          return previous.routeReachedBottom
-            ? previous
-            : { ...previous, routeReachedBottom: true };
-        }
-        if (!previous.routeReachedBottom) return previous;
-        const nextTrips = Math.min(3, previous.routeTrips + 1);
-        return {
-          ...previous,
-          routeTrips: nextTrips,
-          routeReachedBottom: false,
-          unlocked: nextTrips === 3
-            ? unique([...previous.unlocked, "S16"])
-            : previous.unlocked,
-        };
-      });
-    }
-    window.scrollTo({
-      top: destination === "top" ? 0 : document.documentElement.scrollHeight,
-      behavior: game.settings.reducedMotion ? "auto" : "smooth",
-    });
-  }
-
-  function submitSupplementPassword(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const normalized = supplementPassword.trim().replace(/[—–\-\s]/g, "");
-    if (normalized === "673") {
-      mutateGame(["S17"]);
-      setSupplementPasswordNote("校验通过。被删除的文字层已恢复。");
-      return;
-    }
-
-    const nextAttempts = supplementPasswordAttempts + 1;
-    setSupplementPasswordAttempts(nextAttempts);
-    setSupplementPasswordNote(
-      nextAttempts >= 3
-        ? "口令不匹配。回看西岩寺的石像数量，以及尸检摘要中的面部伤口数。"
-        : "口令不匹配；附件不会锁定。",
-    );
-  }
-
-  function loadOlderSiteVersion() {
-    setGame((previous) => ({
-      ...previous,
-      historyVersionsLoaded: Math.min(5, previous.historyVersionsLoaded + 1),
-    }));
-  }
-
-  function submitEditorLogin(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const userMatches = editorUser.trim().toLowerCase() === "editor_ys";
-    const passwordMatches = editorPassword.trim().toLowerCase() === "mhdc2019";
-    if (userMatches && passwordMatches) {
-      setGame((previous) => ({
-        ...previous,
-        editorLoggedIn: true,
-        unlocked: unique([...previous.unlocked, "S32"]),
-      }));
-      setEditorPassword("");
-      navigate(ROUTES.editorRevisions);
-      return;
-    }
-    const nextAttempts = editorAttempts + 1;
-    setEditorAttempts(nextAttempts);
-    setEditorPassword("");
-    setEditorNote(nextAttempts >= 3
-      ? "仍未通过。账号来自李司贰书信：editor_ys；口令为书名首字母＋2019。"
-      : userMatches ? "口令不匹配；账号已保留，不会锁定。" : "账号不匹配；不会锁定。");
-  }
-
-  function submitFragmentPassword(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (fragmentPassword.trim() === "左君") {
-      setGame((previous) => ({
-        ...previous,
-        unlocked: unique([...previous.unlocked, "S34"]),
-        recovered: unique([...previous.recovered, "12"]),
-        stageTransformStep: Math.max(1, previous.stageTransformStep),
-      }));
-      setFragmentNote("十段索引已解除。档案正在改写为场记。可立即显示稳定版。");
-      return;
-    }
-    const nextAttempts = fragmentAttempts + 1;
-    setFragmentAttempts(nextAttempts);
-    setFragmentNote(nextAttempts >= 3
-      ? "口令不是法名“元昶”。回看访谈里“原谅我称呼你本名”的下一称呼。"
-      : fragmentPassword.trim() === "元昶" ? "这是角色法名。口令要求被替换前的旧名。" : "口令不匹配；已读碎片不会清空。");
-  }
-
-  function openResult(result: SearchResult) {
-    if (result.locked || !result.path) return;
-    mutateGame(result.unlock ?? [], result.recover ?? []);
-    navigate(result.path);
-  }
-
-  function markWrong(message: string, fallbackResults: SearchResult[] = []) {
-    const nextCount = (wrongAttempts[currentPath] ?? 0) + 1;
-    setWrongAttempts((previous) => ({ ...previous, [currentPath]: nextCount }));
-    setResults(fallbackResults);
-    setResultNote(nextCount >= 3 ? `${message} 提示：${currentHints[0]}` : message);
-  }
-
-  function handleSearch(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+function resolveExactSearch(query: string, game: GameState, currentPath: string): SearchOutcome {
+  const outcome: SearchOutcome = { results: [], note: "" };
+  const setResults = (results: SearchResult[] | null) => { outcome.results = results; };
+  const setResultNote = (note: string) => { outcome.note = note; };
+  const triggerMangRecovery = () => { outcome.action = "mang"; };
+  const triggerWangRecovery = () => { outcome.action = "wang"; };
+  const markWrong = (note: string, results: SearchResult[] = []) => {
+    outcome.results = results;
+    outcome.note = note;
+    outcome.wrong = true;
+  };
+  function resolve() {
     const normalized = normalizeQuery(query);
     if (!normalized) {
       setResults([]);
@@ -1553,14 +987,14 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (["小手指", "右手小指"].includes(normalized)) {
+    if (["右小手指", "右手小指"].includes(normalized)) {
       const allowed = game.routeTrips >= 3 || game.unlocked.includes("S16");
       setResults([{
         id: "wang-supplement",
         kind: allowed ? "加密附件 · 尸检补充" : "伤口索引 · 元数据",
         title: "王克定｜尸检补充",
         summary: allowed
-          ? "右手小指缺失一截；创口时间早于溺水。附件需要口令。"
+          ? "右小手指缺失一截；创口时间早于溺水。附件需要口令。"
           : "伤口条目存在；完整路线批注尚未恢复。",
         path: allowed ? ROUTES.wangSupplement : undefined,
         locked: !allowed,
@@ -1570,7 +1004,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (normalized === "王克定之死") {
+    if (normalized === "野生白鹭") {
       const allowed = game.unlocked.includes("S17");
       if (allowed) {
         setResults(null);
@@ -1585,7 +1019,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
           locked: true,
           note: "缺少尸检补充",
         }]);
-        setResultNote("同名文件尚不能由现有证据打开。");
+        setResultNote("先解密右小手指的尸检补充，再核对其中的文学索引。");
       }
       return;
     }
@@ -2040,7 +1474,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       setResults([{
         id: "little-finger-meta",
         kind: "伤口索引 · 元数据",
-        title: "右手小指／补充附件",
+        title: "右小手指／补充附件",
         summary: "附件名可见，但搜索词不足以验证路线中的完整批注。",
         locked: true,
         note: "补全伤口名称",
@@ -2054,11 +1488,11 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         id: "wang-death-meta",
         kind: "文学文件 · 元数据",
         title: "5.2 王克定之死",
-        summary: "标题可辨，但文件仍需要精确名称与尸检补充权限。",
+        summary: "标题可辨，但文件仍需要尸检补充中的文学索引。",
         locked: true,
         note: "当前不可访问",
       }]);
-      setResultNote("文章标题就是人名加上事件。");
+      setResultNote("回看解密后的尸检补充，寻找其中保留的鸟名。");
       return;
     }
 
@@ -2131,6 +1565,669 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     }
 
     markWrong(`没有找到“${query.trim()}”。已保留原查询。`);
+  }
+  resolve();
+  return outcome;
+}
+
+// Every fuzzy candidate is evaluated through the exact query's existing evidence gate.
+const SEARCH_TERMS = [
+  ["葛东平"], ["白芍肉"], ["李泰", "litai"], ["3dmx3dm", "3x3dm", "3dm3dm"],
+  ["盲之春", "盲春", "看不见春天", "看不見春天"], ["憎恶社", "憎恶"],
+  ["杜南阳"], ["杜万琳"], ["方晚", "fangwan"], ["东兴彼得"], ["王克定", "王克订"],
+  ["刑万", "刑萬", "刑某"], ["莉香", "莉香溺水"],
+  ["尸检报告", "王克定尸检", "王克定认尸", "认尸记录"],
+  ["石立人", "石立人头", "石人头", "佛头"], ["西岩寺", "西岩寺院"],
+  ["凤凰水库", "凤凰水庫", "鳳凰水庫"],
+  ["右小手指", "右手小指", "小指", "尸检补充", "尸检补充报告"], ["野生白鹭"],
+  ["火化单", "焚烧签字单", "火化签字单"], ["方晚署名", "方晚火化单", "方晚代签"],
+  ["他山地方公墓贪污案", "他山公墓贪污案", "地方公墓贪污案"], ["寿享陵园", "寿享陵園"],
+  ["杜彻", "杜徹"], ["李髮"], ["刍味", "芻味"], ["刍胃", "芻胃"],
+  ["阿尔茨海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"],
+  ["阔南会社", "闊南會社"], ["李司贰"], ["玛赫的厨房", "瑪赫的廚房", "玛赫厨房"],
+  ["叶主任", "葉主任", "叶是", "葉是"], ["元昶", "左君"], ["句肉抟飞", "句肉抟飛"],
+  ["始末的碎点", "始末碎点"], ["赭红门", "赭紅門"], ["诗喃"],
+];
+
+export function resolveGameSearch(query: string, game: GameState, currentPath: string): SearchOutcome {
+  const normalized = normalizeQuery(query);
+  if (!normalized) return resolveExactSearch(query, game, currentPath);
+  const exact = SEARCH_TERMS.find((terms) => terms.some((term) => normalizeQuery(term) === normalized));
+  if (exact) return resolveExactSearch(exact[0], game, currentPath);
+  const matches = SEARCH_TERMS.filter((terms) => terms.some((term) => normalizeQuery(term).includes(normalized)));
+  if (!matches.length) return resolveExactSearch(query, game, currentPath);
+  const candidates = new Map<string, SearchResult>();
+  for (const terms of matches) {
+    const found = resolveExactSearch(terms[0], game, currentPath);
+    const rows: SearchResult[] = found.action ? [{
+      id: `recovery-${found.action}`, kind: "可恢复的文学文件", title: terms[0],
+      summary: "相关证据已齐，可以打开文字层。", action: found.action,
+    }] : found.results ?? [];
+    for (const row of rows) {
+      const accessible = !row.locked && Boolean(row.path || row.action);
+      const key = row.path ?? row.id;
+      if (candidates.has(key)) continue;
+      candidates.set(key, accessible ? { ...row, searchTerm: terms[0] } : {
+        id: `locked-${candidates.size}`, kind: "解锁提示", title: "相关记录尚未解锁",
+        summary: found.note || "沿当前档案的线索继续调查。", locked: true,
+      });
+    }
+  }
+  const results = [...candidates.values()].sort((a, b) => Number(Boolean(a.locked)) - Number(Boolean(b.locked)));
+  const accessibleCount = results.filter((row) => !row.locked).length;
+  return { results, note: `找到 ${accessibleCount} 条可访问记录，${results.length - accessibleCount} 条解锁提示。` };
+}
+
+export function rememberSearch(history: string[], query: string) {
+  const term = query.trim().slice(0, 100);
+  if (!normalizeQuery(term)) return history;
+  return [term, ...history.filter((old) => normalizeQuery(old) !== normalizeQuery(term))].slice(0, 50);
+}
+
+export function searchStatus(outcome: SearchOutcome) {
+  if (outcome.action || outcome.results?.some((row) => !row.locked && (row.path || row.action))) return "有效";
+  return outcome.results?.length ? "待解锁" : "未命中";
+}
+
+export function GameApp({ initialPath }: { initialPath: string }) {
+  const [path, setPath] = useState(initialPath);
+  const [game, setGame] = useState<GameState>(DEFAULT_STATE);
+  const [hydrated, setHydrated] = useState(false);
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SearchResult[] | null>(null);
+  const [resultNote, setResultNote] = useState("");
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
+  const [hintLevel, setHintLevel] = useState(0);
+  const [frameNotice, setFrameNotice] = useState(false);
+  const [plainText, setPlainText] = useState(false);
+  const [scareActive, setScareActive] = useState(false);
+  const [scareTextVisible, setScareTextVisible] = useState(false);
+  const [roleGlitch, setRoleGlitch] = useState(false);
+  const [stoneRevealActive, setStoneRevealActive] = useState(false);
+  const [supplementPassword, setSupplementPassword] = useState("");
+  const [supplementPasswordVisible, setSupplementPasswordVisible] = useState(false);
+  const [supplementPasswordAttempts, setSupplementPasswordAttempts] = useState(0);
+  const [supplementPasswordNote, setSupplementPasswordNote] = useState("");
+  const [deathScareActive, setDeathScareActive] = useState(false);
+  const [deathScareTextVisible, setDeathScareTextVisible] = useState(false);
+  const [collapseImageActive, setCollapseImageActive] = useState(false);
+  const [editorUser, setEditorUser] = useState("");
+  const [editorPassword, setEditorPassword] = useState("");
+  const [editorAttempts, setEditorAttempts] = useState(0);
+  const [editorNote, setEditorNote] = useState("");
+  const [fragmentPassword, setFragmentPassword] = useState("");
+  const [fragmentAttempts, setFragmentAttempts] = useState(0);
+  const [fragmentNote, setFragmentNote] = useState("");
+  const [stableStage, setStableStage] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const skipScareRef = useRef<HTMLButtonElement>(null);
+  const skipDeathScareRef = useRef<HTMLButtonElement>(null);
+  const collapseImageRef = useRef<HTMLButtonElement>(null);
+
+  const currentPath = displayPath(path);
+  const currentHints = HINTS[currentPath] ?? HINTS[ROUTES.exhibition];
+  const stageComplete = game.recovered.includes("14");
+  const stageVocabulary = game.recovered.includes("12");
+  const publicCatalog = useMemo(() => buildPublicCatalog(game), [game]);
+  const currentNavigationSection = getNavigationSection(currentPath);
+  const isGalleryHome = currentPath === ROUTES.home;
+  const isDirectoryPage = [ROUTES.exhibitions, ROUTES.people, ROUTES.news, ROUTES.publications, ROUTES.about].includes(currentPath);
+
+  const mutateGame = useCallback((unlock: string[] = [], recover: string[] = []) => {
+    setGame((previous) => ({
+      ...previous,
+      unlocked: unique([...previous.unlocked, ...unlock]),
+      recovered: unique([...previous.recovered, ...recover]),
+    }));
+  }, []);
+
+  const navigate = useCallback((nextPath: string) => {
+    const cleanPath = displayPath(nextPath);
+    window.history.pushState({}, "", browserPath(nextPath));
+    setPath(cleanPath);
+    setResults(null);
+    setResultNote("");
+    setQuery("");
+    setFrameNotice(false);
+    setPlainText(false);
+    setSupplementPassword("");
+    setSupplementPasswordVisible(false);
+    setSupplementPasswordAttempts(0);
+    setSupplementPasswordNote("");
+    setEditorPassword("");
+    setEditorNote("");
+    setFragmentPassword("");
+    setFragmentAttempts(0);
+    setFragmentNote("");
+    setStableStage(false);
+  }, []);
+
+  const finishMangRecovery = useCallback(() => {
+    setScareActive(false);
+    setScareTextVisible(false);
+    mutateGame(["S03", "S04"], ["01"]);
+    navigate(ROUTES.recoveredOne);
+  }, [mutateGame, navigate]);
+
+  const finishWangRecovery = useCallback(() => {
+    setDeathScareActive(false);
+    setDeathScareTextVisible(false);
+    mutateGame(["S18"], ["13"]);
+    navigate(ROUTES.wangDeath);
+    window.setTimeout(() => searchInputRef.current?.focus(), 0);
+  }, [mutateGame, navigate]);
+
+  const dismissCollapseImage = useCallback(() => {
+    setCollapseImageActive(false);
+    setGame((previous) => ({
+      ...previous,
+      scaresSeen: unique([...previous.scaresSeen, "J04-collapse-image"]),
+    }));
+  }, []);
+
+  useEffect(() => {
+    const initialize = window.setTimeout(() => {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as Partial<GameState>;
+          setGame({
+            ...DEFAULT_STATE,
+            ...parsed,
+            searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory.filter((value): value is string => typeof value === "string").slice(0, 50) : [],
+            settings: { ...DEFAULT_STATE.settings, ...(parsed.settings ?? {}) },
+          });
+        } catch {
+          window.localStorage.removeItem(STORAGE_KEY);
+        }
+      } else if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setGame((previous) => ({
+          ...previous,
+          settings: { ...previous.settings, reducedMotion: true },
+        }));
+      }
+      setHydrated(true);
+    }, 0);
+
+    const onPopState = () => {
+      setPath(displayPath(window.location.pathname));
+      setResults(null);
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.clearTimeout(initialize);
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
+  }, [game, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    const unlocksThrough = (step: number) => Array.from({ length: step }, (_, index) => `S${String(index + 1).padStart(2, "0")}`);
+    const recoveredTwelve = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "13"];
+    const arrival: Record<string, { unlock?: string[]; recover?: string[] }> = {
+      [ROUTES.artwork]: { unlock: ["S01"] },
+      [ROUTES.curator]: { unlock: ["S01", "S02"] },
+      [ROUTES.dimensions]: { unlock: ["S01", "S02"] },
+      [ROUTES.damagedReader]: { unlock: ["S01", "S02", "S03"] },
+      [ROUTES.recoveredOne]: {
+        unlock: ["S01", "S02", "S03", "S04"],
+        recover: ["01"],
+      },
+      [ROUTES.history]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05"],
+        recover: ["01", "02"],
+      },
+      [ROUTES.duNanyangOld]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06"],
+        recover: ["01", "02"],
+      },
+      [ROUTES.duWanlin]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07"],
+        recover: ["01", "02"],
+      },
+      [ROUTES.fangWan]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08"],
+        recover: ["01", "02", "03"],
+      },
+      [ROUTES.dongxingPeter]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09"],
+        recover: ["01", "02", "03"],
+      },
+      [ROUTES.wangKeding]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10"],
+        recover: ["01", "02", "03", "04"],
+      },
+      [ROUTES.xingWan]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11"],
+        recover: ["01", "02", "03", "04", "05"],
+      },
+      [ROUTES.liXiangDeath]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12"],
+        recover: ["01", "02", "03", "04", "05", "06"],
+      },
+      [ROUTES.wangAutopsy]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13"],
+        recover: ["01", "02", "03", "04", "05", "06"],
+      },
+      [ROUTES.stoneHead]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14"],
+        recover: ["01", "02", "03", "04", "05", "06"],
+      },
+      [ROUTES.xiyanTemple]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14"],
+        recover: ["01", "02", "03", "04", "05", "06"],
+      },
+      [ROUTES.phoenixRoute]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15"],
+        recover: ["01", "02", "03", "04", "05", "06", "09"],
+      },
+      [ROUTES.wangSupplement]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16"],
+        recover: ["01", "02", "03", "04", "05", "06", "09"],
+      },
+      [ROUTES.wangDeath]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18"],
+        recover: ["01", "02", "03", "04", "05", "06", "09", "13"],
+      },
+      [ROUTES.duCremation]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19"],
+        recover: ["01", "02", "03", "04", "05", "06", "09", "13"],
+      },
+      [ROUTES.duCremationSigned]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.cemeteryCase]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.xingNews]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.shouxiang]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.duChe]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "13"],
+      },
+      [ROUTES.wedding]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S25"],
+        recover: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "13"],
+      },
+      [ROUTES.taste]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "13"],
+      },
+      [ROUTES.medical]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26", "S27"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "13"],
+      },
+      [ROUTES.stomach]: {
+        unlock: ["S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "S11", "S12", "S13", "S14", "S15", "S16", "S17", "S18", "S19", "S20", "S21", "S22", "S23", "S24", "S26", "S27", "S28"],
+        recover: ["01", "02", "03", "04", "05", "06", "08", "09", "10", "11", "13"],
+      },
+      [ROUTES.kuonanHistory]: { unlock: unlocksThrough(29), recover: recoveredTwelve },
+      [ROUTES.liLetter]: { unlock: unlocksThrough(30), recover: recoveredTwelve },
+      [ROUTES.mahePublication]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
+      [ROUTES.editorLogin]: { unlock: unlocksThrough(31), recover: recoveredTwelve },
+      [ROUTES.editorRevisions]: { unlock: unlocksThrough(32), recover: recoveredTwelve },
+      [ROUTES.yuanchang]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
+      [ROUTES.recoveredIndex]: { unlock: unlocksThrough(33), recover: recoveredTwelve },
+      [ROUTES.stageZhuhongmen]: { unlock: unlocksThrough(35), recover: [...recoveredTwelve, "12", "14"] },
+      [ROUTES.shinan]: { unlock: unlocksThrough(36), recover: [...recoveredTwelve, "12", "14"] },
+    };
+    const effect = arrival[currentPath];
+    const syncArrival = window.setTimeout(() => {
+      setGame((previous) => ({
+        ...previous,
+        unlocked: unique([...previous.unlocked, ...(effect?.unlock ?? [])]),
+        recovered: unique([...previous.recovered, ...(effect?.recover ?? [])]),
+        visited: unique([...previous.visited, currentPath]),
+        editorLoggedIn: currentPath === ROUTES.editorRevisions || currentPath === ROUTES.yuanchang || currentPath === ROUTES.recoveredIndex || currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? true : previous.editorLoggedIn,
+        stageTransformStep: currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? Math.max(previous.stageTransformStep, 3) : previous.stageTransformStep,
+      }));
+      setHintLevel(0);
+    }, 0);
+    document.title = `${PAGE_TITLES[currentPath] ?? "憎恶社"}｜憎恶社`;
+    window.scrollTo({ top: 0, behavior: game.settings.reducedMotion ? "auto" : "smooth" });
+    return () => window.clearTimeout(syncArrival);
+  }, [currentPath, hydrated, game.settings.reducedMotion]);
+
+  useEffect(() => {
+    if (currentPath !== ROUTES.history || game.scaresSeen.includes("role-glitch")) return;
+    const start = window.setTimeout(() => setRoleGlitch(true), 0);
+    const timer = window.setTimeout(() => {
+      setRoleGlitch(false);
+      setGame((previous) => ({
+        ...previous,
+        scaresSeen: unique([...previous.scaresSeen, "role-glitch"]),
+      }));
+    }, game.settings.reducedMotion ? 120 : 1100);
+    return () => {
+      window.clearTimeout(start);
+      window.clearTimeout(timer);
+    };
+  }, [currentPath, game.scaresSeen, game.settings.reducedMotion]);
+
+  useEffect(() => {
+    const roleGlitchFinished = game.scaresSeen.includes("role-glitch");
+    const collapseImageSeen = game.scaresSeen.includes("J04-collapse-image");
+    if (currentPath !== ROUTES.history || !roleGlitchFinished || collapseImageSeen) return;
+
+    if (game.settings.reducedScares) {
+      const skip = window.setTimeout(() => {
+        setGame((previous) => ({
+          ...previous,
+          scaresSeen: unique([...previous.scaresSeen, "J04-collapse-image"]),
+        }));
+      }, 0);
+      return () => window.clearTimeout(skip);
+    }
+
+    const reveal = window.setTimeout(
+      () => setCollapseImageActive(true),
+      game.settings.reducedMotion ? 0 : 180,
+    );
+    return () => window.clearTimeout(reveal);
+  }, [currentPath, game.scaresSeen, game.settings.reducedMotion, game.settings.reducedScares]);
+
+  useEffect(() => {
+    if (!collapseImageActive) return;
+    collapseImageRef.current?.focus();
+  }, [collapseImageActive]);
+
+  useEffect(() => {
+    if (!scareActive) return;
+    skipScareRef.current?.focus();
+    const reveal = window.setTimeout(
+      () => setScareTextVisible(true),
+      game.settings.reducedMotion ? 0 : 450,
+    );
+    const enter = window.setTimeout(
+      () => finishMangRecovery(),
+      game.settings.reducedMotion ? 120 : 1750,
+    );
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") finishMangRecovery();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(reveal);
+      window.clearTimeout(enter);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [scareActive, finishMangRecovery, game.settings.reducedMotion]);
+
+  useEffect(() => {
+    if (!deathScareActive) return;
+    skipDeathScareRef.current?.focus();
+    const reveal = window.setTimeout(
+      () => setDeathScareTextVisible(true),
+      game.settings.reducedMotion ? 0 : 160,
+    );
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") finishWangRecovery();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(reveal);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [deathScareActive, finishWangRecovery, game.settings.reducedMotion]);
+
+  useEffect(() => {
+    if (!hydrated || currentPath !== ROUTES.phoenixRoute || game.routeTrips >= 3) return;
+
+    const inspectRoutePosition = () => {
+      const page = document.documentElement;
+      const atBottom = window.innerHeight + window.scrollY >= page.scrollHeight - 32;
+      const atTop = window.scrollY <= 32;
+
+      if (atBottom && !game.routeReachedBottom) {
+        setGame((previous) => previous.routeReachedBottom
+          ? previous
+          : { ...previous, routeReachedBottom: true });
+        return;
+      }
+
+      if (atTop && game.routeReachedBottom) {
+        setGame((previous) => {
+          if (!previous.routeReachedBottom) return previous;
+          const nextTrips = Math.min(3, previous.routeTrips + 1);
+          return {
+            ...previous,
+            routeTrips: nextTrips,
+            routeReachedBottom: false,
+            unlocked: nextTrips === 3
+              ? unique([...previous.unlocked, "S16"])
+              : previous.unlocked,
+          };
+        });
+      }
+    };
+
+    window.addEventListener("scroll", inspectRoutePosition, { passive: true });
+    inspectRoutePosition();
+    return () => window.removeEventListener("scroll", inspectRoutePosition);
+  }, [currentPath, game.routeReachedBottom, game.routeTrips, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated || currentPath !== ROUTES.kuonanHistory || game.historyVersionsLoaded >= 5 || game.settings.reducedMotion) return;
+    const loadAtBottom = () => {
+      const page = document.documentElement;
+      if (window.innerHeight + window.scrollY < page.scrollHeight - 24) return;
+      setGame((previous) => ({
+        ...previous,
+        historyVersionsLoaded: Math.min(5, previous.historyVersionsLoaded + 1),
+      }));
+    };
+    window.addEventListener("scroll", loadAtBottom, { passive: true });
+    return () => window.removeEventListener("scroll", loadAtBottom);
+  }, [currentPath, game.historyVersionsLoaded, game.settings.reducedMotion, hydrated]);
+
+  useEffect(() => {
+    if (currentPath !== ROUTES.kuonanHistory || game.historyVersionsLoaded < 5 || game.historyAutofillDone || query.trim()) return;
+    const fill = window.setTimeout(() => {
+      setQuery("李司贰");
+      setGame((previous) => ({ ...previous, historyAutofillDone: true }));
+      searchInputRef.current?.focus();
+    }, game.settings.reducedMotion ? 0 : 650);
+    return () => window.clearTimeout(fill);
+  }, [currentPath, game.historyAutofillDone, game.historyVersionsLoaded, game.settings.reducedMotion, query]);
+
+  useEffect(() => {
+    if (!game.recovered.includes("12") || game.stageTransformStep === 0 || game.stageTransformStep >= 3) return;
+    const advance = window.setTimeout(() => {
+      setGame((previous) => ({ ...previous, stageTransformStep: Math.min(3, previous.stageTransformStep + 1) }));
+    }, game.settings.reducedMotion ? 100 : 4000);
+    return () => window.clearTimeout(advance);
+  }, [game.recovered, game.settings.reducedMotion, game.stageTransformStep]);
+
+  function triggerMangRecovery() {
+    if (game.settings.reducedScares || game.scaresSeen.includes("J01")) {
+      finishMangRecovery();
+      return;
+    }
+    setGame((previous) => ({
+      ...previous,
+      scaresSeen: unique([...previous.scaresSeen, "J01"]),
+    }));
+    setScareTextVisible(false);
+    setScareActive(true);
+  }
+
+  function triggerWangRecovery() {
+    if (game.settings.reducedScares || game.scaresSeen.includes("J03")) {
+      finishWangRecovery();
+      return;
+    }
+    setGame((previous) => ({
+      ...previous,
+      scaresSeen: unique([...previous.scaresSeen, "J03"]),
+    }));
+    setDeathScareTextVisible(false);
+    setDeathScareActive(true);
+  }
+
+  function inspectStone(part: "break" | "base") {
+    if (currentPath !== ROUTES.xiyanTemple || game.unlocked.includes("S15")) return;
+
+    if (part === "break") {
+      const nextBreakClicks = Math.min(6, game.stoneBreakClicks + 1);
+      setGame((previous) => ({ ...previous, stoneBreakClicks: nextBreakClicks }));
+      return;
+    }
+
+    if (game.stoneBreakClicks < 6) return;
+    const nextBaseClicks = Math.min(7, game.stoneBaseClicks + 1);
+    const completed = nextBaseClicks === 7;
+    setGame((previous) => ({
+      ...previous,
+      stoneBaseClicks: nextBaseClicks,
+      unlocked: completed ? unique([...previous.unlocked, "S15"]) : previous.unlocked,
+      recovered: completed ? unique([...previous.recovered, "09"]) : previous.recovered,
+      scaresSeen: completed ? unique([...previous.scaresSeen, "J02"]) : previous.scaresSeen,
+    }));
+
+    if (completed && !game.settings.reducedScares && !game.scaresSeen.includes("J02")) {
+      setStoneRevealActive(true);
+      window.setTimeout(() => setStoneRevealActive(false), 900);
+    }
+  }
+
+  function moveAlongRoute(destination: "top" | "bottom") {
+    if (currentPath === ROUTES.phoenixRoute && game.routeTrips < 3) {
+      setGame((previous) => {
+        if (destination === "bottom") {
+          return previous.routeReachedBottom
+            ? previous
+            : { ...previous, routeReachedBottom: true };
+        }
+        if (!previous.routeReachedBottom) return previous;
+        const nextTrips = Math.min(3, previous.routeTrips + 1);
+        return {
+          ...previous,
+          routeTrips: nextTrips,
+          routeReachedBottom: false,
+          unlocked: nextTrips === 3
+            ? unique([...previous.unlocked, "S16"])
+            : previous.unlocked,
+        };
+      });
+    }
+    window.scrollTo({
+      top: destination === "top" ? 0 : document.documentElement.scrollHeight,
+      behavior: game.settings.reducedMotion ? "auto" : "smooth",
+    });
+  }
+
+  function submitSupplementPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalized = supplementPassword.trim().replace(/[—–\-\s]/g, "");
+    if (normalized === "673") {
+      mutateGame(["S17"]);
+      setSupplementPasswordNote("校验通过。被删除的文字层已恢复。");
+      return;
+    }
+
+    const nextAttempts = supplementPasswordAttempts + 1;
+    setSupplementPasswordAttempts(nextAttempts);
+    setSupplementPasswordNote(
+      nextAttempts >= 3
+        ? "口令不匹配。回看西岩寺的石像数量，以及尸检摘要中的面部伤口数。"
+        : "口令不匹配；附件不会锁定。",
+    );
+  }
+
+  function loadOlderSiteVersion() {
+    setGame((previous) => ({
+      ...previous,
+      historyVersionsLoaded: Math.min(5, previous.historyVersionsLoaded + 1),
+    }));
+  }
+
+  function submitEditorLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const userMatches = editorUser.trim().toLowerCase() === "editor_ys";
+    const passwordMatches = editorPassword.trim().toLowerCase() === "mhdc2019";
+    if (userMatches && passwordMatches) {
+      setGame((previous) => ({
+        ...previous,
+        editorLoggedIn: true,
+        unlocked: unique([...previous.unlocked, "S32"]),
+      }));
+      setEditorPassword("");
+      navigate(ROUTES.editorRevisions);
+      return;
+    }
+    const nextAttempts = editorAttempts + 1;
+    setEditorAttempts(nextAttempts);
+    setEditorPassword("");
+    setEditorNote(nextAttempts >= 3
+      ? "仍未通过。账号来自李司贰书信：editor_ys；口令为书名首字母＋2019。"
+      : userMatches ? "口令不匹配；账号已保留，不会锁定。" : "账号不匹配；不会锁定。");
+  }
+
+  function submitFragmentPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (fragmentPassword.trim() === "左君") {
+      setGame((previous) => ({
+        ...previous,
+        unlocked: unique([...previous.unlocked, "S34"]),
+        recovered: unique([...previous.recovered, "12"]),
+        stageTransformStep: Math.max(1, previous.stageTransformStep),
+      }));
+      setFragmentNote("十段索引已解除。档案正在改写为场记。可立即显示稳定版。");
+      return;
+    }
+    const nextAttempts = fragmentAttempts + 1;
+    setFragmentAttempts(nextAttempts);
+    setFragmentNote(nextAttempts >= 3
+      ? "口令不是法名“元昶”。回看访谈里“原谅我称呼你本名”的下一称呼。"
+      : fragmentPassword.trim() === "元昶" ? "这是角色法名。口令要求被替换前的旧名。" : "口令不匹配；已读碎片不会清空。");
+  }
+
+  function openResult(result: SearchResult) {
+    if (result.locked) return;
+    if (result.searchTerm) {
+      setGame((previous) => ({ ...previous, searchHistory: rememberSearch(previous.searchHistory, result.searchTerm!) }));
+    }
+    if (result.action === "mang") { triggerMangRecovery(); return; }
+    if (result.action === "wang") { triggerWangRecovery(); return; }
+    if (!result.path) return;
+    mutateGame(result.unlock ?? [], result.recover ?? []);
+    navigate(result.path);
+  }
+
+  function markWrong(message: string, fallbackResults: SearchResult[] = []) {
+    const nextCount = (wrongAttempts[currentPath] ?? 0) + 1;
+    setWrongAttempts((previous) => ({ ...previous, [currentPath]: nextCount }));
+    setResults(fallbackResults);
+    setResultNote(nextCount >= 3 ? `${message} 提示：${currentHints[0]}` : message);
+  }
+
+  function runSearch(value: string) {
+    const outcome = resolveGameSearch(value, game, currentPath);
+    setQuery(value);
+    if (normalizeQuery(value)) setGame((previous) => ({ ...previous, searchHistory: rememberSearch(previous.searchHistory, value) }));
+    if (outcome.wrong) markWrong(outcome.note, outcome.results ?? []);
+    else { setResults(outcome.results); setResultNote(outcome.note); }
+    if (outcome.action === "mang") triggerMangRecovery();
+    if (outcome.action === "wang") triggerWangRecovery();
+  }
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    runSearch(query);
   }
 
   function inspectFrame() {
@@ -2347,7 +2444,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
           <label className="sr-only" htmlFor="global-query">{stageVocabulary ? "搜索剧本、朗读者、场记或演出名称" : "搜索作品、人名、尺寸或文件标签"}</label>
           <input id="global-query" ref={searchInputRef} value={query} onChange={(event) => setQuery(event.target.value)} placeholder={stageVocabulary ? "搜索剧本、朗读者、场记或演出名称" : "搜索作品、人名、尺寸或文件标签"} autoComplete="off" spellCheck={false} aria-describedby="search-instruction" />
           <button type="submit">搜索</button>
-          <span className="sr-only" id="search-instruction">线索可能存在于公开导航之外。搜索不会自动清空错误答案。</span>
+          <span className="sr-only" id="search-instruction">支持输入部分关键词。未解锁记录只提供线索提示；搜索历史可以重新查询。</span>
 
           {results !== null && (
             <section className="search-results" aria-label="搜索结果">
@@ -2356,11 +2453,11 @@ export function GameApp({ initialPath }: { initialPath: string }) {
                 <button type="button" onClick={() => setResults(null)} aria-label="关闭搜索结果"><X /></button>
               </div>
               {results.length === 0 ? (
-                <div className="empty-result"><span aria-hidden="true">∅</span><p>目录没有给出答案。换一种更精确的写法。</p></div>
+                <div className="empty-result"><span aria-hidden="true">∅</span><p>没有找到相关记录。试试作品名、人名，或其中的一部分。</p></div>
               ) : (
                 <div className="result-list">
                   {results.map((result) => (
-                    <button key={result.id} className="result-card" type="button" onClick={() => openResult(result)} disabled={result.locked || !result.path}>
+                    <button key={result.id} className="result-card" type="button" onClick={() => openResult(result)} disabled={result.locked || (!result.path && !result.action)}>
                       <span className="result-kind">{result.kind}</span>
                       <strong>{result.title}</strong>
                       <span className="result-summary">{result.summary}</span>
@@ -2374,6 +2471,18 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         </form>
 
         <nav className="header-actions" aria-label="游戏工具">
+          <Dialog open={historyOpen} onOpenChange={setHistoryOpen}>
+            <DialogTrigger asChild><Button variant="ghost" className="header-button"><History aria-hidden="true" /><span>搜索历史</span></Button></DialogTrigger>
+            <DialogContent className="search-history-dialog">
+              <DialogHeader><DialogTitle>搜索历史</DialogTitle><DialogDescription>保留最近 50 个搜索词。标记为“有效”的词可访问记录；点击任一词可按当前进度重新查询。</DialogDescription></DialogHeader>
+              {game.searchHistory.length ? <ol className="search-history-list">
+                {game.searchHistory.map((term) => {
+                  const status = searchStatus(resolveGameSearch(term, game, currentPath));
+                  return <li key={term}><button type="button" onClick={() => { setHistoryOpen(false); runSearch(term); }}><span>{term}</span><b className={status === "有效" ? "is-valid" : ""}>{status}</b></button></li>;
+                })}
+              </ol> : <p>还没有搜索记录。找到的线索可以在这里随时重查。</p>}
+            </DialogContent>
+          </Dialog>
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="ghost" className="header-button"><FolderOpen aria-hidden="true" /><span>已恢复</span><b>{recoveredLabel}</b></Button>
@@ -2424,8 +2533,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       )}
 
       {deathScareActive && (
-        <div className="deleted-post-scare" role="dialog" aria-modal="true" aria-label="已删除帖子" onClick={finishWangRecovery}>
-          <button ref={skipDeathScareRef} type="button" onClick={(event) => { event.stopPropagation(); finishWangRecovery(); }}>跳过</button>
+        <div className="deleted-post-scare" role="dialog" aria-modal="true" aria-label="已删除帖子">
+          <button ref={skipDeathScareRef} type="button" onClick={(event) => { event.stopPropagation(); finishWangRecovery(); }}>阅读完毕，继续</button>
           <article className={deathScareTextVisible ? "is-visible" : ""}>
             <span>帖子 302｜已删除</span>
             <p>他们已经替王克定写好了一种死法。</p>
@@ -3072,7 +3181,7 @@ function PhoenixRoutePage({ trips, reachedBottom, reducedMotion, onMove }: { tri
         <section className="river-stop"><span>00 / 上游</span><h2>老城河入口</h2><p>记录把这里列作可能的入水区，却没有保留可靠目击证词。</p>{trips >= 1 && <aside className="route-annotation">水位批注：当周河水不足以覆盖岸边全部石面。</aside>}</section>
         <section className="river-stop"><span>01 / 石滩</span><h2>第一处弯道</h2><p>原解释称面部伤口可能来自漂流中撞击河石。</p>{trips >= 2 && <aside className="route-annotation">时间批注：伤口状态与长距离漂流的单一解释不能完全闭合。</aside>}</section>
         <section className="river-stop"><span>02 / 闸口</span><h2>废弃测量点</h2><p>绳结、石质坠物与水流方向被分开记录，从未在同一张表中对照。</p>{trips >= 2 && <aside className="route-annotation">复核批注：先验结论遮住了反绑这一事实。</aside>}</section>
-        <section className="river-stop"><span>03 / 回水</span><h2>低速水域</h2><p>漂流路线在此变缓，随后进入水库。</p>{trips >= 3 && <aside className="route-annotation pinky-reveal">伤口批注：右手小指缺失；切口时间早于落水。</aside>}</section>
+        <section className="river-stop"><span>03 / 回水</span><h2>低速水域</h2><p>漂流路线在此变缓，随后进入水库。</p>{trips >= 3 && <aside className="route-annotation pinky-reveal">伤口批注：右小手指缺失；切口时间早于落水。</aside>}</section>
         <section className="river-stop route-reservoir" id="route-bottom"><span>04 / 下游</span><h2>凤凰水库</h2><p>尸体在这里被发现。河流记录至此结束，但尸检附件仍缺少一页。</p></section>
       </div>
 
@@ -3081,7 +3190,7 @@ function PhoenixRoutePage({ trips, reachedBottom, reducedMotion, onMove }: { tri
         <span>{reducedMotion ? "即时移动" : "沿路线移动"}</span>
         <button type="button" onClick={() => onMove("top")}><ArrowUp aria-hidden="true" />回上游</button>
       </div>
-      {trips >= 3 && <section className="prototype-end"><span>补充附件已定位</span><div><h2>被漏记的部位：右手小指。</h2><p>用部位名称搜索尸检补充记录。</p></div></section>}
+      {trips >= 3 && <section className="prototype-end"><span>补充附件已定位</span><div><h2>被漏记的部位：右小手指。</h2><p>用部位名称搜索尸检补充记录。</p></div></section>}
     </article>
   );
 }
@@ -3108,7 +3217,7 @@ function WangSupplementPage({
   return (
     <article className="supplement-page">
       <header className="evidence-masthead">
-        <div><CacheStamp>FORENSIC ATTACHMENT / WK-02</CacheStamp><p className="section-kicker">被删除的尸检补充页</p><h1>右手小指</h1><p>附件正文仍在，但访问口令被拆散在石像记录与面部伤痕中。</p></div>
+        <div><CacheStamp>FORENSIC ATTACHMENT / WK-02</CacheStamp><p className="section-kicker">被删除的尸检补充页</p><h1>右小手指</h1><p>附件正文仍在，但访问口令被拆散在石像记录与面部伤痕中。</p></div>
         <div className="document-notice"><span>附件状态</span><b>{unlocked ? "文字层已恢复" : "加密"}</b><small>无失败锁定</small></div>
       </header>
 
@@ -3127,9 +3236,10 @@ function WangSupplementPage({
       ) : (
         <section className="supplement-evidence">
           <header><UnlockKeyhole aria-hidden="true" /><div><span>DECRYPTED TEXT LAYER</span><h2>尸检补充摘要</h2></div></header>
-          <dl><MetaLine label="缺失部位">右手小指</MetaLine><MetaLine label="切口状态">人为切割痕迹</MetaLine><MetaLine label="发生顺序">落水之前</MetaLine><MetaLine label="时间批注">前一周六（原文相对时间）</MetaLine></dl>
+          <dl><MetaLine label="缺失部位">右小手指</MetaLine><MetaLine label="切口状态">人为切割痕迹</MetaLine><MetaLine label="发生顺序">落水之前</MetaLine><MetaLine label="时间批注">前一周六（原文相对时间）</MetaLine></dl>
           <p className="evidence-callout">该伤口不能由漂流撞击解释；它与脸颊伤痕、反绑双手和石质坠物共同要求重新判断死亡过程。</p>
           <div className="cross-index-grid"><span>交叉索引</span><b>302 室</b><b>3 × 3dm</b><b>老城河</b></div>
+          <aside className="evidence-callout"><span>关联文学索引</span><h3>野生白鹭</h3><p>补充页与一份被删除的文学文件共用这个标签。沿着它，继续核对王克定的死亡记录。</p><p>搜索：野生白鹭。</p></aside>
         </section>
       )}
     </article>
@@ -3151,7 +3261,7 @@ function WangDeathPage() {
       <section className="evidence-verdict-grid">
         <div><span>01</span><h3>反绑</h3><p>双手在背后受束，且连接数公斤重的石质人头。</p></div>
         <div><span>02</span><h3>伤痕</h3><p>脸颊三道割伤不能仅靠河石碰撞闭合解释。</p></div>
-        <div><span>03</span><h3>缺指</h3><p>右手小指在人落水前已被人为切断。</p></div>
+        <div><span>03</span><h3>缺指</h3><p>右小手指在人落水前已被人为切断。</p></div>
         <div><span>04</span><h3>路线</h3><p>水位、时间与回水路线彼此留下矛盾。</p></div>
       </section>
 
