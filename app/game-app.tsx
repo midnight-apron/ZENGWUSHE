@@ -188,7 +188,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.xingWan]: "刑万／刑某｜合并人物档案",
   [ROUTES.liXiangDeath]: "莉香｜溺亡记录",
   [ROUTES.wangAutopsy]: "王克定｜认尸与尸检摘要",
-  [ROUTES.stoneHead]: "石立人头｜物证记录",
+  [ROUTES.stoneHead]: "石立人·头部塑像｜物证记录",
   [ROUTES.xiyanTemple]: "西岩寺｜石像档案",
   [ROUTES.phoenixRoute]: "凤凰水库｜河流路线",
   [ROUTES.wangSupplement]: "王克定｜尸检补充",
@@ -301,18 +301,18 @@ const HINTS: Record<string, string[]> = {
   ],
   [ROUTES.xingWan]: [
     "刑万的关联人物只剩下“莉×”。",
-    "杜彻称她为未曾谋面的姑姑，诗中直接叫出她的名字。",
+    "晚近家属卡补出杜彻：杜万琳之子；他称“莉×”为未曾谋面的姑姑。损坏姓名旁还留下“花香”分类。",
     "搜索：莉香。",
   ],
   [ROUTES.liXiangDeath]: [
-    "河流档案还交叉引用了另一名死者的材料。",
-    "把死者姓名与材料类型组合起来搜索。",
-    "搜索：王克定尸检。",
+    "河流档案还交叉引用了另一名死者的尸检材料。",
+    "附件索引已经写出材料名称。",
+    "搜索：尸检报告。",
   ],
   [ROUTES.wangAutopsy]: [
     "报告里有一件与投河叙述极不相称的物证。",
     "它连接在死者反绑的双手后面。",
-    "搜索：石立人头。",
+    "搜索：石立人。",
   ],
   [ROUTES.stoneHead]: [
     "物证来源栏保留了一处寺院名称。",
@@ -527,56 +527,57 @@ function getJuroutuanfeiChapterBlocks(number: JuroutuanfeiChapter["number"]) {
 function buildPublicCatalog(game: GameState) {
   const unlocked = (step: string) => game.unlocked.includes(step);
   const recovered = (id: string) => game.recovered.includes(id);
+  const isUnvisited = (path: string) => !game.visited.includes(path);
 
   const people: DirectoryEntry[] = [
-    { id: "ge-dongping", eyebrow: "参展者 / 人物档案", title: "葛东平", summary: "《赭红门》当期展览相关人物；人物附图与文本摘录现已归档。", path: ROUTES.geDongping, isNew: true },
-    unlocked("S02") && { id: "li-tai", eyebrow: "旧成员缓存", title: "李泰", summary: "撤回作品记录中的策展与编辑人员。", path: ROUTES.curator, isNew: true },
-    unlocked("S06") && { id: "du-nanyang", eyebrow: "人物档案", title: "杜南阳", summary: "旧成员页与社团合照中的同一人物。", path: ROUTES.duNanyangOld, isNew: true },
-    unlocked("S07") && { id: "du-wanlin", eyebrow: "合并人物档案", title: "杜万琳", summary: "创作者、家属关系与多份朗读文件的交叉节点。", path: ROUTES.duWanlin, isNew: true },
-    unlocked("S08") && { id: "fang-wan", eyebrow: "人物档案", title: "方晚", summary: "杜万琳的同乡、同学与画廊合伙人。", path: ROUTES.fangWan, isNew: true },
-    unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: true },
-    unlocked("S11") && { id: "xing-wan", eyebrow: "异名合并", title: "刑万／刑某", summary: "社团合照与新闻匿名记录指向的同一人物。", path: ROUTES.xingWan, isNew: true },
-    unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、刑万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: true },
-    unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭关系与寿享陵园旧站履历的交叉人物。", path: ROUTES.duChe, isNew: true },
-    unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: true },
-    unlocked("S33") && { id: "yuanchang", eyebrow: "小说角色", title: "元昶／左君", summary: "法名与本名已合并为同一个小说角色。", path: ROUTES.yuanchang, isNew: true },
+    { id: "ge-dongping", eyebrow: "参展者 / 人物档案", title: "葛东平", summary: "《赭红门》当期展览相关人物；人物附图与文本摘录现已归档。", path: ROUTES.geDongping, isNew: isUnvisited(ROUTES.geDongping) },
+    unlocked("S02") && { id: "li-tai", eyebrow: "旧成员缓存", title: "李泰", summary: "撤回作品记录中的策展与编辑人员。", path: ROUTES.curator, isNew: isUnvisited(ROUTES.curator) },
+    unlocked("S06") && { id: "du-nanyang", eyebrow: "人物档案", title: "杜南阳", summary: "旧成员页与社团合照中的同一人物。", path: ROUTES.duNanyangOld, isNew: isUnvisited(ROUTES.duNanyangOld) },
+    unlocked("S07") && { id: "du-wanlin", eyebrow: "合并人物档案", title: "杜万琳", summary: "创作者、家属关系与多份朗读文件的交叉节点。", path: ROUTES.duWanlin, isNew: isUnvisited(ROUTES.duWanlin) },
+    unlocked("S08") && { id: "fang-wan", eyebrow: "人物档案", title: "方晚", summary: "杜万琳的同乡、同学与画廊合伙人。", path: ROUTES.fangWan, isNew: isUnvisited(ROUTES.fangWan) },
+    unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: isUnvisited(ROUTES.wangKeding) },
+    unlocked("S11") && { id: "xing-wan", eyebrow: "异名合并", title: "刑万／刑某", summary: "社团合照与新闻匿名记录指向的同一人物。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
+    unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、刑万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
+    unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭关系与寿享陵园旧站履历的交叉人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
+    unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: isUnvisited(ROUTES.editorRevisions) },
+    unlocked("S33") && { id: "yuanchang", eyebrow: "小说角色", title: "元昶／左君", summary: "法名与本名已合并为同一个小说角色。", path: ROUTES.yuanchang, isNew: isUnvisited(ROUTES.yuanchang) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const news: DirectoryEntry[] = [
     { id: "current-exhibition", eyebrow: "展览动态", title: "《赭红门》开放公告", summary: "憎恶社二层主厅当期展览及观展信息。", path: ROUTES.exhibition },
     { id: "missing-notice", eyebrow: "场馆告示", title: "关于 A-07 展品状态的说明", summary: "西南角展品未能在闭馆复核中确认位置。", path: ROUTES.exhibition },
-    recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: true },
-    unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: true },
-    unlocked("S22") && { id: "xing-news", eyebrow: "新闻原刊 / 缓存", title: "刑某被捕报道的两个版本", summary: "公开报道与缓存页面之间存在姓名和时间差异。", path: ROUTES.xingNews, isNew: true },
-    unlocked("S23") && { id: "shouxiang", eyebrow: "站点存档", title: "寿享陵园旧站镜像恢复", summary: "失效网站的人员目录和早期文字层重新可读。", path: ROUTES.shouxiang, isNew: true },
-    recovered("14") && { id: "shinan-open", eyebrow: "演出资料", title: "《诗喃》终场档案开放", summary: "完整排练文本、演出海报与现场照片已经归档。", path: ROUTES.shinan, isNew: true },
+    recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: isUnvisited(ROUTES.wangDeath) },
+    unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: isUnvisited(ROUTES.cemeteryCase) },
+    unlocked("S22") && { id: "xing-news", eyebrow: "新闻原刊 / 缓存", title: "刑某被捕报道的两个版本", summary: "公开报道与缓存页面之间存在姓名和时间差异。", path: ROUTES.xingNews, isNew: isUnvisited(ROUTES.xingNews) },
+    unlocked("S23") && { id: "shouxiang", eyebrow: "站点存档", title: "寿享陵园旧站镜像恢复", summary: "失效网站的人员目录和早期文字层重新可读。", path: ROUTES.shouxiang, isNew: isUnvisited(ROUTES.shouxiang) },
+    recovered("14") && { id: "shinan-open", eyebrow: "演出资料", title: "《诗喃》终场档案开放", summary: "完整排练文本、演出海报与现场照片已经归档。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const publications: DirectoryEntry[] = [
     { id: "catalog-zhuhongmen", eyebrow: "展览手册", title: "《赭红门》", summary: "当期展览作品目录与现场记录。", path: ROUTES.exhibition },
-    unlocked("S31") && { id: "mahe", eyebrow: "小说 / 2019", title: "《玛赫的厨房》", summary: "杜彻小说的出版档案与版权页。", path: ROUTES.mahePublication, isNew: true },
+    unlocked("S31") && { id: "mahe", eyebrow: "小说 / 2019", title: "《玛赫的厨房》", summary: "杜彻小说的出版档案与版权页。", path: ROUTES.mahePublication, isNew: isUnvisited(ROUTES.mahePublication) },
     ...JUROUTUANFEI_CHAPTERS.map((chapter) => chapter.isAvailable(game) && {
       id: `juroutuanfei-section-${chapter.number}`,
       eyebrow: `Section.${chapter.number} / 选自《句肉抟飞》`,
       title: chapter.displayTitle,
       summary: `${chapter.trigger}。本条目收录该章完整正文。`,
       path: chapter.route,
-      isNew: true,
+      isNew: isUnvisited(chapter.route),
     }),
-    recovered("14") && { id: "shinan-script", eyebrow: "诗剧 / 完整版", title: "《诗喃》排练文本", summary: "序诗、五个篇章与结诗的完整恢复版本。", path: ROUTES.shinan, isNew: true },
+    recovered("14") && { id: "shinan-script", eyebrow: "诗剧 / 完整版", title: "《诗喃》排练文本", summary: "序诗、五个篇章与结诗的完整恢复版本。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const exhibitions: DirectoryEntry[] = [
     { id: "zhuhongmen", eyebrow: "正在展出 / 主厅", title: "赭红门", summary: "10.01—10.14｜憎恶社二层主厅", path: ROUTES.exhibition },
-    unlocked("S01") && { id: "baishaorou", eyebrow: "撤回作品缓存", title: "白芍肉", summary: "展厅目录中缺失的 A-07 作品记录。", path: ROUTES.artwork, isNew: true },
-    recovered("14") && { id: "shinan-stage", eyebrow: "特别项目 / 终场", title: "诗喃", summary: "航船诗歌社国庆诗歌剧场及现场档案。", path: ROUTES.shinan, isNew: true },
+    unlocked("S01") && { id: "baishaorou", eyebrow: "撤回作品缓存", title: "白芍肉", summary: "展厅目录中缺失的 A-07 作品记录。", path: ROUTES.artwork, isNew: isUnvisited(ROUTES.artwork) },
+    recovered("14") && { id: "shinan-stage", eyebrow: "特别项目 / 终场", title: "诗喃", summary: "航船诗歌社国庆诗歌剧场及现场档案。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const about: DirectoryEntry[] = [
     { id: "institution", eyebrow: "机构介绍", title: "憎恶社", summary: "以当代艺术、诗歌、出版与地方档案为工作线索的独立空间。" },
-    unlocked("S05") && { id: "old-history", eyebrow: "旧社团历史", title: "憎恶社的早期成员", summary: "角色字段损坏的社团历史与成员合照。", path: ROUTES.history, isNew: true },
-    unlocked("S29") && { id: "kuonan", eyebrow: "网站版本史", title: "阔南会社", summary: "本站公开名称被改写前的五层版本记录。", path: ROUTES.kuonanHistory, isNew: true },
-    unlocked("S30") && { id: "li-letter", eyebrow: "私人书信缓存", title: "李司贰致叶是", summary: "关于憎恶社、小说与画廊命名关系的书信。", path: ROUTES.liLetter, isNew: true },
+    unlocked("S05") && { id: "old-history", eyebrow: "旧社团历史", title: "憎恶社的早期成员", summary: "角色字段损坏的社团历史与成员合照。", path: ROUTES.history, isNew: isUnvisited(ROUTES.history) },
+    unlocked("S29") && { id: "kuonan", eyebrow: "网站版本史", title: "阔南会社", summary: "本站公开名称被改写前的五层版本记录。", path: ROUTES.kuonanHistory, isNew: isUnvisited(ROUTES.kuonanHistory) },
+    unlocked("S30") && { id: "li-letter", eyebrow: "私人书信缓存", title: "李司贰致叶是", summary: "关于憎恶社、小说与画廊命名关系的书信。", path: ROUTES.liLetter, isNew: isUnvisited(ROUTES.liLetter) },
   ].filter(Boolean) as DirectoryEntry[];
 
   return { people, news, publications, exhibitions, about };
@@ -1482,7 +1483,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (["王克定尸检", "王克定认尸"].includes(normalized)) {
+    if (["尸检报告", "王克定尸检", "王克定认尸"].includes(normalized)) {
       const allowed = game.unlocked.includes("S12") || currentPath === ROUTES.liXiangDeath;
       setResults([{
         id: "wang-autopsy",
@@ -1500,12 +1501,12 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (["石立人头", "石人头"].includes(normalized)) {
+    if (["石立人", "石立人头", "石人头"].includes(normalized)) {
       const allowed = game.unlocked.includes("S13") || currentPath === ROUTES.wangAutopsy;
       setResults([{
         id: "stone-head",
         kind: allowed ? "独立物证记录 · 1件" : "雕塑索引 · 4条",
-        title: "石立人头",
+        title: "石立人·头部塑像",
         summary: allowed
           ? "与死者反绑双手连接的石物；物证来源栏仍可读取。"
           : "名称命中旧雕塑目录，但案件关联尚未开放。",
@@ -2002,7 +2003,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       return;
     }
 
-    if (["尸检", "尸检报告", "认尸记录"].includes(normalized)) {
+    if (["尸检", "认尸记录"].includes(normalized)) {
       markWrong("同类材料过多；莉香档案给出了另一名死者的姓名。", [{
         id: "autopsy-public",
         kind: "档案类型 · 7条",
@@ -2883,6 +2884,12 @@ function XingWanPage() {
         <div className="damaged-relation"><span>关联人物</span><h2>莉×</h2><p>杜家亲属 · 第二字损坏</p></div>
       </section>
 
+      <section className="xing-family-crossref">
+        <span>晚近家属卡 / 关联补录</span>
+        <div><h2>杜彻</h2><p>杜万琳与徐惠之子。他称“莉×”为未曾谋面的姑姑。</p></div>
+        <code>姓名残片：莉× · 分类残片：花香</code>
+      </section>
+
       <RecoveredScript id="05" section="瞽人篇 · 1.4" title="在兰道" reader="刑万">
         <p>紧张是一时的，去兰道看好的戏法吧<br />一环重一环。也无关抒情了<br />仅是绘画带来的乐趣已不足捱过昨夜</p>
         <p>更棒的譬如抛球，三个轮着转圈<br />这已是次点。甭说那些迷人眼的扑克骗术<br />会更高明么？</p>
@@ -2907,7 +2914,7 @@ function LiXiangDeathPage() {
         <div className="kinship-note"><span>亲属关系合并</span><p>杜万琳的妹妹；早期诗稿亦写作堂妹。杜彻称她为未曾谋面的姑姑。</p><p>刑万的童年记忆与她相连，但现有材料没有补写婚姻或死亡原因。</p></div>
       </section>
 
-      <section className="case-crossref"><span>交叉附件</span><div><h2>另一名河中死者</h2><p>人物：王克定</p><p>材料类型：认尸／尸检摘要</p></div><code>INDEX AVAILABLE · BODY LOCKED</code></section>
+      <section className="case-crossref"><span>交叉附件</span><div><h2>另一名河中死者</h2><p>人物：王克定</p><p>材料名称：尸检报告</p></div><code>INDEX AVAILABLE · BODY LOCKED</code></section>
 
       <RecoveredScript id="06" section="阔南篇 · 2.1" title="溺水的莉香" reader="刑万">
         <p>T县热的夏天六月煞人心气<br />这段时间过完十岁生日的男孩<br />学着向街里同龄女孩表现——<br />像是爬树或者吹口哨。</p>
@@ -2921,7 +2928,7 @@ function LiXiangDeathPage() {
         <p>啊，你想起那位莉香<br />就此时已是许多年前的事了。</p>
       </RecoveredScript>
 
-      <section className="prototype-end"><span>第三章入口已定位</span><div><h2>河流档案指向一份尸检摘要。</h2><p>下一步需要把另一名死者的姓名与材料类型组合起来搜索。</p></div></section>
+      <section className="prototype-end"><span>第三章入口已定位</span><div><h2>河流档案指向王克定的尸检报告。</h2><p>下一搜索词：尸检报告。</p></div></section>
     </article>
   );
 }
@@ -2941,7 +2948,7 @@ function WangAutopsyPage() {
             <MetaLine label="辨认人">母亲、表哥</MetaLine>
             <MetaLine label="身长">约 1.6 米</MetaLine>
             <MetaLine label="双手">反绑于身后</MetaLine>
-            <MetaLine label="连接物">数公斤重石立人头</MetaLine>
+            <MetaLine label="连接物">石立人·头部塑像（数公斤重）</MetaLine>
             <MetaLine label="面部">脸颊三道割伤</MetaLine>
             <MetaLine label="漂流终点">凤凰水库</MetaLine>
           </dl>
@@ -2950,9 +2957,9 @@ function WangAutopsyPage() {
         <aside className="transcription-panel">
           <ArtifactTag>转录层 02</ArtifactTag>
           <h2>反绑与坠物</h2>
-          <p>死者双手在背后受束，并与石质人头像连接。原记录将石头像来源指向西岩寺后山。</p>
+          <p>死者双手在背后受束，并与石质头部塑像连接。原记录将塑像来源指向西岩寺后山。</p>
           <p>尸表另见脸颊三道伤痕。关于漂流与伤痕形成方式的表面解释，仍需沿河流路线复核。</p>
-          <div className="evidence-callout"><span>物证索引</span><strong>石立人头</strong><code>SOURCE FIELD AVAILABLE</code></div>
+          <div className="evidence-callout"><span>物证索引</span><strong>石立人·头部塑像</strong><code>SOURCE FIELD AVAILABLE</code></div>
         </aside>
       </section>
       <p className="literary-disclaimer">此页是依据用户提供文学文本制作的游戏档案，不对应现实司法文书。</p>
@@ -2964,7 +2971,7 @@ function StoneHeadEvidencePage() {
   return (
     <article className="stone-evidence-page">
       <header className="evidence-masthead">
-        <div><CacheStamp>EVIDENCE OBJECT / ST-67</CacheStamp><p className="section-kicker">物证记录 · 石质残件</p><h1>石立人头</h1><p>照片层保留为干燥状态。异常痕迹并不在这份初始物证页出现。</p></div>
+        <div><CacheStamp>EVIDENCE OBJECT / ST-67</CacheStamp><p className="section-kicker">物证记录 · 石质残件</p><h1>石立人·头部塑像</h1><p>照片层保留为干燥状态。异常痕迹并不在这份初始物证页出现。</p></div>
         <div className="document-notice"><span>状态</span><b>入库照片</b><small>色彩未校正</small></div>
       </header>
       <figure className="evidence-photo">
@@ -2974,7 +2981,7 @@ function StoneHeadEvidencePage() {
         <figcaption><span>图像编号 ST-67-A</span><p>颈部断口干燥；此页未检出红色液体痕迹。</p></figcaption>
       </figure>
       <section className="evidence-ledger">
-        <dl><MetaLine label="物件">石质立人头像残件</MetaLine><MetaLine label="重量">数公斤（原文未给精确值）</MetaLine><MetaLine label="辨认来源">西岩寺后山</MetaLine><MetaLine label="关联">王克定尸体反绑处</MetaLine></dl>
+        <dl><MetaLine label="物件">石立人头部塑像残件</MetaLine><MetaLine label="重量">数公斤（原文未给精确值）</MetaLine><MetaLine label="辨认来源">西岩寺后山</MetaLine><MetaLine label="关联">王克定尸体反绑处</MetaLine></dl>
         <div><span>旧照附注</span><p>寺院后山曾排列六十七尊等身石像。断口与石座被分列为两个检查区域。</p><code>RELATED PLACE INDEX: 西岩寺</code></div>
       </section>
     </article>
@@ -3020,6 +3027,12 @@ function XiyanTemplePage({
         </div>
         <div className="stone-controls">
           <div><span>图像检查</span><h2>{completed ? "佛头七窍正在渗出暗红血迹。" : breakClicks < 6 ? "先确认颈部断口。" : "断口已标记；现在检查石座。"}</h2><p>没有声音、喷溅或闪烁。完成既定顺序后，干燥入库照会缓慢显露七窍出血状态。</p></div>
+          {(breakClicks > 0 || baseClicks > 0) && (
+            <div className="stone-observations" aria-live="polite">
+              {breakClicks > 0 && <p><span>断口 / 首次检查</span>系统把断口拆为六处检查标记。首次点选确认了第一处；其余标记仍需逐处核对。</p>}
+              {baseClicks > 0 && <p><span>石座 / 首次检查</span>系统把石座拆为七处检查标记。首次点选确认了第一处；其余标记仍需逐处核对。</p>}
+            </div>
+          )}
           {showCounts && <div className="stone-counts" aria-live="polite"><span>断口 <b>{breakClicks}/6</b></span><span>石座 <b>{baseClicks}/7</b></span></div>}
           {completed && reducedScares && <p className="static-scare-note">减少惊吓：仅保留缓慢叠化，不伴随闪烁或声响。</p>}
         </div>

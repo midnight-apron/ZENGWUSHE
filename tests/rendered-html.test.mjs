@@ -110,10 +110,17 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(dongxingPeter, /dongxing-peter-sign\.webp/);
   assert.match(dongxingPeter, /非原始档案影像/);
 
+  const xingWan = await renderPath("/members/xing-wan");
+  assert.match(xingWan, /晚近家属卡/);
+  assert.match(xingWan, /杜彻/);
+  assert.match(xingWan, /分类残片：花香/);
+
   const liXiang = await renderPath("/archive/deaths/lixiang");
   assert.match(liXiang, /死亡过程/);
   assert.match(liXiang, /溺亡/);
   assert.match(liXiang, /不记录原因与责任主体/);
+  assert.match(liXiang, /材料名称：尸检报告/);
+  assert.match(liXiang, /下一搜索词：尸检报告/);
   assert.match(liXiang, /已恢复 06 \/ 14/);
 });
 
@@ -122,6 +129,7 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
   assert.match(autopsy, /双手/);
   assert.match(autopsy, /反绑于身后/);
   assert.match(autopsy, /脸颊三道割伤/);
+  assert.match(autopsy, /石立人·头部塑像/);
 
   const temple = await renderPath("/archive/evidence/xiyansi");
   assert.match(temple, /六十七尊/);
