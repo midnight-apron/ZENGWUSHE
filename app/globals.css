@@ -2007,7 +2007,7 @@ button {
   margin: .5rem auto;
 }
 
-.corrupted-reader span {
+.damaged-page .reader-clue {
   color: #d66065;
 }
 
@@ -8425,3 +8425,8 @@ button {
 .cemetery-panel ol { padding-left: 1.5rem; list-style: decimal; }
 .cemetery-panel button:focus-visible { outline: 2px solid #394330; outline-offset: 3px; }
 @media (max-width: 600px) { .cemetery-nav [data-slot="tabs-trigger"] { flex-basis: 40%; } .cemetery-panel th, .cemetery-panel td { padding: .5rem; } }
+
+.history-layout.timeline-only,
+.independent-text-page.is-text-only > header {
+  grid-template-columns: minmax(0, 1fr);
+}

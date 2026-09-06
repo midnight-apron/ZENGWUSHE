@@ -16,7 +16,7 @@ test("places every independent text outside the Juroutuanfei serial", async () =
   assert.match(app, /篇目一：色目掘漕/);
   assert.match(app, /篇目二：铁房山补/);
   assert.match(app, /终局叙事补遗/);
-  assert.match(app, /独立散页 · 非《句肉抟飞》/);
+  assert.doesNotMatch(app, /独立散页 · 非《句肉抟飞》/);
 
   assert.match(files.semu, /除开会画点“大写意古典油画”/);
   assert.match(files.semu, /牛牟，声调过长，一边含笑摇头。/);

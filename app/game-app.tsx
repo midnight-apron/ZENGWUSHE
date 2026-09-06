@@ -553,7 +553,6 @@ function buildPublicCatalog(game: GameState) {
 
   const news: DirectoryEntry[] = [
     { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "一则关于公墓项目款项的旧报道。原网页现只保留简讯，随文材料未能打开。", path: ROUTES.cemeteryReport },
-    { id: "current-exhibition", eyebrow: "展览动态", title: "《赭红门》开放公告", summary: "憎恶社二层主厅当期展览及观展信息。", path: ROUTES.exhibition },
     { id: "missing-notice", eyebrow: "场馆告示", title: "关于 A-07 展品状态的说明", summary: "西南角展品未能在闭馆复核中确认位置。", path: ROUTES.exhibition },
     recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: isUnvisited(ROUTES.wangDeath) },
     unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: isUnvisited(ROUTES.cemeteryCase) },
@@ -2407,7 +2406,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         return <JuroutuanfeiChapterPage chapter={chapter} available={chapter.isAvailable(game)} onBack={() => navigate(ROUTES.publications)} onSeries={() => navigate(ROUTES.juroutuanfei)} />;
       }
       case ROUTES.scatteredSemu:
-        return <IndependentTextPage title="色目掘漕" placement="葛东平人物补遗" src="/archive/scattered/se-mu-jue-cao.html" available onBack={() => navigate(ROUTES.geDongping)} />;
+        return <IndependentTextPage title="色目掘漕" placement="葛东平人物补遗" src="/archive/scattered/se-mu-jue-cao.html" available showMetadata={false} onBack={() => navigate(ROUTES.geDongping)} />;
       case ROUTES.scatteredTiefangshan:
         return <IndependentTextPage title="铁房山补" placement="杜彻／铁房山关联散页" src="/archive/scattered/tiefangshan-bu.html" available={game.unlocked.includes("S24")} onBack={() => navigate(ROUTES.duChe)} />;
       case ROUTES.scatteredZoudi:
@@ -2547,8 +2546,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
 
           <Dialog>
             <DialogTrigger asChild><Button variant="ghost" size="icon" className="header-icon" aria-label="打开线索"><HelpCircle aria-hidden="true" /></Button></DialogTrigger>
-            <DialogContent className="hint-dialog">
-              <DialogHeader><DialogTitle>调查进度提示</DialogTitle><DialogDescription>按尚未完成的调查步骤提示。线索来源：{PAGE_TITLES[currentHint.path] ?? "展厅记录"}。返回旧页面不会重置提示。</DialogDescription></DialogHeader>
+            <DialogContent className="hint-dialog" aria-describedby={undefined}>
+              <DialogHeader><DialogTitle>调查进度提示</DialogTitle></DialogHeader>
               <div className="hint-sheet"><span>提示 {hintLevel + 1}/3</span><p>{currentHints[hintLevel]}</p></div>
               <Button variant="outline" onClick={() => setHintLevels((levels) => ({ ...levels, [currentHint.id]: Math.min(currentHints.length - 1, hintLevel + 1) }))} disabled={hintLevel >= 2}>{hintLevel >= 2 ? "已显示最终提示" : "再给我一点提示"}</Button>
             </DialogContent>
@@ -2788,7 +2787,7 @@ function GeDongpingPage({ onOpenSupplement }: { onOpenSupplement: () => void }) 
   return (
     <article className="person-page ge-dongping-page">
       <header className="person-masthead">
-        <div><CacheStamp>PERSON / PUBLIC FILE</CacheStamp><p className="section-kicker">参展相关人物</p><h1>葛东平</h1><p>《赭红门》当期展览相关人物。其访客意见、人物附图与文本摘录分别保存在不同记录层。</p></div>
+        <div><CacheStamp>PERSON / PUBLIC FILE</CacheStamp><p className="section-kicker">参展相关人物</p><h1>葛东平</h1></div>
         <dl className="person-quick-facts"><MetaLine label="身份">参展者／艺术工作者</MetaLine><MetaLine label="公开关联">《赭红门》</MetaLine><MetaLine label="档案">图像材料 GD—01</MetaLine></dl>
       </header>
 
@@ -2800,7 +2799,7 @@ function GeDongpingPage({ onOpenSupplement }: { onOpenSupplement: () => void }) 
         </figure>
         <div><span>文本摘录</span><h2>刺青</h2><blockquote><p>葛东平赤着上身，膀处小块一朵白芍站着，两簇窄叶。花下纹三字“我自顾”。言语中大有铭记着现代艺术失败的大创痛。但那花绣却实在美得逃出戏谑：</p><p>刺青。肉上生花，墨色的细线条与粗棱角穿插，团团从从，交亘几组颜色不同，仿似死了，仿似开得艳一时，素泠一时。频繁地抖动肩胛，字体扯皮扯筋肉变形，明体作宋。当是值得漂亮二字。刺扎的边角血隐隐继续敛光。对于非姣好肉之辩，针灼皮下图样猛然变化，冬天凝起，咕哝一紧，白白生生地教它多出大小皴痕来，如是古时候受用墨刑的罪人，脸上在这般季节结霜了。</p></blockquote></div>
       </section>
-      <button className="independent-text-link" type="button" onClick={onOpenSupplement}><span>独立散页 · 非《句肉抟飞》</span><b>篇目一：色目掘漕</b><small>葛东平人物补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
+      <button className="independent-text-link" type="button" onClick={onOpenSupplement}><b>篇目一：色目掘漕</b><small>葛东平人物补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
     </article>
   );
 }
@@ -2841,7 +2840,7 @@ function DamagedReaderPage({ plainText, onTogglePlain }: { plainText: boolean; o
     <article className="damaged-page">
       <header className="damaged-head"><div><CacheStamp>ARCHIVE / READER 01</CacheStamp><h1>损坏的朗读页</h1></div><Button variant="outline" onClick={onTogglePlain}>{plainText ? <EyeOff /> : <Eye />}{plainText ? "返回损坏层" : "查看纯文字"}</Button></header>
       <div className="file-name"><span>filename</span><code>mang_?_chun.reader</code></div>
-      {plainText ? <section className="plain-reader"><p>［可辨认转录］</p><blockquote>“我已看不见这些春天，你当依着屐痕，给经行此地的瞽人指明路——教他平稳抵达南方的温度里。”</blockquote><p>残留索引词：看不见 / 春天 / 瞽人</p></section> : <section className="corrupted-reader" aria-label="损坏文字；可使用纯文字按钮读取同等线索"><p><span>说：</span>“我已看<span className="void-word">不见</span>这些春天你当</p><p className="shift-one">依着屐痕给经行此地的<span>瞽人</span>指明路</p><p className="noise">▒▒ 教他平稳抵达 南方的温度里 乱码_17%_▒▒▒</p><p className="shift-two">还要嘱咐他遇着僧众放生的蛇 便避着离去</p><p className="noise">00::mang / ? / chun::FILE HEADER LOST</p><p>感到让你惬意的好太阳便赞美 它如狮如虎方才醒过来</p><div className="corruption-block" aria-hidden="true">▓░▓▓░░▓░▓░░▓▓░</div><p className="last-line">给他们指一条明路：“得往春天最好的地方走……”</p></section>}
+      {plainText ? <section className="plain-reader"><p>［可辨认转录］</p><blockquote>“我已<span className="reader-clue">看不见</span>这些<span className="reader-clue">春天</span>，你当依着屐痕，给经行此地的瞽人指明路——教他平稳抵达南方的温度里。”</blockquote><p>残留索引词：<span className="reader-clue">看不见</span> / <span className="reader-clue">春天</span> / 瞽人</p></section> : <section className="corrupted-reader" aria-label="损坏文字；可使用纯文字按钮读取同等线索"><p>说：“我已<span className="reader-clue">看不见</span>这些<span className="reader-clue">春天</span>你当</p><p className="shift-one">依着屐痕给经行此地的瞽人指明路</p><p className="noise">▒▒ 教他平稳抵达 南方的温度里 乱码_17%_▒▒▒</p><p className="shift-two">还要嘱咐他遇着僧众放生的蛇 便避着离去</p><p className="noise">00::mang / ? / chun::FILE HEADER LOST</p><p>感到让你惬意的好太阳便赞美 它如狮如虎方才醒过来</p><div className="corruption-block" aria-hidden="true">▓░▓▓░░▓░▓░░▓▓░</div><p className="last-line">给他们指一条明路：“得往<span className="reader-clue">春天</span>最好的地方走……”</p></section>}
       <footer className="damaged-footer"><span>文字完整度：63%</span><span>标题字段：LOST</span><span>全文搜索：AVAILABLE</span></footer>
     </article>
   );
@@ -2866,11 +2865,10 @@ function HistoryPage({ roleGlitch }: { roleGlitch: boolean }) {
         <div className="history-group-photo-frame">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={browserPath("/archive/zengwu-early-group.webp")} alt="一张泛黄失焦的五人旧合照：四名男性与一名女性，中央一男一女肩靠得更近，所有人的面容都因相纸老化而模糊" />
-          <span>ZW—01 / FACE LAYER DAMAGED</span>
         </div>
         <figcaption><span>社团合照 / 视觉复原层</span><strong>早期成员及同行者</strong><p>四名男性成员 · 一名女性同行者。照片背注的姓名层残损，暂不据此补全名单。</p><small>杭州 · 年份字段缺失</small></figcaption>
       </figure>
-      <section className="history-layout"><div className="timeline"><div className="timeline-item"><span>成立</span><div><b>创办人：杜南阳</b><p>画社以人物、静物练习与集体采风开始活动。</p></div></div><div className="timeline-item"><span>{roleGlitch ? "声部" : "成员"}</span><div><b>杜南阳 · 徐惠 · 刑万</b><p>旧名单和现代成员索引无法完全互相对应。</p></div></div><div className="timeline-item"><span>状态</span><div><b>停止公开活动</b><p>关闭时间与原因字段均为空。</p></div></div></div><aside className="name-card"><span>下一人物索引</span><h2>杜南阳</h2><p>现代成员目录：查无此人</p><code>301 → /members/du＿lin</code></aside></section>
+      <section className="history-layout timeline-only"><div className="timeline"><div className="timeline-item"><span>成立</span><div><b>创办人：杜南阳</b></div></div><div className="timeline-item"><span>{roleGlitch ? "声部" : "成员"}</span><div><b>杜南阳 · 徐惠 · 刑万</b></div></div><div className="timeline-item"><span>状态</span><div><b>停止公开活动</b></div></div></div></section>
       <section className="script-two" id="script-02"><header><ArtifactTag>已恢复 02 / 14</ArtifactTag><span>瞽人篇 · 1.1</span></header><h2>憎恶社 <small>（杜万琳）</small></h2><div className="script-two-copy"><p>“我听见有人在讲他的画社<br />他的艺术<br />他的徐惠”</p><p>告诉我你对那些旅游地区布置类景色感到烦厌<br />这周末，带你去做艺术采风。<br />画静物——静物你懂吧？</p><p>谁受“憎恶”的启发呢？<br />在杭州喝到干呕，玻璃渣扎破手掌<br />根丛丛地涌血。</p><p>你说：现在画吧，画彼此<br />思多愁苦、呆滞的神色。<br />直到把彼此描成一对好看的词。</p></div></section>
       <section className="prototype-end"><span>旧索引未闭合</span><div><h2>创办人没有出现在现代成员表。</h2><p>从旧年表中的姓名继续搜索。不要先猜他的新名字。</p></div></section>
     </article>
@@ -3196,7 +3194,7 @@ function XiyanTemplePage({
       <section className="xiyan-archive"><span>旧照转录</span><p>“六十七个等身像放在院墙，摆做一排。从主殿一直列到寝房。”</p><code>67 → 6 / 7</code></section>
 
       <section className="independent-leaf-prologue">
-        <header><span>独立散页 · 非《句肉抟飞》</span><h2>西岩大火</h2></header>
+        <header><h2>西岩大火</h2></header>
         <div><p>辣火趴在寺里各处五瓣。</p><p>土蟹掐妙诀，<br />它说：荼<br />我说之于清蒸<br />顾了秋火过急</p><p>它说“格子” 沉下游泳，<br />同钳子舀汤浇壳。<br />也说毘。倏地脱力</p><p>腹子翻热我重复格子。<br />它游远，汤面圆圈同心。</p><p>我说：西岩寺。</p></div>
       </section>
 
@@ -3364,7 +3362,7 @@ function CemeteryReportPage() {
     <header className="news-cache-head"><div><CacheStamp>NEWS / PUBLIC ARCHIVE</CacheStamp><p className="section-kicker">地方旧闻</p><h1>他山晚讯</h1></div><span>社会简讯 · 剪报存档</span></header>
     <section className="news-paper"><div className="news-masthead"><b>他山晚讯</b><span>旧版网页摘录</span></div>
       <h2>他山地方公墓贪污案</h2>
-      <div className="news-copy"><p>本报讯　他山地方公墓项目有关款项的去向引发争议，相关账目及经办材料已被调阅。此事在当地被称为“他山地方公墓贪污案”。</p><p>原报道篇幅很短，未附完整的人员名单。网页末尾曾列有数份相关材料，现仅留下附件位置。</p><p>本栏保留这则旧闻，后续消息待补。</p></div>
+      <div className="news-copy"><p>本报讯　他山地方公墓项目有关款项的去向引发争议，相关账目及经办材料已被调阅。此事在当地被称为“他山地方公墓贪污案”。</p></div>
       <aside className="cache-difference"><span>随文材料</span><p>附件暂缺。现有报道不足以核对具体人物与事件经过。</p></aside>
     </section>
   </article>;
@@ -3420,7 +3418,7 @@ function DuChePage({ onOpenSupplement, onOpenEditor }: { onOpenSupplement: () =>
     <article className="person-page du-che-page">
       <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子，写作并经营画廊；世伯曾向他介绍寿享陵园。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮</MetaLine></dl></header>
       <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。他在《刍味》中写到席间的世伯，以及对方承办的寿享陵园。</p><p>世伯向他谈起陵园与“死后的住处”。酒桌上的话题由婚姻转向死亡，那些没有问出口的话留在了诗里。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名：李髮。</p><code>INDEX: LI_髮</code></aside></section>
-      <button className="independent-text-link" type="button" onClick={onOpenSupplement}><span>独立散页 · 非《句肉抟飞》</span><b>篇目二：铁房山补</b><small>杜彻、李髮与铁房山的三则补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
+      <button className="independent-text-link" type="button" onClick={onOpenSupplement}><b>篇目二：铁房山补</b><small>杜彻、李髮与铁房山的三则补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
       <section className="version-history"><span>朗读文件索引 · 杜彻</span><div><h2>刍味</h2><p>一次席间谈话，世伯说起他承办的寿享陵园。杜彻把那些酒意、味觉与没有问出口的话写进这首诗。</p><p>搜索“刍味”，查看朗读文本。</p></div></section>
       <button className="editor-login-link" type="button" onClick={onOpenEditor}>编辑登录</button>
       <p className="editor-source-note">账号线索在李司贰书信的缓存信息里；口令线索在《玛赫的厨房》版权页。可以先沿“刍味”的文字继续寻找。</p>
@@ -3596,22 +3594,22 @@ function JuroutuanfeiChapterPage({ chapter, available, onBack, onSeries }: { cha
   );
 }
 
-function IndependentTextPage({ title, placement, src, available, lateDisclosure = false, onBack }: { title: string; placement: string; src: string; available: boolean; lateDisclosure?: boolean; onBack: () => void }) {
+function IndependentTextPage({ title, placement, src, available, lateDisclosure = false, showMetadata = true, onBack }: { title: string; placement: string; src: string; available: boolean; lateDisclosure?: boolean; showMetadata?: boolean; onBack: () => void }) {
   const [frameHeight, setFrameHeight] = useState(900);
 
   if (!available) {
     return (
       <article className="independent-text-page is-locked">
-        <header><CacheStamp>INDEPENDENT LEAF / SEALED</CacheStamp><p className="section-kicker">独立散页 · 非《句肉抟飞》</p><h1>{title}</h1></header>
+        <header><CacheStamp>INDEPENDENT LEAF / SEALED</CacheStamp><h1>{title}</h1></header>
         <section><LockKeyhole aria-hidden="true" /><h2>这份散页尚未进入当前叙事层。</h2><p>继续完成相关人物与文本解密；直接输入地址不会提前显示正文。</p><Button type="button" variant="outline" onClick={onBack}>返回上一层档案</Button></section>
       </article>
     );
   }
 
   return (
-    <article className="independent-text-page">
-      <header><div><CacheStamp>INDEPENDENT LEAF / COMPLETE</CacheStamp><p className="section-kicker">独立散页 · 非《句肉抟飞》</p><h1>{title}</h1><p>{placement}</p></div><aside><span>呈现原则</span><p>{lateDisclosure ? "终局开放的主观叙事文本，不替代案卷中的责任判断。" : "依据人物与地点关系归档；正文保持完整，不拆散为线索。"}</p></aside></header>
-      <section className="independent-text-source"><span>馆藏来源</span><p>独立文本《{title}》；不并入《句肉抟飞》连载。</p></section>
+    <article className={`independent-text-page${showMetadata ? "" : " is-text-only"}`}>
+      <header><div><CacheStamp>INDEPENDENT LEAF / COMPLETE</CacheStamp><h1>{title}</h1><p>{placement}</p></div>{showMetadata && <aside><span>呈现原则</span><p>{lateDisclosure ? "终局开放的主观叙事文本，不替代案卷中的责任判断。" : "依据人物与地点关系归档；正文保持完整，不拆散为线索。"}</p></aside>}</header>
+      {showMetadata && <section className="independent-text-source"><span>馆藏来源</span><p>独立文本《{title}》；不并入《句肉抟飞》连载。</p></section>}
       <iframe
         className="independent-text-frame"
         src={browserPath(src)}
@@ -3683,7 +3681,7 @@ function RecoveredIndexPage({ revealed, password, attempts, note, transformStep,
     <article className={`fragment-stage-page step-${transformStep}`}>
       <header className="fragment-head"><div><CacheStamp>{revealed ? "RECOVERED SCRIPT / 12" : "ENCRYPTED INDEX / Ⅰ—Ⅹ"}</CacheStamp><p className="section-kicker">{revealed ? "场记正在显影" : "文本解密"}</p><h1>始末的碎点</h1></div>{revealed ? <div className="transform-status"><span>界面转换</span><b>{transformStep}/3</b><Button variant="outline" type="button" onClick={onStable} disabled={transformStep >= 3}>显示稳定版</Button></div> : <form className="fragment-password" onSubmit={onSubmit}><label>作者被替换前的旧名<input value={password} onChange={(event) => onPasswordChange(event.target.value)} autoComplete="off" /></label><Button type="submit">解除十段索引</Button><p role="status">{note || `错误不会清空碎片${attempts ? `；已尝试 ${attempts} 次` : ""}。`}</p></form>}</header>
       <section className="fragment-grid" aria-label="始末的碎点正文">{fragments.map(([title, copy], index) => <article key={String(title)} className={!revealed ? "is-locked" : ""}><span>{String(index + 1).padStart(2,"0")}</span><h2>{revealed ? title : `碎片 ${String(index + 1).padStart(2,"0")}`}</h2><div className="stable-fragment-copy">{revealed ? copy : "文字层已加密"}</div>{revealed && transformStep < 3 && <div className="glitch-overlay" aria-hidden="true">{index % 2 ? "剧本／声部／入场" : "▒ 场记_恢复中 ▒"}</div>}</article>)}</section>
-      {revealed && <section className="late-supplement-shelf"><header><span>独立散页 · 非《句肉抟飞》</span><h2>终局叙事补遗</h2><p>这两份文本含有比案卷结论更直接的主观叙述，因此只在“始末的碎点”解密后开放；它们作为文学文本呈现，不替代案件索引中的责任判断。</p></header><div><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredZoudi)}><span>篇目三</span><b>走地国记</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredNanfuzi)}><span>篇目四</span><b>男腹子</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button></div></section>}
+      {revealed && <section className="late-supplement-shelf"><header><h2>终局叙事补遗</h2><p>这两份文本含有比案卷结论更直接的主观叙述，因此只在“始末的碎点”解密后开放；它们作为文学文本呈现，不替代案件索引中的责任判断。</p></header><div><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredZoudi)}><span>篇目三</span><b>走地国记</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredNanfuzi)}><span>篇目四</span><b>男腹子</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button></div></section>}
       {revealed && <section className="stage-call"><span>SCENE INDEX / 13 OF 14</span><h2>文本已接近就位</h2><p>恢复目录只剩结诗。它与网站最初的当前展览使用同一个标题。</p><strong>下一搜索词：赭红门</strong></section>}
     </article>
   );
