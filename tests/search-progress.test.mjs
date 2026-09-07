@@ -86,6 +86,26 @@ test("public cemetery news does not unlock the late case index", () => {
   assert.equal(searchStatus(run("公墓", { unlocked: ["S19"] })), "待解锁");
 });
 
+test("early Du Che family record supplies the name without granting late chapter progress", () => {
+  const game = state();
+  const early = search("杜彻", game, "/news/cemetery-report").results[0];
+  assert.equal(early.path, "/members/du-che-family");
+  assert.equal(early.unlock, undefined);
+  assert.equal(early.recover, undefined);
+  game.visited.push("/news/cemetery-report", early.path);
+  assert.equal(getProgressHint(game).id, "missing-work");
+  for (const term of ["李髮", "刍味", "他山地方公墓贪污案", "莉香"]) {
+    assert.equal(searchStatus(search(term, game, early.path)), "待解锁");
+  }
+  game.unlocked.push("S11");
+  assert.equal(getProgressHint(game).id, "li-xiang");
+  assert.equal(search("莉香", game, early.path).results[0].path, "/archive/deaths/lixiang");
+  const late = run("杜彻", { unlocked: ["S23"] }).results[0];
+  assert.equal(late.path, "/members/du-che");
+  assert.deepEqual(late.unlock, ["S24"]);
+  assert.equal(getProgressHint(state({ unlocked: ["S11"] })).id, "du-che-family");
+});
+
 
 test("hints follow the unresolved frontier and preserve the missing wedding branch", () => {
   const game = state({ unlocked: Array.from({ length: 17 }, (_, i) => `S${String(i + 1).padStart(2, "0")}`) });

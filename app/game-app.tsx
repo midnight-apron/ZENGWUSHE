@@ -118,6 +118,7 @@ const ROUTES = {
   people: "/people",
   news: "/news",
   cemeteryReport: "/news/cemetery-report",
+  duCheFamily: "/members/du-che-family",
   publications: "/publications",
   about: "/about",
   exhibition: "/exhibitions/zhuhongmen",
@@ -174,6 +175,7 @@ const ROUTES = {
 
 const PAGE_TITLES: Record<string, string> = {
   [ROUTES.cemeteryReport]: "他山地方公墓贪污案｜旧闻",
+  [ROUTES.duCheFamily]: "杜彻｜家属记录",
   [ROUTES.home]: "憎恶社｜当代艺术与出版",
   [ROUTES.exhibitions]: "展览｜憎恶社",
   [ROUTES.people]: "人物｜憎恶社",
@@ -547,12 +549,13 @@ function buildPublicCatalog(game: GameState) {
     unlocked("S11") && { id: "xing-wan", eyebrow: "异名合并", title: "刑万／刑某", summary: "社团合照与新闻匿名记录指向的同一人物。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
     unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、刑万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
     unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭资料与寿享陵园相关文学记录中的人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
+    !unlocked("S24") && (game.visited.includes(ROUTES.cemeteryReport) || game.visited.includes(ROUTES.duCheFamily) || unlocked("S11")) && { id: "du-che-family", eyebrow: "家属记录", title: "杜彻", summary: "地方旧闻附存的杜家亲属记录。", path: ROUTES.duCheFamily, isNew: isUnvisited(ROUTES.duCheFamily) },
     unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: isUnvisited(ROUTES.editorRevisions) },
     unlocked("S33") && { id: "yuanchang", eyebrow: "小说角色", title: "元昶／左君", summary: "法名与本名已合并为同一个小说角色。", path: ROUTES.yuanchang, isNew: isUnvisited(ROUTES.yuanchang) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const news: DirectoryEntry[] = [
-    { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "一则关于公墓项目款项的旧报道。原网页现只保留简讯，随文材料未能打开。", path: ROUTES.cemeteryReport },
+    { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "公墓项目款项去向引发争议。附存：杜彻的家属记录。", path: ROUTES.cemeteryReport },
     { id: "missing-notice", eyebrow: "场馆告示", title: "关于 A-07 展品状态的说明", summary: "西南角展品未能在闭馆复核中确认位置。", path: ROUTES.exhibition },
     recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: isUnvisited(ROUTES.wangDeath) },
     unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: isUnvisited(ROUTES.cemeteryCase) },
@@ -1089,6 +1092,14 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
 
     if (["杜彻", "杜徹"].includes(normalized)) {
       const allowed = game.unlocked.includes("S23") || currentPath === ROUTES.shouxiang;
+      if (!allowed) {
+        setResults([{
+          id: "du-che-family", kind: "人物档案 · 家属记录", title: "杜彻",
+          summary: "地方旧闻附存的杜家亲属记录。", path: ROUTES.duCheFamily,
+        }]);
+        setResultNote("找到他山晚讯随文保留的家属记录。");
+        return;
+      }
       setResults([{
         id: "du-che",
         kind: allowed ? "人物档案 · 家庭／作品索引" : "旧站文学索引",
@@ -1650,7 +1661,9 @@ export function getProgressHint(game: GameState) {
   if (has(14)) return seen(ROUTES.xiyanTemple) ? from("stone-inspection", ROUTES.xiyanTemple) : from("temple", ROUTES.stoneHead);
   if (has(13)) return from("stone", ROUTES.wangAutopsy);
   if (has(12)) return from("autopsy", ROUTES.liXiangDeath);
-  if (has(11)) return from("li-xiang", ROUTES.xingWan);
+  if (has(11)) return seen(ROUTES.duCheFamily)
+    ? from("li-xiang", ROUTES.xingWan)
+    : from("du-che-family", ROUTES.cemeteryReport, ["刑万关联栏的姓名残损，杜家还有一份家属记录。", "新闻栏的公墓案旧闻附有杜彻的记录，也可从刑万页进入。", "搜索：杜彻，核对他提到的姑姑姓名。"]);
   if (has(10)) return from("xing-wan", ROUTES.wangKeding);
   if (has(9)) return from("wang", ROUTES.dongxingPeter);
   if (has(8)) return from("photo", ROUTES.fangWan);
@@ -2298,7 +2311,9 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.news:
         return <DirectoryPage kicker="NEWS / ARCHIVE" title="新闻" intro="场馆公告、地方旧闻与陆续恢复的后续报道。" entries={publicCatalog.news} onOpen={navigate} />;
       case ROUTES.cemeteryReport:
-        return <CemeteryReportPage />;
+        return <CemeteryReportPage onOpenFamily={() => navigate(ROUTES.duCheFamily)} />;
+      case ROUTES.duCheFamily:
+        return <DuCheFamilyPage />;
       case ROUTES.publications:
         return <DirectoryPage kicker="PUBLICATIONS / TEXT" title="出版物" intro="展览手册、小说集、小说出版档案与最终开放的诗剧资料。" entries={publicCatalog.publications} onOpen={navigate} />;
       case ROUTES.about:
@@ -2328,7 +2343,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.wangKeding:
         return <WangKedingPage />;
       case ROUTES.xingWan:
-        return <XingWanPage />;
+        return <XingWanPage onOpenFamily={() => navigate(ROUTES.duCheFamily)} />;
       case ROUTES.liXiangDeath:
         return <LiXiangDeathPage />;
       case ROUTES.wangAutopsy:
@@ -2950,13 +2965,12 @@ function FangWanPage() {
 
       <section className="person-evidence-grid">
         <div className="biography-sheet"><span>履历摘要</span><p>家中反对他学画。他曾中断学业、在果园劳动，恢复学业后前往杭州。春节留校创作的一幅作品，后来被旧成员称作加入憎恶社的“投名状”。</p><p>毕业后，他开过小卖店，经历再婚；与杜万琳保持往来，后来共同经营画廊。</p></div>
-        <figure className="lost-photo-card" aria-label="旧照片本体遗失；当前图像是根据文字识别层制作的视觉复原">
+        <figure className="lost-photo-card" aria-label="东兴彼得店铺">
           <div className="reconstructed-photo">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={browserPath("/archive/dongxing-peter-sign.webp")} alt="依据文字层复原的上世纪川渝街巷服装店招牌，牌面写着东兴彼得" />
-            <span>VISUAL RECONSTRUCTION</span>
+            <img src={browserPath("/archive/dongxing-peter-2000.webp")} alt="千禧年川渝街巷的东兴彼得店铺，玻璃橱窗内陈列着塑胶模特和内衣" />
           </div>
-          <figcaption><span>OCR / 视觉复原</span><strong>东兴彼得</strong><p>原照片人物以手遮住半张脸；当前图像仅复原招牌与店面环境。</p></figcaption>
+          <figcaption><strong>东兴彼得</strong></figcaption>
         </figure>
       </section>
 
@@ -2974,17 +2988,16 @@ function FangWanPage() {
 function DongxingPeterPage() {
   return (
     <article className="photo-record-page">
-      <header className="index-head"><div><p className="section-kicker">城市旧照 · 图像复原层</p><h1>东兴彼得</h1></div><p>原照片在迁移中遗失；本页依据OCR、替代文字与访客笔记复原招牌环境。</p></header>
+      <header className="index-head"><div><p className="section-kicker">城市旧照 · 图像复原层</p><h1>东兴彼得</h1></div></header>
 
       <section className="photo-transcript">
-        <div className="photo-index"><span>DX—P / 04</span><b>IMAGE LOST / RECONSTRUCTED</b><small>视觉复原不等同于原始照片</small></div>
+        <div className="photo-index"><span>DX—P / 04</span><b>IMAGE LOST / RECONSTRUCTED</b></div>
         <div className="photo-reconstruction">
           <figure>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={browserPath("/archive/dongxing-peter-sign.webp")} alt="上世纪川渝地区旧式服装店招牌的视觉复原，招牌写着东兴彼得" />
+            <img src={browserPath("/archive/dongxing-peter-2000.webp")} alt="千禧年川渝街巷的东兴彼得店铺，玻璃橱窗内陈列着塑胶模特和内衣" />
             <figcaption><span>依据文字层复原</span><small>非原始档案影像</small></figcaption>
           </figure>
-          <div className="photo-description"><span>原替代文字</span><p>一名男子站在“东兴彼得”的招牌下面，以手遮住半张脸。背后可见塑胶模特与店内唯一的内衣柜台。</p></div>
         </div>
         <div className="ocr-strip"><span>OCR</span><strong>东兴彼得</strong><i>置信度 98%</i></div>
       </section>
@@ -3023,7 +3036,7 @@ function WangKedingPage() {
   );
 }
 
-function XingWanPage() {
+function XingWanPage({ onOpenFamily }: { onOpenFamily: () => void }) {
   return (
     <article className="person-page merged-person-page">
       <header className="person-masthead">
@@ -3041,6 +3054,7 @@ function XingWanPage() {
         <span>晚近家属卡 / 关联补录</span>
         <div><h2>杜彻</h2><p>杜万琳与徐惠之子。他称“莉×”为未曾谋面的姑姑。</p></div>
         <code>姓名残片：莉× · 分类残片：花香</code>
+        <button className="independent-text-link" type="button" onClick={onOpenFamily}><b>杜彻 · 家属记录</b><small>他山晚讯随文存档 <ArrowUpRight aria-hidden="true" /></small></button>
       </section>
 
       <RecoveredScript id="05" section="瞽人篇 · 1.4" title="在兰道" reader="刑万">
@@ -3357,13 +3371,13 @@ function DuCremationPage({ revealed }: { revealed: boolean }) {
   );
 }
 
-function CemeteryReportPage() {
+function CemeteryReportPage({ onOpenFamily }: { onOpenFamily: () => void }) {
   return <article className="news-cache-page">
     <header className="news-cache-head"><div><CacheStamp>NEWS / PUBLIC ARCHIVE</CacheStamp><p className="section-kicker">地方旧闻</p><h1>他山晚讯</h1></div><span>社会简讯 · 剪报存档</span></header>
     <section className="news-paper"><div className="news-masthead"><b>他山晚讯</b><span>旧版网页摘录</span></div>
       <h2>他山地方公墓贪污案</h2>
       <div className="news-copy"><p>本报讯　他山地方公墓项目有关款项的去向引发争议，相关账目及经办材料已被调阅。此事在当地被称为“他山地方公墓贪污案”。</p></div>
-      <aside className="cache-difference"><span>随文材料</span><p>附件暂缺。现有报道不足以核对具体人物与事件经过。</p></aside>
+      <aside className="cache-difference"><span>随文材料</span><p>杜彻提供了一份家属记录，其中谈及父辈的往来与一位未曾谋面的姑姑。</p><button className="independent-text-link" type="button" onClick={onOpenFamily}><b>杜彻 · 家属记录</b><small>打开随文存档 <ArrowUpRight aria-hidden="true" /></small></button></aside>
     </section>
   </article>;
 }
@@ -3411,6 +3425,13 @@ function XingNewsPage() {
       </section>
     </article>
   );
+}
+
+function DuCheFamilyPage() {
+  return <article className="person-page du-che-page">
+    <header className="person-masthead"><div><CacheStamp>PERSON / FAMILY RECORD</CacheStamp><p className="section-kicker">他山晚讯 · 随文家属记录</p><h1>杜彻</h1><p>写作者，经营画廊。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳</MetaLine><MetaLine label="母亲">徐惠</MetaLine></dl></header>
+    <section className="biography-sheet"><span>亲属记述</span><p>父亲与方晚早年相识，后来往来渐少。偶尔通电话，仍会谈起家里的旧事。</p><blockquote>“我那个未曾谋面的亲姑姑莉香。”</blockquote><p>杜彻在这份记录中写下了她的全名。</p></section>
+  </article>;
 }
 
 function DuChePage({ onOpenSupplement, onOpenEditor }: { onOpenSupplement: () => void; onOpenEditor: () => void }) {

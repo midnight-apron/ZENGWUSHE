@@ -79,6 +79,7 @@ test("renders the public gallery directories without leaking locked records", as
   assert.doesNotMatch(news, /五名参与者|死亡过程已/);
   const report = await renderPath("/news/cemetery-report");
   assert.match(report, /随文材料/);
+  assert.match(report, /杜彻 · 家属记录/);
   assert.doesNotMatch(report, /杜万琳|方晚|王克定|莉香|刑万/);
 
   const publications = await renderPath("/publications");
@@ -106,18 +107,24 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(wangKeding, /该结论尚未经过交叉验证/);
 
   const fangWan = await renderPath("/members/fang-wan");
-  assert.match(fangWan, /dongxing-peter-sign\.webp/);
-  assert.match(fangWan, /VISUAL RECONSTRUCTION/);
+  assert.match(fangWan, /dongxing-peter-2000\.webp/);
+  assert.doesNotMatch(fangWan, /VISUAL RECONSTRUCTION|原照片人物以手遮住半张脸/);
 
   const dongxingPeter = await renderPath("/photos/dongxing-peter");
   assert.match(dongxingPeter, /图像复原层/);
-  assert.match(dongxingPeter, /dongxing-peter-sign\.webp/);
+  assert.match(dongxingPeter, /dongxing-peter-2000\.webp/);
+  assert.doesNotMatch(dongxingPeter, /原照片在迁移中遗失|视觉复原不等同于原始照片|一名男子站在/);
   assert.match(dongxingPeter, /非原始档案影像/);
 
   const xingWan = await renderPath("/members/xing-wan");
   assert.match(xingWan, /晚近家属卡/);
   assert.match(xingWan, /杜彻/);
   assert.match(xingWan, /分类残片：花香/);
+  assert.match(xingWan, /杜彻 · 家属记录/);
+
+  const duCheFamily = await renderPath("/members/du-che-family");
+  assert.match(duCheFamily, /未曾谋面的亲姑姑莉香/);
+  assert.doesNotMatch(duCheFamily, /朗读文件索引|杜彻婚礼|编辑登录|寿享陵园/);
 
   const liXiang = await renderPath("/archive/deaths/lixiang");
   assert.match(liXiang, /死亡过程/);
