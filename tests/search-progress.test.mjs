@@ -8,7 +8,8 @@ const vite = await createServer({ appType: "custom", configFile: false, root,
   resolve: { alias: { "@": root } }, server: { middlewareMode: true } });
 after(() => vite.close());
 const { resolveGameSearch: search, rememberSearch, searchStatus, getProgressHint, matchesEditorCredentials } = await vite.ssrLoadModule("/app/game-app.tsx");
-const state = (overrides = {}) => ({ unlocked: [], recovered: [], visited: [], routeTrips: 0,
+const { INITIAL_WEDDING_TILES, swapPhotoTiles, isWeddingPhotoComplete } = await vite.ssrLoadModule("/app/archive-photo-interactions.tsx");
+const state = (overrides = {}) => ({ unlocked: [], recovered: [], visited: [], familyPhotoRead: false, weddingPhotoSolved: false, routeTrips: 0,
   frameClicks: 0, historyVersionsLoaded: 1, editorLoggedIn: false, ...overrides });
 const run = (query, overrides) => search(query, state(overrides), "/");
 
@@ -88,6 +89,7 @@ test("public cemetery news does not unlock the late case index", () => {
 
 test("early Du Che family record supplies the name without granting late chapter progress", () => {
   const game = state();
+  assert.equal(searchStatus(search("杜彻", game, "/")), "未命中");
   const early = search("杜彻", game, "/news/cemetery-report").results[0];
   assert.equal(early.path, "/members/du-che-family");
   assert.equal(early.unlock, undefined);
@@ -98,6 +100,9 @@ test("early Du Che family record supplies the name without granting late chapter
     assert.equal(searchStatus(search(term, game, early.path)), "待解锁");
   }
   game.unlocked.push("S11");
+  assert.equal(getProgressHint(game).id, "du-che-family");
+  assert.equal(searchStatus(search("莉香", game, early.path)), "待解锁");
+  game.familyPhotoRead = true;
   assert.equal(getProgressHint(game).id, "li-xiang");
   assert.equal(search("莉香", game, early.path).results[0].path, "/archive/deaths/lixiang");
   const late = run("杜彻", { unlocked: ["S23"] }).results[0];
@@ -134,4 +139,24 @@ test("editor password includes the final title initial F", () => {
   assert.equal(matchesEditorCredentials(" editor_ys ", "MHDCF2019"), true);
   assert.equal(matchesEditorCredentials("editor_ys", "mhdc2019"), false);
   assert.equal(matchesEditorCredentials("unknown", "mhdcf2019"), false);
+});
+
+
+test("wedding puzzle gates the alias, while existing saves retain access", () => {
+  const game = state({ unlocked: ["S06"] });
+  assert.equal(search("徐惠", game, "/members/du-nanyang-old").results[0].path, "/members/xu-hui");
+  assert.equal(searchStatus(search("杜万琳", game, "/members/du-nanyang-old")), "待解锁");
+  assert.equal(getProgressHint(game).id, "xu-hui-photo");
+  let tiles = [...INITIAL_WEDDING_TILES];
+  assert.equal(isWeddingPhotoComplete(tiles), false);
+  for (let target = 0; target < 9; target++) {
+    tiles = swapPhotoTiles(tiles, tiles.indexOf(target), target);
+    assert.equal(new Set(tiles).size, 9);
+  }
+  assert.equal(isWeddingPhotoComplete(tiles), true);
+  game.weddingPhotoSolved = true;
+  assert.equal(getProgressHint(game).id, "du-wanlin");
+  assert.equal(search("杜万琳", game, "/members/xu-hui").results[0].path, "/members/du-wanlin");
+  assert.equal(searchStatus(run("杜万琳", { unlocked: ["S07"] })), "有效");
+  assert.equal(searchStatus(run("莉香", { unlocked: ["S12"] })), "有效");
 });

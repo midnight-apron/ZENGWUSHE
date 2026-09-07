@@ -35,6 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ShouxiangPage } from "./shouxiang-page";
+import { FamilyPhoto, WeddingPhotoPuzzle, ShopPhoto, INITIAL_WEDDING_TILES, isWeddingPhotoComplete } from "./archive-photo-interactions";
 import { Switch } from "@/components/ui/switch";
 import { JUROUTUANFEI_TEXT, type JuroutuanfeiTextBlock } from "./juroutuanfei-text";
 
@@ -52,6 +53,9 @@ type GameState = {
   recovered: string[];
   visited: string[];
   searchHistory: string[];
+  familyPhotoRead: boolean;
+  weddingPhotoTiles: number[];
+  weddingPhotoSolved: boolean;
   frameClicks: number;
   stoneBreakClicks: number;
   stoneBaseClicks: number;
@@ -94,6 +98,9 @@ export const DEFAULT_STATE: GameState = {
   recovered: [],
   visited: [],
   searchHistory: [],
+  familyPhotoRead: false,
+  weddingPhotoTiles: INITIAL_WEDDING_TILES,
+  weddingPhotoSolved: false,
   frameClicks: 0,
   stoneBreakClicks: 0,
   stoneBaseClicks: 0,
@@ -119,6 +126,7 @@ const ROUTES = {
   news: "/news",
   cemeteryReport: "/news/cemetery-report",
   duCheFamily: "/members/du-che-family",
+  xuHui: "/members/xu-hui",
   publications: "/publications",
   about: "/about",
   exhibition: "/exhibitions/zhuhongmen",
@@ -176,6 +184,7 @@ const ROUTES = {
 const PAGE_TITLES: Record<string, string> = {
   [ROUTES.cemeteryReport]: "他山地方公墓贪污案｜旧闻",
   [ROUTES.duCheFamily]: "杜彻｜家属记录",
+  [ROUTES.xuHui]: "徐惠｜人物档案",
   [ROUTES.home]: "憎恶社｜当代艺术与出版",
   [ROUTES.exhibitions]: "展览｜憎恶社",
   [ROUTES.people]: "人物｜憎恶社",
@@ -285,9 +294,9 @@ const HINTS: Record<string, string[]> = {
     "搜索：杜南阳。",
   ],
   [ROUTES.duNanyangOld]: [
-    "这份旧人物页显示了一个残缺的永久重定向地址。",
-    "比较画廊、配偶和同乡关系，补全“杜＿琳”。",
-    "搜索：杜万琳。",
+    "杜南阳的家庭栏写着配偶的姓名。",
+    "徐惠保留了一张撕碎的婚纱照。",
+    "搜索：徐惠，拼合那张照片。",
   ],
   [ROUTES.duWanlin]: [
     "合并档案中有一张没有姓名的同乡履历卡。",
@@ -295,12 +304,12 @@ const HINTS: Record<string, string[]> = {
     "搜索：方晚。",
   ],
   [ROUTES.fangWan]: [
-    "人物页的照片图层损坏了，但OCR转录仍在。",
+    "人物页保留着一张店铺照片。",
     "把照片招牌上的四个字完整输入搜索框。",
     "搜索：东兴彼得。",
   ],
   [ROUTES.dongxingPeter]: [
-    "照片说明不够，继续读访客笔记的末尾。",
+    "点一下橱窗的照片，再读访客笔记的末尾。",
     "那里的姓名也是一份朗读文件标题。",
     "搜索：王克定。",
   ],
@@ -311,7 +320,7 @@ const HINTS: Record<string, string[]> = {
   ],
   [ROUTES.xingWan]: [
     "刑万的关联人物只剩下“莉×”。",
-    "晚近家属卡补出杜彻：杜万琳之子；他称“莉×”为未曾谋面的姑姑。损坏姓名旁还留下“花香”分类。",
+    "晚近家属卡补出杜彻：杜万琳之子；他将“莉×”称作姑姑。损坏姓名旁还留下“花香”分类。",
     "搜索：莉香。",
   ],
   [ROUTES.liXiangDeath]: [
@@ -543,19 +552,20 @@ function buildPublicCatalog(game: GameState) {
     { id: "ge-dongping", eyebrow: "参展者 / 人物档案", title: "葛东平", summary: "《赭红门》当期展览相关人物；人物附图与文本摘录现已归档。", path: ROUTES.geDongping, isNew: isUnvisited(ROUTES.geDongping) },
     unlocked("S02") && { id: "li-tai", eyebrow: "旧成员缓存", title: "李泰", summary: "撤回作品记录中的策展与编辑人员。", path: ROUTES.curator, isNew: isUnvisited(ROUTES.curator) },
     unlocked("S06") && { id: "du-nanyang", eyebrow: "人物档案", title: "杜南阳", summary: "旧成员页与社团合照中的同一人物。", path: ROUTES.duNanyangOld, isNew: isUnvisited(ROUTES.duNanyangOld) },
+    (unlocked("S06") || game.visited.includes(ROUTES.xuHui)) && { id: "xu-hui", eyebrow: "人物档案", title: "徐惠", summary: "一张未拼合的婚纱照。", path: ROUTES.xuHui, isNew: isUnvisited(ROUTES.xuHui) },
     unlocked("S07") && { id: "du-wanlin", eyebrow: "合并人物档案", title: "杜万琳", summary: "创作者、家属关系与多份朗读文件的交叉节点。", path: ROUTES.duWanlin, isNew: isUnvisited(ROUTES.duWanlin) },
     unlocked("S08") && { id: "fang-wan", eyebrow: "人物档案", title: "方晚", summary: "杜万琳的同乡、同学与画廊合伙人。", path: ROUTES.fangWan, isNew: isUnvisited(ROUTES.fangWan) },
     unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: isUnvisited(ROUTES.wangKeding) },
     unlocked("S11") && { id: "xing-wan", eyebrow: "异名合并", title: "刑万／刑某", summary: "社团合照与新闻匿名记录指向的同一人物。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
     unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、刑万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
     unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭资料与寿享陵园相关文学记录中的人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
-    !unlocked("S24") && (game.visited.includes(ROUTES.cemeteryReport) || game.visited.includes(ROUTES.duCheFamily) || unlocked("S11")) && { id: "du-che-family", eyebrow: "家属记录", title: "杜彻", summary: "地方旧闻附存的杜家亲属记录。", path: ROUTES.duCheFamily, isNew: isUnvisited(ROUTES.duCheFamily) },
+    !unlocked("S24") && hasDuCheFamilyLead(game) && { id: "du-che-family", eyebrow: "家属记录", title: "杜彻", summary: "地方旧闻附存的杜家亲属记录。", path: ROUTES.duCheFamily, isNew: isUnvisited(ROUTES.duCheFamily) },
     unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: isUnvisited(ROUTES.editorRevisions) },
     unlocked("S33") && { id: "yuanchang", eyebrow: "小说角色", title: "元昶／左君", summary: "法名与本名已合并为同一个小说角色。", path: ROUTES.yuanchang, isNew: isUnvisited(ROUTES.yuanchang) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const news: DirectoryEntry[] = [
-    { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "公墓项目款项去向引发争议。附存：杜彻的家属记录。", path: ROUTES.cemeteryReport },
+    { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "他山晚讯的一页旧报，附随文材料。", path: ROUTES.cemeteryReport },
     { id: "missing-notice", eyebrow: "场馆告示", title: "关于 A-07 展品状态的说明", summary: "西南角展品未能在闭馆复核中确认位置。", path: ROUTES.exhibition },
     recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: isUnvisited(ROUTES.wangDeath) },
     unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: isUnvisited(ROUTES.cemeteryCase) },
@@ -592,6 +602,10 @@ function buildPublicCatalog(game: GameState) {
   ].filter(Boolean) as DirectoryEntry[];
 
   return { people, news, publications, exhibitions, about };
+}
+
+export function hasDuCheFamilyLead(game: GameState, currentPath = "") {
+  return game.visited.includes(ROUTES.cemeteryReport) || game.visited.includes(ROUTES.duCheFamily) || game.unlocked.includes("S11") || currentPath === ROUTES.cemeteryReport || currentPath === ROUTES.duCheFamily || currentPath === ROUTES.xingWan;
 }
 
 function unique(values: string[]) {
@@ -787,7 +801,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         kind: allowed ? (merged ? "规范人物档案 · 已合并" : "旧人物页 · 1条") : "受限元数据 · 1条",
         title: merged ? "杜万琳（旧名：杜南阳）" : "杜南阳",
         summary: allowed
-          ? (merged ? "旧姓名已永久映射到杜万琳的规范人物档案。" : "旧社团创办人。人物页显示一条目标残缺的永久重定向。")
+          ? (merged ? "旧姓名已永久映射到杜万琳的规范人物档案。" : "旧社团创办人；家庭栏保留着配偶徐惠的姓名。")
           : "旧人物记录存在；相关组织档案尚未恢复。",
         path: allowed ? (merged ? ROUTES.duWanlin : ROUTES.duNanyangOld) : undefined,
         unlock: allowed ? ["S06"] : undefined,
@@ -798,8 +812,19 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       return;
     }
 
+    if (normalized === "徐惠") {
+      const allowed = game.unlocked.includes("S06") || currentPath === ROUTES.duNanyangOld || game.visited.includes(ROUTES.xuHui);
+      setResults([{
+        id: "xu-hui", kind: "人物档案", title: "徐惠",
+        summary: allowed ? "旧相簿里存着一张撕碎的婚纱照。" : "先核对旧社团的人物与家庭关系。",
+        path: allowed ? ROUTES.xuHui : undefined, locked: !allowed,
+      }]);
+      setResultNote(allowed ? "找到徐惠的旧相簿。" : "从杜南阳的家庭栏查找。 ");
+      return;
+    }
+
     if (normalized === "杜万琳") {
-      const allowed = game.unlocked.includes("S06") || currentPath === ROUTES.duNanyangOld;
+      const allowed = game.unlocked.includes("S07") || (game.unlocked.includes("S06") && game.weddingPhotoSolved);
       setResults([{
         id: "du-wanlin",
         kind: allowed ? "合并人物档案 · 2个来源" : "现代成员 · 公开摘要",
@@ -812,7 +837,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         locked: !allowed,
         note: allowed ? undefined : "缺少旧页",
       }]);
-      setResultNote(allowed ? "两个姓名现在指向同一份规范档案。" : "仅凭现代成员页还不能确认身份合并。");
+      setResultNote(allowed ? "婚纱照中的姓名与旧人物家庭关系吻合。" : "先到徐惠的人物页，拼合那张婚纱照。");
       return;
     }
 
@@ -911,7 +936,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
     }
 
     if (normalized === "莉香" || normalized === "莉香溺水") {
-      const allowed = game.unlocked.includes("S11") || currentPath === ROUTES.xingWan;
+      const allowed = game.unlocked.includes("S12") || ((game.unlocked.includes("S11") || currentPath === ROUTES.xingWan) && game.familyPhotoRead);
       setResults([{
         id: "li-xiang-death",
         kind: allowed ? "亲属／死亡档案＋朗读文件" : "损坏关系卡",
@@ -925,7 +950,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         locked: !allowed,
         note: allowed ? undefined : "字段损坏",
       }]);
-      setResultNote(allowed ? "河流档案与亲属记录指向同一人。" : "先从刑万的关联人与杜彻的家庭记录交叉确认。");
+      setResultNote(allowed ? "河流档案与亲属记录指向同一人。" : "先核对刑万的关联栏，再翻看杜彻童年合照的背面。");
       return;
     }
 
@@ -1092,6 +1117,11 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
 
     if (["杜彻", "杜徹"].includes(normalized)) {
       const allowed = game.unlocked.includes("S23") || currentPath === ROUTES.shouxiang;
+      if (!allowed && !hasDuCheFamilyLead(game, currentPath)) {
+        setResults([]);
+        setResultNote("尚未发现对应的人物材料。");
+        return;
+      }
       if (!allowed) {
         setResults([{
           id: "du-che-family", kind: "人物档案 · 家属记录", title: "杜彻",
@@ -1571,7 +1601,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
 const SEARCH_TERMS = [
   ["葛东平"], ["白芍肉"], ["李泰", "litai"], ["3dmx3dm", "3x3dm", "3dm3dm"],
   ["盲之春", "盲春", "看不见春天", "看不見春天"], ["憎恶社", "憎恶"],
-  ["杜南阳"], ["杜万琳"], ["方晚", "fangwan", "方晚署名", "方晚代签", "方晚火化单", "方晚焚烧签字单"], ["东兴彼得"], ["王克定", "王克订"],
+  ["杜南阳"], ["徐惠"], ["杜万琳"], ["方晚", "fangwan", "方晚署名", "方晚代签", "方晚火化单", "方晚焚烧签字单"], ["东兴彼得"], ["王克定", "王克订"],
   ["刑万", "刑萬", "刑某"], ["莉香", "莉香溺水"],
   ["尸检报告", "王克定尸检", "王克定认尸", "认尸记录"],
   ["石立人", "石立人头", "石人头", "佛头"], ["西岩寺", "西岩寺院"],
@@ -1661,14 +1691,16 @@ export function getProgressHint(game: GameState) {
   if (has(14)) return seen(ROUTES.xiyanTemple) ? from("stone-inspection", ROUTES.xiyanTemple) : from("temple", ROUTES.stoneHead);
   if (has(13)) return from("stone", ROUTES.wangAutopsy);
   if (has(12)) return from("autopsy", ROUTES.liXiangDeath);
-  if (has(11)) return seen(ROUTES.duCheFamily)
+  if (has(11)) return game.familyPhotoRead
     ? from("li-xiang", ROUTES.xingWan)
-    : from("du-che-family", ROUTES.cemeteryReport, ["刑万关联栏的姓名残损，杜家还有一份家属记录。", "新闻栏的公墓案旧闻附有杜彻的记录，也可从刑万页进入。", "搜索：杜彻，核对他提到的姑姑姓名。"]);
+    : from("du-che-family", ROUTES.cemeteryReport, ["刑万关联栏的姓名残损，杜家还有一份家属记录。", "新闻栏的公墓案旧闻附有杜彻的记录，也可从刑万页进入。", "打开杜彻的照片，翻到背面核对姑姑姓名。"]);
   if (has(10)) return from("xing-wan", ROUTES.wangKeding);
   if (has(9)) return from("wang", ROUTES.dongxingPeter);
   if (has(8)) return from("photo", ROUTES.fangWan);
   if (has(7)) return from("fang", ROUTES.duWanlin);
-  if (has(6)) return from("du-wanlin", ROUTES.duNanyangOld);
+  if (has(6)) return game.weddingPhotoSolved
+    ? from("du-wanlin", ROUTES.xuHui, ["婚纱照已经拼好，照片上浮现了两个人的姓名。", "将新郎的姓名与杜南阳的家庭关系互证。", "搜索：杜万琳。"] )
+    : from("xu-hui-photo", ROUTES.duNanyangOld);
   if (has(5)) return from("du-nanyang", ROUTES.history);
   if (has(4) || game.recovered.includes("01")) return from("society", ROUTES.recoveredOne);
   if (has(3) || game.frameClicks >= 3) return from("spring", ROUTES.damagedReader);
@@ -1789,6 +1821,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
           setGame({
             ...DEFAULT_STATE,
             ...parsed,
+            weddingPhotoTiles: Array.isArray(parsed.weddingPhotoTiles) && parsed.weddingPhotoTiles.length === 9 && new Set(parsed.weddingPhotoTiles).size === 9 && parsed.weddingPhotoTiles.every((tile) => Number.isInteger(tile) && tile >= 0 && tile <= 8) ? parsed.weddingPhotoTiles : INITIAL_WEDDING_TILES,
             searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory.filter((value): value is string => typeof value === "string").slice(0, 50) : [],
             settings: { ...DEFAULT_STATE.settings, ...(parsed.settings ?? {}) },
           });
@@ -2313,7 +2346,9 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.cemeteryReport:
         return <CemeteryReportPage onOpenFamily={() => navigate(ROUTES.duCheFamily)} />;
       case ROUTES.duCheFamily:
-        return <DuCheFamilyPage />;
+        return <DuCheFamilyPage onRead={() => setGame((previous) => ({ ...previous, familyPhotoRead: true }))} />;
+      case ROUTES.xuHui:
+        return <XuHuiPage tiles={game.weddingPhotoTiles} solved={game.weddingPhotoSolved} onChange={(tiles) => setGame((previous) => ({ ...previous, weddingPhotoTiles: tiles, weddingPhotoSolved: isWeddingPhotoComplete(tiles) }))} />;
       case ROUTES.publications:
         return <DirectoryPage kicker="PUBLICATIONS / TEXT" title="出版物" intro="展览手册、小说集、小说出版档案与最终开放的诗剧资料。" entries={publicCatalog.publications} onOpen={navigate} />;
       case ROUTES.about:
@@ -2333,7 +2368,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.history:
         return <HistoryPage roleGlitch={roleGlitch} />;
       case ROUTES.duNanyangOld:
-        return <DuNanyangOldPage />;
+        return <DuNanyangOldPage onOpenXuHui={() => navigate(ROUTES.xuHui)} />;
       case ROUTES.duWanlin:
         return <DuWanlinPage />;
       case ROUTES.fangWan:
@@ -2736,9 +2771,8 @@ function GalleryHomePage({ onStart }: { onStart: () => void }) {
                         <DialogHeader>
                           <p>馆藏图像交叉索引 / 未登记</p>
                           <DialogTitle>徐惠</DialogTitle>
-                          <DialogDescription>一张夹在旧图录里的素描手稿。纸张背面只留下人物名，没有作者、年代与入藏编号。</DialogDescription>
+                          <DialogDescription>一张夹在旧图录里的素描手稿。</DialogDescription>
                         </DialogHeader>
-                        <span>此图不属于《乔凡尼·阿尔诺芬尼夫妇像》，也未被登记为扬·凡·艾克作品。</span>
                       </div>
                     </DialogContent>
                   </Dialog>
@@ -2903,7 +2937,7 @@ function RecoveredScript({ id, section, title, reader, children }: { id: string;
   );
 }
 
-function DuNanyangOldPage() {
+function DuNanyangOldPage({ onOpenXuHui }: { onOpenXuHui: () => void }) {
   return (
     <article className="person-page old-person-page">
       <header className="person-masthead">
@@ -2919,15 +2953,9 @@ function DuNanyangOldPage() {
           <MetaLine label="同乡／同学">方晚</MetaLine>
           <MetaLine label="活动地">杭州 → 阔南</MetaLine>
         </dl>
-        <div className="redirect-card">
-          <span>HTTP 301 / PERMANENT</span>
-          <h2>永久重定向目标损坏</h2>
-          <code>/members/du＿lin</code>
-          <p>迁移记录仍保留同一配偶、画廊与同乡关系，目标姓名的中间字段被覆盖。</p>
-        </div>
+        <button className="independent-text-link" type="button" onClick={onOpenXuHui}><b>徐惠 · 人物档案</b><small>旧相簿 <ArrowUpRight aria-hidden="true" /></small></button>
       </section>
 
-      <section className="source-note"><span>来源差异</span><p>本页使用旧姓名。不要将年代不同当作两个人；先补全重定向后的规范姓名。</p></section>
     </article>
   );
 }
@@ -2994,8 +3022,7 @@ function DongxingPeterPage() {
         <div className="photo-index"><span>DX—P / 04</span><b>IMAGE LOST / RECONSTRUCTED</b></div>
         <div className="photo-reconstruction">
           <figure>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={browserPath("/archive/dongxing-peter-2000.webp")} alt="千禧年川渝街巷的东兴彼得店铺，玻璃橱窗内陈列着塑胶模特和内衣" />
+            <ShopPhoto original={browserPath("/archive/dongxing-peter-2000.webp")} changed={browserPath("/archive/dongxing-peter-man.webp")} />
             <figcaption><span>依据文字层复原</span><small>非原始档案影像</small></figcaption>
           </figure>
         </div>
@@ -3052,7 +3079,7 @@ function XingWanPage({ onOpenFamily }: { onOpenFamily: () => void }) {
 
       <section className="xing-family-crossref">
         <span>晚近家属卡 / 关联补录</span>
-        <div><h2>杜彻</h2><p>杜万琳与徐惠之子。他称“莉×”为未曾谋面的姑姑。</p></div>
+        <div><h2>杜彻</h2><p>杜万琳与徐惠之子。他将“莉×”称作姑姑。</p></div>
         <code>姓名残片：莉× · 分类残片：花香</code>
         <button className="independent-text-link" type="button" onClick={onOpenFamily}><b>杜彻 · 家属记录</b><small>他山晚讯随文存档 <ArrowUpRight aria-hidden="true" /></small></button>
       </section>
@@ -3078,7 +3105,7 @@ function LiXiangDeathPage() {
 
       <section className="water-dossier">
         <dl><MetaLine label="姓名">莉香</MetaLine><MetaLine label="地点">T县河流</MetaLine><MetaLine label="过程">溺亡</MetaLine><MetaLine label="发现时间">未记载</MetaLine><MetaLine label="目击记录">未记载</MetaLine><MetaLine label="责任主体">未记载</MetaLine></dl>
-        <div className="kinship-note"><span>亲属关系合并</span><p>杜万琳的妹妹；早期诗稿亦写作堂妹。杜彻称她为未曾谋面的姑姑。</p><p>刑万的童年记忆与她相连，但现有材料没有补写婚姻或死亡原因。</p></div>
+        <div className="kinship-note"><span>亲属关系合并</span><p>杜万琳的妹妹；早期诗稿亦写作堂妹。杜彻在童年合照背面写下了姑姑的姓名。</p><p>刑万的童年记忆与她相连，但现有材料没有补写婚姻或死亡原因。</p></div>
       </section>
 
       <section className="case-crossref"><span>交叉附件</span><div><h2>另一名河中死者</h2><p>人物：王克定</p><p>材料名称：尸检报告</p></div><code>INDEX AVAILABLE · BODY LOCKED</code></section>
@@ -3376,8 +3403,11 @@ function CemeteryReportPage({ onOpenFamily }: { onOpenFamily: () => void }) {
     <header className="news-cache-head"><div><CacheStamp>NEWS / PUBLIC ARCHIVE</CacheStamp><p className="section-kicker">地方旧闻</p><h1>他山晚讯</h1></div><span>社会简讯 · 剪报存档</span></header>
     <section className="news-paper"><div className="news-masthead"><b>他山晚讯</b><span>旧版网页摘录</span></div>
       <h2>他山地方公墓贪污案</h2>
-      <div className="news-copy"><p>本报讯　他山地方公墓项目有关款项的去向引发争议，相关账目及经办材料已被调阅。此事在当地被称为“他山地方公墓贪污案”。</p></div>
-      <aside className="cache-difference"><span>随文材料</span><p>杜彻提供了一份家属记录，其中谈及父辈的往来与一位未曾谋面的姑姑。</p><button className="independent-text-link" type="button" onClick={onOpenFamily}><b>杜彻 · 家属记录</b><small>打开随文存档 <ArrowUpRight aria-hidden="true" /></small></button></aside>
+      <figure className="cemetery-newspaper">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={browserPath("/archive/cemetery-newspaper.webp")} alt="他山晚讯旧报：他山地方公墓贪污案，公墓项目账目接受调查" />
+      </figure>
+      <aside className="cache-difference"><span>随文材料</span><button className="independent-text-link" type="button" onClick={onOpenFamily}><b>杜彻 · 家属记录</b><small>打开随文存档 <ArrowUpRight aria-hidden="true" /></small></button></aside>
     </section>
   </article>;
 }
@@ -3427,10 +3457,17 @@ function XingNewsPage() {
   );
 }
 
-function DuCheFamilyPage() {
+function DuCheFamilyPage({ onRead }: { onRead: () => void }) {
   return <article className="person-page du-che-page">
-    <header className="person-masthead"><div><CacheStamp>PERSON / FAMILY RECORD</CacheStamp><p className="section-kicker">他山晚讯 · 随文家属记录</p><h1>杜彻</h1><p>写作者，经营画廊。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳</MetaLine><MetaLine label="母亲">徐惠</MetaLine></dl></header>
-    <section className="biography-sheet"><span>亲属记述</span><p>父亲与方晚早年相识，后来往来渐少。偶尔通电话，仍会谈起家里的旧事。</p><blockquote>“我那个未曾谋面的亲姑姑莉香。”</blockquote><p>杜彻在这份记录中写下了她的全名。</p></section>
+    <header className="index-head"><div><h1>杜彻</h1></div></header>
+    <FamilyPhoto front={browserPath("/archive/du-che-childhood.webp")} back={browserPath("/archive/du-che-photo-back.webp")} onRead={onRead} />
+  </article>;
+}
+
+function XuHuiPage({ tiles, solved, onChange }: { tiles: number[]; solved: boolean; onChange: (next: number[]) => void }) {
+  return <article className="person-page xu-hui-page">
+    <header className="index-head"><div><p className="section-kicker">人物档案 · 旧相簿</p><h1>徐惠</h1></div></header>
+    <WeddingPhotoPuzzle image={browserPath("/archive/xu-hui-wedding.webp")} tiles={tiles} solved={solved} onChange={onChange} />
   </article>;
 }
 

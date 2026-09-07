@@ -8430,3 +8430,128 @@ button {
 .independent-text-page.is-text-only > header {
   grid-template-columns: minmax(0, 1fr);
 }
+
+/* Photographs carry the archive clues. */
+.archive-photo-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.archive-photo-button:focus-visible,
+.wedding-photo-piece:focus-visible {
+  outline: 3px solid var(--blood);
+  outline-offset: 5px;
+}
+.archive-photo-button > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+}
+.family-snapshot {
+  width: min(100%, 54rem);
+  margin: 1.5rem auto 4rem;
+}
+.family-snapshot .archive-photo-button {
+  box-shadow: 0 12px 36px #0003;
+}
+.family-snapshot figcaption,
+.photo-instruction {
+  margin: 1.25rem 0;
+  text-align: center;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ash);
+}
+.cemetery-newspaper {
+  max-width: 48rem;
+  margin: 2rem auto;
+}
+.cemetery-newspaper img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.shop-photo-hint {
+  position: absolute;
+  left: 1rem;
+  bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: #171716d9;
+  color: #fff;
+  font-size: 0.875rem;
+}
+.wedding-puzzle {
+  max-width: 55rem;
+  margin: 1.5rem auto 4rem;
+}
+.wedding-puzzle-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  aspect-ratio: 4 / 3;
+  gap: clamp(3px, 0.7vw, 8px);
+  padding: clamp(8px, 1.5vw, 16px);
+  background: #22211f;
+  box-shadow: 0 10px 30px #0003;
+}
+.wedding-photo-piece {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: #e4ddcc;
+  cursor: grab;
+  touch-action: manipulation;
+}
+.wedding-photo-piece span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-size: 300% 300%;
+  background-repeat: no-repeat;
+  clip-path: polygon(0 1%, 13% 0, 27% 2%, 39% 0, 51% 1%, 63% 0, 78% 2%, 90% 0, 100% 1%, 99% 21%, 100% 37%, 98% 51%, 100% 69%, 99% 83%, 100% 99%, 84% 98%, 72% 100%, 57% 98%, 41% 100%, 29% 99%, 14% 100%, 0 98%, 1% 80%, 0 66%, 2% 51%, 0 38%, 1% 20%);
+}
+.wedding-photo-piece.is-selected {
+  outline: 3px solid #f0d091;
+  outline-offset: 1px;
+  z-index: 1;
+}
+.wedding-puzzle-board.is-complete {
+  display: block;
+  padding: 0;
+}
+.wedding-complete-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.wedding-name-reveal {
+  position: absolute;
+  inset: auto 0 9%;
+  margin: 0;
+  text-align: center;
+  color: #b1121c;
+  font-family: var(--display-serif);
+  font-size: clamp(1.6rem, 6vw, 4rem);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-shadow: 0 1px 3px #fff9;
+  animation: wedding-name-appear 1.8s ease-out both;
+}
+@keyframes wedding-name-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.reduce-motion .wedding-name-reveal { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .wedding-name-reveal { animation: none; }
+}

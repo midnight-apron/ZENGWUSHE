@@ -70,7 +70,7 @@ test("renders the public gallery directories without leaking locked records", as
   const people = await renderPath("/people");
   assert.match(people, /PEOPLE \/ INDEX/);
   assert.match(people, /葛东平/);
-  assert.doesNotMatch(people, /莉香/);
+  assert.doesNotMatch(people, /莉香|杜彻/);
 
   const news = await renderPath("/news");
   assert.match(news, /NEWS \/ ARCHIVE/);
@@ -79,6 +79,8 @@ test("renders the public gallery directories without leaking locked records", as
   assert.doesNotMatch(news, /五名参与者|死亡过程已/);
   const report = await renderPath("/news/cemetery-report");
   assert.match(report, /随文材料/);
+  assert.match(report, /cemetery-newspaper\.webp/);
+  assert.doesNotMatch(report, /本报讯/);
   assert.match(report, /杜彻 · 家属记录/);
   assert.doesNotMatch(report, /杜万琳|方晚|王克定|莉香|刑万/);
 
@@ -115,6 +117,7 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(dongxingPeter, /dongxing-peter-2000\.webp/);
   assert.doesNotMatch(dongxingPeter, /原照片在迁移中遗失|视觉复原不等同于原始照片|一名男子站在/);
   assert.match(dongxingPeter, /非原始档案影像/);
+  assert.match(dongxingPeter, /查看橱窗中的人影/);
 
   const xingWan = await renderPath("/members/xing-wan");
   assert.match(xingWan, /晚近家属卡/);
@@ -123,7 +126,17 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(xingWan, /杜彻 · 家属记录/);
 
   const duCheFamily = await renderPath("/members/du-che-family");
-  assert.match(duCheFamily, /未曾谋面的亲姑姑莉香/);
+  assert.match(duCheFamily, /du-che-childhood\.webp/);
+  assert.match(duCheFamily, /翻看照片背面/);
+  assert.doesNotMatch(duCheFamily, /亲属记述|未曾谋面|姑姑莉香/);
+  const xuHui = await renderPath("/members/xu-hui");
+  assert.match(xuHui, /徐惠的婚纱照拼图/);
+  assert.match(xuHui, /xu-hui-wedding\.webp/);
+  assert.doesNotMatch(xuHui, /杜万琳和徐惠/);
+  assert.equal((xuHui.match(/class="wedding-photo-piece/g) ?? []).length, 9);
+  const oldDu = await renderPath("/members/du-nanyang-old");
+  assert.match(oldDu, /徐惠 · 人物档案/);
+  assert.doesNotMatch(oldDu, /HTTP 301 \/ PERMANENT|永久重定向目标损坏|du＿lin/);
   assert.doesNotMatch(duCheFamily, /朗读文件索引|杜彻婚礼|编辑登录|寿享陵园/);
 
   const liXiang = await renderPath("/archive/deaths/lixiang");
