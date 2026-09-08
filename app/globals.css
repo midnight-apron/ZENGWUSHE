@@ -8628,3 +8628,22 @@ button {
 .cemetery-curse-dialog.motion-quiet .cemetery-curse-field span { animation: none; }
 @media (prefers-reduced-motion: reduce) { .stone-fallen-note, .cemetery-curse-field span { animation: none; } }
 @media (max-width: 600px) { .stone-inspection.stone-seven { padding: .75rem; } .stone-fallen-note { padding: .5rem 1rem; font-size: 1.15rem; } }
+
+.rented-room { margin-top: 2.5rem; }
+.rented-room-scene { position: relative; }
+.rented-room-scene > img { display: block; width: 100%; height: auto; }
+.room-background { position: absolute; inset: 0; border: 0; background: transparent; cursor: crosshair; }
+.room-object { position: absolute; z-index: 1; border: 1px solid transparent; border-radius: 50%; background: transparent; cursor: pointer; }
+.room-ashtray { left: 22%; top: 34.5%; width: 14%; height: 9%; }
+.room-drum { left: 68%; top: 73.5%; width: 28%; height: 17%; }
+.room-background:focus-visible { outline: 2px solid #b54b3f; outline-offset: -3px; }
+.room-object:hover, .room-object:focus-visible { outline: 2px solid #d7bdb0; outline-offset: 2px; background: #dbb3a014; }
+.room-object.is-read { border-color: #bda18b70; }
+.room-observation { min-height: 2.4em; margin: 1rem 0; font-size: 1.05rem; line-height: 1.8; color: var(--ink); }
+.drum-detail-dialog { width: min(94vw, 60rem); max-width: 60rem !important; padding: 1.2rem; max-height: 94dvh; overflow: auto; }
+.drum-detail-dialog img { display: block; width: 100%; height: auto; max-height: 75dvh; object-fit: contain; }
+.family-relations { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+.family-relations h2 { font-size: 1.25rem; margin-bottom: 1.2rem; }
+.cemetery-receipt { margin: 2.5rem 0; }
+.cemetery-receipt img { display: block; width: 100%; height: auto; }
+.society-return-link { align-self: start; }

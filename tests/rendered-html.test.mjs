@@ -71,7 +71,7 @@ test("renders the public gallery directories without leaking locked records", as
 
   const people = await renderPath("/people");
   assert.match(people, /PEOPLE \/ INDEX/);
-  assert.match(people, /葛东平/);
+  assert.doesNotMatch(people, /葛东平|徐惠/);
   assert.doesNotMatch(people, /莉香|杜彻/);
 
   const news = await renderPath("/news");
@@ -98,7 +98,7 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(history, /zengwu-early-group\.webp/);
   assert.match(history, /早期成员及同行者/);
   assert.match(history, /四名男性成员 · 一名女性同行者/);
-  assert.doesNotMatch(history, /方晚 · 王克定/);
+  assert.doesNotMatch(history, /方晚 · 王克定|杜南阳 · 徐惠 · 邢万|旧索引未闭合/);
 
   const mergedIdentity = await renderPath("/members/du-wanlin");
   assert.match(mergedIdentity, /杜南阳/);
@@ -109,6 +109,8 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(wangKeding, /公开死亡记录/);
   assert.match(wangKeding, /结论：自杀/);
   assert.match(wangKeding, /该结论尚未经过交叉验证/);
+  assert.match(wangKeding, /society-return-link/);
+  assert.doesNotMatch(wangKeding, /长期遮住半张脸|背注转录|新闻缓存没有/);
 
   const fangWan = await renderPath("/members/fang-wan");
   assert.match(fangWan, /dongxing-peter-2000\.webp/);
@@ -122,15 +124,18 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(dongxingPeter, /查看橱窗中的人影/);
 
   const xingWan = await renderPath("/members/xing-wan");
-  assert.match(xingWan, /晚近家属卡/);
+  assert.doesNotMatch(xingWan, /晚近家属卡|分类残片：花香|关联人物|杜彻 · 家属记录/);
+  assert.match(xingWan, /rented-room\.webp/);
+  assert.match(xingWan, /查看桌上的烟灰缸/);
+  assert.match(xingWan, /查看地上的拨浪鼓/);
   assert.doesNotMatch(xingWan, /刑某|映射状态|异名合并/);
-  assert.match(xingWan, /杜彻/);
-  assert.match(xingWan, /分类残片：花香/);
-  assert.match(xingWan, /杜彻 · 家属记录/);
+  assert.doesNotMatch(xingWan, /杜彻/);
 
   const duCheFamily = await renderPath("/members/du-che-family");
   assert.match(duCheFamily, /du-che-childhood\.webp/);
   assert.match(duCheFamily, /翻看照片背面/);
+  assert.match(duCheFamily, /家庭关系/);
+  assert.match(duCheFamily, /杜万琳（旧名杜南阳）/);
   assert.doesNotMatch(duCheFamily, /亲属记述|未曾谋面|姑姑莉香/);
   const xuHui = await renderPath("/members/xu-hui");
   assert.match(xuHui, /徐惠的婚纱照拼图/);
@@ -138,7 +143,8 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.doesNotMatch(xuHui, /杜万琳和徐惠/);
   assert.equal((xuHui.match(/class="wedding-photo-piece/g) ?? []).length, 9);
   const oldDu = await renderPath("/members/du-nanyang-old");
-  assert.match(oldDu, /徐惠 · 人物档案/);
+  assert.doesNotMatch(oldDu, /徐惠 · 人物档案/);
+  assert.match(oldDu, /配偶：徐惠/);
   assert.doesNotMatch(oldDu, /HTTP 301 \/ PERMANENT|永久重定向目标损坏|du＿lin/);
   assert.doesNotMatch(duCheFamily, /朗读文件索引|杜彻婚礼|编辑登录|寿享陵园/);
 
@@ -178,7 +184,8 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
   const cremation = await renderPath("/archive/forms/cremation-du-complete");
   assert.match(cremation, /方晚/);
   assert.match(cremation, /已恢复 08 \/ 14/);
-  assert.match(cremation, /他山地方公墓贪污案/);
+  assert.match(cremation, /cemetery-receipt\.webp/);
+  assert.doesNotMatch(cremation, /旧闻关联|NEXT: CASE/);
 });
 
 test("keeps the missing-work clues and places the supplied image only in Ge Dongping's profile", async () => {
@@ -207,7 +214,7 @@ test("renders the five-person cemetery case without inventing missing deaths", a
   assert.match(caseIndex, /杜万琳/);
   assert.match(caseIndex, /方晚/);
   assert.match(caseIndex, /王克定/);
-  assert.match(caseIndex, /刑万/);
+  assert.match(caseIndex, /邢万/);
   assert.match(caseIndex, /莉香/);
   assert.match(caseIndex, /自杀现场系伪造/);
   assert.match(caseIndex, /溺亡/);

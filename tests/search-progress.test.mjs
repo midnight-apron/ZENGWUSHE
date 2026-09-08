@@ -108,7 +108,7 @@ test("early Du Che family record supplies the name without granting late chapter
   const late = run("杜彻", { unlocked: ["S23"] }).results[0];
   assert.equal(late.path, "/members/du-che");
   assert.deepEqual(late.unlock, ["S24"]);
-  assert.equal(getProgressHint(state({ unlocked: ["S11"] })).id, "du-che-family");
+  assert.equal(getProgressHint(state({ unlocked: ["S11"] })).id, "room-drum");
 });
 
 
@@ -178,4 +178,30 @@ test("seven distinct openings are required; repeated clicks do not advance", asy
   }
   assert.equal(inspectStoneOpening(mask, 3), 127);
   assert.equal(inspectStoneOpening(mask, 7), mask);
+});
+
+
+test("room aliases retain character and later-news gates", () => {
+  for (const progress of [{}, { unlocked: ["S10"] }, { unlocked: ["S21"] }]) {
+    for (const term of ["廉租房", "西门车站", "西门车站附近廉租房", "刑万"]) {
+      assert.deepEqual(run(term, progress), run("邢万", progress));
+    }
+  }
+});
+
+test("character directories wait for searches and the drum supplies the family lead", async () => {
+  const { buildPublicCatalog } = await vite.ssrLoadModule("/app/game-app.tsx");
+  const game = state({ unlocked: ["S06"] });
+  const names = () => buildPublicCatalog(game).people.map((person) => person.title);
+  assert.ok(!names().includes("葛东平"));
+  assert.ok(!names().includes("徐惠"));
+  game.unlocked.push(...run("葛东平", game).results[0].unlock, ...run("徐惠", game).results[0].unlock);
+  assert.ok(names().includes("葛东平"));
+  assert.ok(names().includes("徐惠"));
+  assert.equal(searchStatus(run("杜彻", { unlocked: ["S11"] })), "未命中");
+  const found = run("杜彻", { unlocked: ["S11"], roomDrumRead: true }).results[0];
+  assert.equal(found.path, "/members/du-che-family");
+  assert.equal(getProgressHint(state({ unlocked: ["S10"] })).id, "society-return");
+  assert.equal(getProgressHint(state({ unlocked: ["S10"], societyMembersRevealed: true })).id, "xing-wan");
+  assert.equal(getProgressHint(state({ unlocked: ["S11"], roomDrumRead: true })).id, "du-che-family");
 });
