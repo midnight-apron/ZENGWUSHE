@@ -147,7 +147,8 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(liXiang, /溺亡/);
   assert.match(liXiang, /不记录原因与责任主体/);
   assert.match(liXiang, /材料名称：尸检报告/);
-  assert.match(liXiang, /下一搜索词：尸检报告/);
+  assert.doesNotMatch(liXiang, /下一搜索词|搜索[“\"]?尸检报告/);
+  assert.match(liXiang, /人体检验材料/);
   assert.match(liXiang, /已恢复 06 \/ 14/);
 });
 
@@ -174,12 +175,27 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
   assert.match(wangDeath, /王克定并非自杀/);
   assert.match(wangDeath, /现场被布置为投河自杀/);
   assert.match(wangDeath, /责任主体：现有材料不指认/);
+  assert.match(wangDeath, /残留表单标题：焚烧签字单/);
+  assert.doesNotMatch(wangDeath, /用这份单据的名称继续查找/);
 
   const cremation = await renderPath("/archive/forms/cremation-du-complete");
   assert.match(cremation, /方晚/);
   assert.match(cremation, /已恢复 08 \/ 14/);
   assert.match(cremation, /cemetery-receipt\.webp/);
   assert.doesNotMatch(cremation, /旧闻关联|NEXT: CASE/);
+});
+
+test("keeps next search terms inside evidence instead of page instructions", async () => {
+  const source = await import("node:fs/promises").then(({ readFile }) =>
+    readFile(new URL("../app/game-app.tsx", import.meta.url), "utf8"),
+  );
+
+  assert.doesNotMatch(source, /setQuery\("李司贰"\)/);
+  assert.doesNotMatch(source, /下一搜索词：|用部位名称搜索|用这份单据的名称继续查找|搜索“刍味”|NEXT TITLE:/);
+  assert.match(source, /材料名称：尸检报告/);
+  assert.match(source, /部位：右小手指/);
+  assert.match(source, /随信书稿索引/);
+  assert.match(source, /杜彻／小说／《玛赫的厨房》/);
 });
 
 test("keeps the missing-work clues and places the supplied image only in Ge Dongping's profile", async () => {

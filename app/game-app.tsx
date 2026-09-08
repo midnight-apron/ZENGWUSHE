@@ -421,7 +421,7 @@ const HINTS: Record<string, string[]> = {
   [ROUTES.kuonanHistory]: [
     "旧名没有消失，只藏在更早的网站版本。",
     "连续触底或点击按钮，载入全部 5 个版本。",
-    "第 5 版会出现阔南会社，并把下一姓名写入搜索框。",
+    "第 5 版会同时出现最早署名与站内书信索引；用署名查找那封信。",
   ],
   [ROUTES.liLetter]: [
     "书信说明“憎恶社”来自杜彻的一部小说。",
@@ -2109,16 +2109,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, [currentPath, game.historyVersionsLoaded, game.settings.reducedMotion, hydrated]);
 
   useEffect(() => {
-    if (currentPath !== ROUTES.kuonanHistory || game.historyVersionsLoaded < 5 || game.historyAutofillDone || query.trim()) return;
-    const fill = window.setTimeout(() => {
-      setQuery("李司贰");
-      setGame((previous) => ({ ...previous, historyAutofillDone: true }));
-      searchInputRef.current?.focus();
-    }, game.settings.reducedMotion ? 0 : 650);
-    return () => window.clearTimeout(fill);
-  }, [currentPath, game.historyAutofillDone, game.historyVersionsLoaded, game.settings.reducedMotion, query]);
-
-  useEffect(() => {
     if (!game.recovered.includes("12") || game.stageTransformStep === 0 || game.stageTransformStep >= 3) return;
     const advance = window.setTimeout(() => {
       setGame((previous) => ({ ...previous, stageTransformStep: Math.min(3, previous.stageTransformStep + 1) }));
@@ -3079,7 +3069,7 @@ function LiXiangDeathPage() {
         <p>啊，你想起那位莉香<br />就此时已是许多年前的事了。</p>
       </RecoveredScript>
 
-      <section className="prototype-end"><span>第三章入口已定位</span><div><h2>河流档案指向王克定的尸检报告。</h2><p>下一搜索词：尸检报告。</p></div></section>
+      <section className="prototype-end"><span>交叉材料</span><div><h2>莉香并非这批河流记录中唯一的死者。</h2><p>王克定名下另存有一份未并入公开结论的人体检验材料。</p></div></section>
     </article>
   );
 }
@@ -3196,7 +3186,7 @@ function PhoenixRoutePage({ trips, reachedBottom, reducedMotion, onMove }: { tri
         <span>{reducedMotion ? "即时移动" : "沿路线移动"}</span>
         <button type="button" onClick={() => onMove("top")}><ArrowUp aria-hidden="true" />回上游</button>
       </div>
-      {trips >= 3 && <section className="prototype-end"><span>补充附件已定位</span><div><h2>被漏记的部位：右小手指。</h2><p>用部位名称搜索尸检补充记录。</p></div></section>}
+      {trips >= 3 && <section className="prototype-end"><span>补充附件已定位</span><div><h2>尸表遗漏</h2><p>部位：右小手指<br />状态：切口形成于落水之前</p></div></section>}
     </article>
   );
 }
@@ -3279,7 +3269,7 @@ function WangDeathPage() {
         <p>有人指明当今是看不见君王，也看不见臣属。<br />如同是歌剧里刺耳的女角色，<br />这个偌大的城池，古称是什么<br />还有些旧人，如扇骨一样重迭的身影。</p>
         <p>你应该反思，为年青时狂暴的诗篇<br />有些不恰当的日子，他一头跳进老城河<br />以至于和谁又忘了这座城市<br />谁记得的，众人默不作声，全权算作祭奠。</p>
       </RecoveredScript>
-      <section className="version-history"><span>版本历史</span><div><h2>下一份手续发生在另一名参与者死后。</h2><p>版本记录留下一份“焚烧签字单”。用这份单据的名称继续查找。</p></div><code>FORM INDEX AVAILABLE</code></section>
+      <section className="version-history"><span>版本历史</span><div><h2>另一名参与者的身后手续</h2><p>残留表单标题：焚烧签字单<br />死者姓名字段：杜万琳</p></div><code>FORM INDEX AVAILABLE</code></section>
     </article>
   );
 }
@@ -3358,7 +3348,7 @@ function CemeteryCasePage() {
         </table>
       </div>
 
-      <section className="case-index-foot"><span>下一条公开记录</span><figure className="case-magazine">
+      <section className="case-index-foot"><span>随案公开记录</span><figure className="case-magazine">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={browserPath("/archive/xing-arrest-magazine.webp")} alt="‘他山地方公墓贪污案’涉案人员 刑某现已被警方依法逮捕" loading="lazy" />
       </figure></section>
@@ -3404,9 +3394,9 @@ function DuChePage({ onOpenSupplement, onOpenEditor }: { onOpenSupplement: () =>
       <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子，写作并经营画廊；世伯曾向他介绍寿享陵园。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮</MetaLine></dl></header>
       <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。他在《刍味》中写到席间的世伯，以及对方承办的寿享陵园。</p><p>世伯向他谈起陵园与“死后的住处”。酒桌上的话题由婚姻转向死亡，那些没有问出口的话留在了诗里。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名：李髮。</p><code>INDEX: LI_髮</code></aside></section>
       <button className="independent-text-link" type="button" onClick={onOpenSupplement}><b>篇目二：铁房山补</b><small>杜彻、李髮与铁房山的三则补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
-      <section className="version-history"><span>朗读文件索引 · 杜彻</span><div><h2>刍味</h2><p>一次席间谈话，世伯说起他承办的寿享陵园。杜彻把那些酒意、味觉与没有问出口的话写进这首诗。</p><p>搜索“刍味”，查看朗读文本。</p></div></section>
+      <section className="version-history"><span>朗读文件索引 · 杜彻</span><div><h2>刍味</h2><p>一次席间谈话，世伯说起他承办的寿享陵园。杜彻把那些酒意、味觉与没有问出口的话写进这首诗。</p><p>文件状态：正文未并入人物档案。</p></div></section>
       <button className="editor-login-link" type="button" onClick={onOpenEditor}>编辑登录</button>
-      <p className="editor-source-note">账号线索在李司贰书信的缓存信息里；口令线索在《玛赫的厨房》版权页。可以先沿“刍味”的文字继续寻找。</p>
+      <p className="editor-source-note">账号线索在李司贰书信的缓存信息里；口令线索在《玛赫的厨房》版权页。</p>
     </article>
   );
 }
@@ -3455,7 +3445,7 @@ function MedicalPage({ revealed, glyphRevealed, onToggleGlyph }: { revealed: boo
         <p>你会觉得呼吸依旧顺畅，子女们<br />偶尔会拿着那薄纸闻闻<br />寻橘子鲜活的气味无时无刻<br />在你油墨名字、<br />在你老的尸首上反刍。</p>
         <p>你讲不出一个完整的故事<br />屏息前最后几个画面<br />以至于毫无干系。</p>
       </RecoveredScript>}
-      {revealed && <section className="old-history-reveal"><span>旧站历史／下一条名称</span><h2>阔南会社</h2><p>杜彻与葛东平改造画廊时曾考虑使用的名称。正文尚未进入当前恢复范围。</p><code>NEXT: S29 / METADATA ONLY</code></section>}
+      {revealed && <section className="old-history-reveal"><span>旧站命名残片</span><h2>阔南会社</h2><p>杜彻与葛东平改造画廊时曾考虑使用的名称。正文尚未进入当前恢复范围。</p></section>}
     </article>
   );
 }
@@ -3472,7 +3462,7 @@ function KuonanHistoryPage({ loaded, reducedMotion, onLoad }: { loaded: number; 
     <article className="kuonan-history-page">
       <header className="archive-terminal-head"><div><CacheStamp>SITE HISTORY / {loaded} OF 5</CacheStamp><p className="section-kicker">旧站版本向下追溯</p><h1>阔南会社</h1></div><aside><span>已载入</span><b>{loaded}/5</b><p>每次抵达页面底部，只会载入一个更早版本。</p></aside></header>
       <section className="version-stack" aria-label={`已载入 ${loaded} 个旧版本`}>{versions.slice(0, loaded).map((version, index) => <article key={version.id} className={index === 4 ? "origin-version" : ""}><div><span>{version.id}</span><small>{version.label}</small></div><h2>{version.title}</h2><p>{version.note}</p>{index === 4 && <strong>站内书信索引：李司贰 → 叶是</strong>}</article>)}</section>
-      {loaded < 5 ? <div className="history-loader"><p>{reducedMotion ? "减少动态已开启，请手动载入。" : "继续滚至底部，载入更早版本。"}</p>{reducedMotion && <Button type="button" onClick={onLoad}>载入更早版本（{loaded + 1}/5）</Button>}</div> : <section className="autofill-notice"><span>5/5 · 最早版本已恢复</span><p>署名将写入顶部搜索框，但不会自动提交，也不会覆盖正在输入的文字。</p></section>}
+      {loaded < 5 ? <div className="history-loader"><p>{reducedMotion ? "减少动态已开启，请手动载入。" : "继续滚至底部，载入更早版本。"}</p>{reducedMotion && <Button type="button" onClick={onLoad}>载入更早版本（{loaded + 1}/5）</Button>}</div> : <section className="autofill-notice"><span>5/5 · 最早版本已恢复</span><p>最早保存版的署名与站内书信索引可以互相核对。</p></section>}
     </article>
   );
 }
@@ -3482,7 +3472,7 @@ function LiLetterPage() {
     <article className="letter-page">
       <header className="letter-meta"><div><CacheStamp>PRIVATE LETTER / CACHE</CacheStamp><p className="section-kicker">站名改写依据</p><h1>李司贰致叶是</h1></div><dl><MetaLine label="收件人">叶是</MetaLine><MetaLine label="缓存账号"><code>editor_ys</code></MetaLine><MetaLine label="日期">20XX.2.20</MetaLine></dl></header>
       <section className="letter-sheet"><p>叶是：</p><p>前些日子参考你同乡张恋发来的西岩寺主持元昶人物访谈资料，做了几首不太好的诗歌，悉以令作《礼倒僧元昶》，各中民俗相关描写不逮笔力，还望去日指点二三。</p><p>李髮、杜彻上月慨已结婚，夫妇俩托我向你道歉，有关婚礼邀请实在太忙没有寄出。他们也是看到你捎来的赠诗，才记起做邀请函时候忘记写你。</p><p>上月葛东平联合杜彻在 Z 城重新装修了画廊。杜彻执意要以自己小说里的“憎恶社”来命名，我们都觉着不太吉利，最后综合一下，他妥协名字改成了“阔南会社”。</p><p>对了，你应该是看过他的那篇小说的草稿。当时我们说其中诗的部分过于浓重而堪堪难阅，他记了很久，最后索性写得流水账起来。</p><p>半年未见，凭此信代为问安。</p><footer><strong>李司贰</strong><span>20XX.2.20</span></footer></section>
-      <section className="letter-crossref"><span>书信第一次确认</span><p><b>“憎恶社”首先是杜彻小说里的组织名。</b>网站中的人物、画廊和所谓历史，可能同时属于小说、诗剧与编辑改稿。</p><code>NEXT TITLE: 玛赫的厨房</code></section>
+      <section className="letter-crossref"><span>随信书稿索引</span><p><b>“憎恶社”首先是杜彻小说里的组织名。</b>网站中的人物、画廊和所谓历史，可能同时属于小说、诗剧与编辑改稿。</p><code>杜彻／小说／《玛赫的厨房》</code></section>
     </article>
   );
 }
@@ -3667,7 +3657,7 @@ function RecoveredIndexPage({ revealed, password, attempts, note, transformStep,
       <header className="fragment-head"><div><CacheStamp>{revealed ? "RECOVERED SCRIPT / 12" : "ENCRYPTED INDEX / Ⅰ—Ⅹ"}</CacheStamp><p className="section-kicker">{revealed ? "场记正在显影" : "文本解密"}</p><h1>始末的碎点</h1></div>{revealed ? <div className="transform-status"><span>界面转换</span><b>{transformStep}/3</b><Button variant="outline" type="button" onClick={onStable} disabled={transformStep >= 3}>显示稳定版</Button></div> : <form className="fragment-password" onSubmit={onSubmit}><label>作者被替换前的旧名<input value={password} onChange={(event) => onPasswordChange(event.target.value)} autoComplete="off" /></label><Button type="submit">解除十段索引</Button><p role="status">{note || `错误不会清空碎片${attempts ? `；已尝试 ${attempts} 次` : ""}。`}</p></form>}</header>
       <section className="fragment-grid" aria-label="始末的碎点正文">{fragments.map(([title, copy], index) => <article key={String(title)} className={!revealed ? "is-locked" : ""}><span>{String(index + 1).padStart(2,"0")}</span><h2>{revealed ? title : `碎片 ${String(index + 1).padStart(2,"0")}`}</h2><div className="stable-fragment-copy">{revealed ? copy : "文字层已加密"}</div>{revealed && transformStep < 3 && <div className="glitch-overlay" aria-hidden="true">{index % 2 ? "剧本／声部／入场" : "▒ 场记_恢复中 ▒"}</div>}</article>)}</section>
       {revealed && <section className="late-supplement-shelf"><header><h2>终局叙事补遗</h2><p>这两份文本含有比案卷结论更直接的主观叙述，因此只在“始末的碎点”解密后开放；它们作为文学文本呈现，不替代案件索引中的责任判断。</p></header><div><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredZoudi)}><span>篇目三</span><b>走地国记</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredNanfuzi)}><span>篇目四</span><b>男腹子</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button></div></section>}
-      {revealed && <section className="stage-call"><span>SCENE INDEX / 13 OF 14</span><h2>文本已接近就位</h2><p>恢复目录只剩结诗。它与网站最初的当前展览使用同一个标题。</p><strong>下一搜索词：赭红门</strong></section>}
+      {revealed && <section className="stage-call"><span>SCENE INDEX / 13 OF 14</span><h2>文本已接近就位</h2><p>恢复目录只剩结诗。标题字段缺失，但它与网站最初的当前展览使用同一个名称。</p></section>}
     </article>
   );
 }
