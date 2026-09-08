@@ -5,12 +5,11 @@ import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const STAFF = [
-  { name: "杜彻", role: "投资人", duty: "无", detail: "", hours: "" },
-
   { name: "陈守安", role: "园务主管", duty: "公共区域与值班安排", detail: "负责步道巡查、雨季排水和节日值班。平时随身带一本巡园记录，遇到损坏的路牌会先记下位置，再交给维护组。", hours: "周一至周五 08:30—16:30" },
   { name: "林素贞", role: "服务接待", duty: "来访登记与物品借用", detail: "在南门服务室接待来访家属，协助查询园区位置，并管理轮椅、雨伞和手推车。借用物品请在离园前归还原处。", hours: "每日 08:00—17:00" },
   { name: "周树平", role: "绿化养护", duty: "树木、草坪与花坛", detail: "负责松柏修枝与草坪养护。新栽区域会拉起矮绳，浇水后的石阶较滑，请沿干燥步道通行。", hours: "周一至周六 07:30—15:30" },
   { name: "许明川", role: "设施维护", duty: "照明、水管与无障碍设施", detail: "定期检查廊灯、水龙头和扶手。园内发现设施损坏，可到服务室填写维修登记，注明附近的分区牌号。", hours: "周二至周日 08:30—16:30" },
+  { name: "杜彻", role: "投资人", duty: "无", detail: "", hours: "" },
 ];
 const SERVICES = [
   { id: "visit", title: "祭扫与来访", text: "园区白天开放。鲜花可带入，包装纸请放进步道旁的分类箱。雨天石阶湿滑，建议穿平底鞋。临近闭园时，值班员会沿主路提醒来访者。" },
