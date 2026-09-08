@@ -33,6 +33,8 @@ async function renderPath(pathname) {
 test("renders the gallery homepage and missing-work entrance", async () => {
   const html = await renderPath("/");
   assert.match(html, /<title>憎恶社｜作品与旧档案<\/title>/);
+  assert.match(html, /opening-prologue/);
+  assert.doesNotMatch(html, /先听见，后看见/);
   assert.match(html, /正在展出 \/ NOW ON VIEW/);
   assert.match(html, /赭红门/);
   assert.match(html, /展品丢失/);
@@ -121,6 +123,7 @@ test("renders the recovered identity and death-record chapter routes", async () 
 
   const xingWan = await renderPath("/members/xing-wan");
   assert.match(xingWan, /晚近家属卡/);
+  assert.doesNotMatch(xingWan, /刑某|映射状态|异名合并/);
   assert.match(xingWan, /杜彻/);
   assert.match(xingWan, /分类残片：花香/);
   assert.match(xingWan, /杜彻 · 家属记录/);

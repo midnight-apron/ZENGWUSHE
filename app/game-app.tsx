@@ -37,7 +37,9 @@ import {
 import { ShouxiangPage } from "./shouxiang-page";
 import { FamilyPhoto, WeddingPhotoPuzzle, ShopPhoto, INITIAL_WEDDING_TILES, isWeddingPhotoComplete } from "./archive-photo-interactions";
 import { Switch } from "@/components/ui/switch";
-import { JUROUTUANFEI_TEXT, type JuroutuanfeiTextBlock } from "./juroutuanfei-text";
+import { type JuroutuanfeiTextBlock } from "./juroutuanfei-text";
+import { getReadingChapter } from "./juroutuanfei-layout";
+import { OpeningPrologue } from "./opening-prologue";
 
 const STORAGE_KEY = "zengwu-she-prototype-v1";
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -204,7 +206,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.fangWan]: "方晚｜人物档案",
   [ROUTES.dongxingPeter]: "东兴彼得｜城市旧照",
   [ROUTES.wangKeding]: "王克定｜人物档案",
-  [ROUTES.xingWan]: "刑万／刑某｜合并人物档案",
+  [ROUTES.xingWan]: "刑万｜人物档案",
   [ROUTES.liXiangDeath]: "莉香｜溺亡记录",
   [ROUTES.wangAutopsy]: "王克定｜认尸与尸检摘要",
   [ROUTES.stoneHead]: "石立人·头部塑像｜物证记录",
@@ -535,12 +537,7 @@ const JUROUTUANFEI_CHAPTERS: JuroutuanfeiChapter[] = [
 ];
 
 function getJuroutuanfeiChapterBlocks(number: JuroutuanfeiChapter["number"]) {
-  const sectionStarts = JUROUTUANFEI_TEXT
-    .map((block, index) => block.kind === "section" ? index : -1)
-    .filter((index) => index >= 0);
-  const start = number === 1 ? 0 : sectionStarts[number - 1];
-  const end = sectionStarts[number] ?? JUROUTUANFEI_TEXT.length;
-  return JUROUTUANFEI_TEXT.slice(start, end);
+  return getReadingChapter(number);
 }
 
 function buildPublicCatalog(game: GameState) {
@@ -556,7 +553,7 @@ function buildPublicCatalog(game: GameState) {
     unlocked("S07") && { id: "du-wanlin", eyebrow: "合并人物档案", title: "杜万琳", summary: "创作者、家属关系与多份朗读文件的交叉节点。", path: ROUTES.duWanlin, isNew: isUnvisited(ROUTES.duWanlin) },
     unlocked("S08") && { id: "fang-wan", eyebrow: "人物档案", title: "方晚", summary: "杜万琳的同乡、同学与画廊合伙人。", path: ROUTES.fangWan, isNew: isUnvisited(ROUTES.fangWan) },
     unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: isUnvisited(ROUTES.wangKeding) },
-    unlocked("S11") && { id: "xing-wan", eyebrow: "异名合并", title: "刑万／刑某", summary: "社团合照与新闻匿名记录指向的同一人物。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
+    unlocked("S11") && { id: "xing-wan", eyebrow: "人物档案", title: "刑万", summary: "憎恶社早期成员及其社会关系。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
     unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、刑万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
     unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭资料与寿享陵园相关文学记录中的人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
     !unlocked("S24") && hasDuCheFamilyLead(game) && { id: "du-che-family", eyebrow: "家属记录", title: "杜彻", summary: "地方旧闻附存的杜家亲属记录。", path: ROUTES.duCheFamily, isNew: isUnvisited(ROUTES.duCheFamily) },
@@ -920,10 +917,10 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       const allowed = game.unlocked.includes("S10") || currentPath === ROUTES.wangKeding;
       setResults([{
         id: "xing-wan",
-        kind: allowed ? "异名合并＋朗读文件" : "新闻匿名记录",
-        title: "刑万／刑某",
+        kind: allowed ? "人物档案＋朗读文件" : "人物记录",
+        title: "刑万",
         summary: allowed
-          ? "社团合照使用刑万，新闻缓存使用刑某；职业、位置与关联人一致。"
+          ? "憎恶社早期成员；档案保留了社团往来、杜家亲属线索及朗读诗文。"
           : "新闻中的姓名已匿名化，尚不能与成员库互证。",
         path: allowed ? ROUTES.xingWan : undefined,
         unlock: allowed ? ["S11"] : undefined,
@@ -931,7 +928,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
         locked: !allowed,
         note: allowed ? undefined : "待交叉验证",
       }]);
-      setResultNote(allowed ? "“某”是新闻匿名写法，不是另一个人。" : "还需要一份写出完整姓名的旧社团材料。");
+      setResultNote(allowed ? "找到刑万的人物档案与朗读诗文。" : "还需要一份写出完整姓名的旧社团材料。");
       return;
     }
 
@@ -1725,8 +1722,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [hintLevels, setHintLevels] = useState<Record<string, number>>({});
   const [frameNotice, setFrameNotice] = useState(false);
   const [plainText, setPlainText] = useState(false);
-  const [scareActive, setScareActive] = useState(false);
-  const [scareTextVisible, setScareTextVisible] = useState(false);
+  const [openingActive, setOpeningActive] = useState(true);
   const [roleGlitch, setRoleGlitch] = useState(false);
   const [stoneRevealActive, setStoneRevealActive] = useState(false);
   const [supplementPassword, setSupplementPassword] = useState("");
@@ -1745,7 +1741,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [fragmentNote, setFragmentNote] = useState("");
   const [stableStage, setStableStage] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const skipScareRef = useRef<HTMLButtonElement>(null);
   const skipDeathScareRef = useRef<HTMLButtonElement>(null);
   const collapseImageRef = useRef<HTMLButtonElement>(null);
 
@@ -1790,8 +1785,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, []);
 
   const finishMangRecovery = useCallback(() => {
-    setScareActive(false);
-    setScareTextVisible(false);
     mutateGame(["S03", "S04"], ["01"]);
     navigate(ROUTES.recoveredOne);
   }, [mutateGame, navigate]);
@@ -1854,7 +1847,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, [game, hydrated]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || openingActive) return;
     const unlocksThrough = (step: number) => Array.from({ length: step }, (_, index) => `S${String(index + 1).padStart(2, "0")}`);
     const recoveredTwelve = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "13"];
     const arrival: Record<string, { unlock?: string[]; recover?: string[] }> = {
@@ -1985,7 +1978,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     document.title = `${PAGE_TITLES[currentPath] ?? "憎恶社"}｜憎恶社`;
     window.scrollTo({ top: 0, behavior: game.settings.reducedMotion ? "auto" : "smooth" });
     return () => window.clearTimeout(syncArrival);
-  }, [currentPath, hydrated, game.settings.reducedMotion]);
+  }, [currentPath, hydrated, openingActive, game.settings.reducedMotion]);
 
   useEffect(() => {
     if (currentPath !== ROUTES.history || game.scaresSeen.includes("role-glitch")) return;
@@ -2029,28 +2022,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     if (!collapseImageActive) return;
     collapseImageRef.current?.focus();
   }, [collapseImageActive]);
-
-  useEffect(() => {
-    if (!scareActive) return;
-    skipScareRef.current?.focus();
-    const reveal = window.setTimeout(
-      () => setScareTextVisible(true),
-      game.settings.reducedMotion ? 0 : 450,
-    );
-    const enter = window.setTimeout(
-      () => finishMangRecovery(),
-      game.settings.reducedMotion ? 120 : 1750,
-    );
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") finishMangRecovery();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => {
-      window.clearTimeout(reveal);
-      window.clearTimeout(enter);
-      window.removeEventListener("keydown", onKeyDown);
-    };
-  }, [scareActive, finishMangRecovery, game.settings.reducedMotion]);
 
   useEffect(() => {
     if (!deathScareActive) return;
@@ -2138,16 +2109,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, [game.recovered, game.settings.reducedMotion, game.stageTransformStep]);
 
   function triggerMangRecovery() {
-    if (game.settings.reducedScares || game.scaresSeen.includes("J01")) {
-      finishMangRecovery();
-      return;
-    }
-    setGame((previous) => ({
-      ...previous,
-      scaresSeen: unique([...previous.scaresSeen, "J01"]),
-    }));
-    setScareTextVisible(false);
-    setScareActive(true);
+    finishMangRecovery();
   }
 
   function triggerWangRecovery() {
@@ -2510,7 +2472,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, [results, resultNote]);
 
   return (
-    <div className={`game-shell${game.settings.reducedMotion ? " reduce-motion" : ""}${stageComplete ? " stage-complete" : stageVocabulary ? " stage-transition" : ""}${isGalleryHome ? " is-gallery-home" : ""}${isDirectoryPage ? " is-directory-page" : ""}`}>
+    <>
+    <div inert={openingActive} className={`game-shell${game.settings.reducedMotion ? " reduce-motion" : ""}${stageComplete ? " stage-complete" : stageVocabulary ? " stage-transition" : ""}${isGalleryHome ? " is-gallery-home" : ""}${isDirectoryPage ? " is-directory-page" : ""}`}>
       <a className="skip-link" href="#main-content">跳到正文</a>
 
       <header className="site-header">
@@ -2623,10 +2586,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
 
       <p className="sr-only" aria-live="polite">{searchSummary}{currentPath === ROUTES.dimensions ? `空框已检查 ${game.frameClicks} 次。` : ""}{currentPath === ROUTES.xiyanTemple ? `断口已检查 ${game.stoneBreakClicks} 次，石座已检查 ${game.stoneBaseClicks} 次。` : ""}{currentPath === ROUTES.phoenixRoute ? `河流路线已完成 ${game.routeTrips} 次往返。` : ""}</p>
 
-      {scareActive && (
-        <div className="scare-layer" role="dialog" aria-modal="true" aria-label="短暂黑场提示"><button ref={skipScareRef} type="button" onClick={finishMangRecovery}>跳过</button><p className={scareTextVisible ? "is-visible" : ""}>先听见，后看见。</p></div>
-      )}
-
       {deathScareActive && (
         <div className="deleted-post-scare" role="dialog" aria-modal="true" aria-label="已删除帖子">
           <button ref={skipDeathScareRef} type="button" onClick={(event) => { event.stopPropagation(); finishWangRecovery(); }}>阅读完毕，继续</button>
@@ -2648,6 +2607,8 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         </div>
       )}
     </div>
+    <OpeningPrologue onActiveChange={setOpeningActive} onComplete={() => navigate(ROUTES.home)} />
+    </>
   );
 }
 
@@ -3067,13 +3028,11 @@ function XingWanPage({ onOpenFamily }: { onOpenFamily: () => void }) {
   return (
     <article className="person-page merged-person-page">
       <header className="person-masthead">
-        <div><CacheStamp>NAME CROSS-REFERENCE / XW</CacheStamp><p className="section-kicker">异名合并人物档案</p><h1>刑万 <small>／刑某</small></h1><p>“某”来自新闻匿名化处理。旧合照、职业位置和关联人物确认两种写法指向同一人。</p></div>
-        <div className="identity-status"><span>映射状态</span><b>刑万 ⇄ 刑某</b><small>来源名称不被覆盖</small></div>
+        <div><CacheStamp>PERSON / XW</CacheStamp><p className="section-kicker">人物档案</p><h1>刑万</h1><p>憎恶社早期成员，与杜南阳、徐惠相识，曾与方晚、王克定一同出现在社团合照中。</p></div>
       </header>
 
       <section className="alias-source-grid">
-        <div><span>社团合照</span><h2>刑万</h2><p>旧成员背注使用完整姓名。</p></div>
-        <div><span>新闻缓存</span><h2>刑某</h2><p>报道以“某”替代名字。</p></div>
+        <div><span>社团关系</span><h2>憎恶社</h2><p>与杜南阳、徐惠及早期成员往来。</p></div>
         <div className="damaged-relation"><span>关联人物</span><h2>莉×</h2><p>杜家亲属 · 第二字损坏</p></div>
       </section>
 
@@ -3633,7 +3592,7 @@ function JuroutuanfeiChapterPage({ chapter, available, onBack, onSeries }: { cha
     <article className="jurou-publication-page jurou-chapter-page">
       <header className="jurou-publication-head">
         <div><CacheStamp>SERIAL RELEASE / {String(chapter.number).padStart(2, "0")} OF 05</CacheStamp><p className="section-kicker">小说章节 · 选自《句肉抟飞》</p><h1>{chapter.displayTitle}</h1></div>
-        <aside><span>Section.{chapter.number}</span><b>{blocks.length}</b><small>非空原稿段落<br />依原顺序收录</small></aside>
+        <aside><span>Section.{chapter.number}</span><b>{blocks.length}</b><small>正文段落<br />按阅读顺序收录</small></aside>
       </header>
 
       <section className="jurou-reader-note"><span>出处</span><p>选自《句肉抟飞》。本页完整收录 <b>{chapter.sourceTitle}</b>；{chapter.trigger}，用作该段线索的剧情回收。</p></section>
