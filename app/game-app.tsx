@@ -563,14 +563,14 @@ export function buildPublicCatalog(game: GameState) {
     unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: isUnvisited(ROUTES.wangKeding) },
     unlocked("S11") && { id: "xing-wan", eyebrow: "人物档案", title: "邢万", summary: "憎恶社早期成员及其社会关系。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
     unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、邢万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
-    unlocked("S24") && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭资料与寿享陵园相关文学记录中的人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
+    unlocked("S24") && hasDuCheFamilyLead(game) && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭资料与寿享陵园相关文学记录中的人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
     !unlocked("S24") && hasDuCheFamilyLead(game) && { id: "du-che-family", eyebrow: "家属记录", title: "杜彻", summary: "地方旧闻附存的杜家亲属记录。", path: ROUTES.duCheFamily, isNew: isUnvisited(ROUTES.duCheFamily) },
     unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: isUnvisited(ROUTES.editorRevisions) },
     unlocked("S33") && { id: "yuanchang", eyebrow: "小说角色", title: "元昶／左君", summary: "法名与本名已合并为同一个小说角色。", path: ROUTES.yuanchang, isNew: isUnvisited(ROUTES.yuanchang) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const news: DirectoryEntry[] = [
-    { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "他山晚讯的一页旧报，附随文材料。", path: ROUTES.cemeteryReport },
+    hasDuCheFamilyLead(game) && { id: "cemetery-report", eyebrow: "地方旧闻 / 他山晚讯", title: "他山地方公墓贪污案", summary: "他山晚讯的一页旧报，附随文材料。", path: ROUTES.cemeteryReport },
     { id: "missing-notice", eyebrow: "场馆告示", title: "关于 A-07 展品状态的说明", summary: "西南角展品未能在闭馆复核中确认位置。", path: ROUTES.exhibition },
     recovered("13") && { id: "wang-death", eyebrow: "档案更新", title: "王克定死亡记录完成补充", summary: "认尸、尸检与文学文件的文字层已经恢复。", path: ROUTES.wangDeath, isNew: isUnvisited(ROUTES.wangDeath) },
     unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: isUnvisited(ROUTES.cemeteryCase) },
@@ -609,8 +609,12 @@ export function buildPublicCatalog(game: GameState) {
   return { people, news, publications, exhibitions, about };
 }
 
-export function hasDuCheFamilyLead(game: GameState, currentPath = "") {
-  return game.visited.includes(ROUTES.cemeteryReport) || game.visited.includes(ROUTES.duCheFamily) || game.roomDrumRead || currentPath === ROUTES.cemeteryReport || currentPath === ROUTES.duCheFamily;
+export function hasDuCheFamilyLead(game: GameState) {
+  return game.roomDrumRead === true;
+}
+
+export function isDrumRecordLocked(game: GameState, path: string) {
+  return [ROUTES.cemeteryReport, ROUTES.duCheFamily, ROUTES.duChe].includes(path) && !hasDuCheFamilyLead(game);
 }
 
 function unique(values: string[]) {
@@ -1123,7 +1127,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
 
     if (["杜彻", "杜徹"].includes(normalized)) {
       const allowed = game.unlocked.includes("S23") || currentPath === ROUTES.shouxiang;
-      if (!allowed && !hasDuCheFamilyLead(game, currentPath)) {
+      if (!hasDuCheFamilyLead(game)) {
         setResults([]);
         setResultNote("尚未发现对应的人物材料。");
         return;
@@ -1697,10 +1701,10 @@ export function getProgressHint(game: GameState) {
   if (has(14)) return seen(ROUTES.xiyanTemple) ? from("stone-inspection", ROUTES.xiyanTemple) : from("temple", ROUTES.stoneHead);
   if (has(13)) return from("stone", ROUTES.wangAutopsy);
   if (has(12)) return from("autopsy", ROUTES.liXiangDeath);
-  if (has(11)) return game.familyPhotoRead
+  if (has(11)) return hasDuCheFamilyLead(game) && game.familyPhotoRead
     ? from("li-xiang", ROUTES.xingWan)
     : hasDuCheFamilyLead(game)
-      ? from("du-che-family", ROUTES.duCheFamily, ["旧物上留下的姓名属于杜家的孩子。", "搜索杜彻，查看他的家庭照片。", "翻到照片背面，核对姑姑姓名。"])
+      ? from("du-che-family", ROUTES.duCheFamily, ["旧物上留下的姓名属于杜家的孩子。", "从拨浪鼓细节中的“杜彻 · 家属记录”进入。", "翻到照片背面，核对姑姑姓名。"])
       : from("room-drum", ROUTES.xingWan, ["房间里留下了别人的东西。", "查看桌上的烟灰缸和地上的拨浪鼓。", "拨浪鼓手柄的握处刻着一个姓名。"]);
   if (has(10)) return game.societyMembersRevealed
     ? from("xing-wan", ROUTES.history, ["合照下补出了早期成员。", "还有一名成员没有查过。", "搜索：邢万。也可搜索：廉租房。"])
@@ -1757,6 +1761,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const collapseImageRef = useRef<HTMLButtonElement>(null);
 
   const currentPath = displayPath(path);
+  const drumRecordLocked = isDrumRecordLocked(game, currentPath);
   const currentHint = getProgressHint(game);
   const currentHints = currentHint.hints;
   const hintLevel = Math.min(hintLevels[currentHint.id] ?? 0, currentHints.length - 1);
@@ -1860,7 +1865,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }, [game, hydrated]);
 
   useEffect(() => {
-    if (!hydrated || openingActive) return;
+    if (!hydrated || openingActive || drumRecordLocked) return;
     const unlocksThrough = (step: number) => Array.from({ length: step }, (_, index) => `S${String(index + 1).padStart(2, "0")}`);
     const recoveredTwelve = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "13"];
     const arrival: Record<string, { unlock?: string[]; recover?: string[] }> = {
@@ -1991,7 +1996,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     document.title = `${PAGE_TITLES[currentPath] ?? "憎恶社"}｜憎恶社`;
     window.scrollTo({ top: 0, behavior: game.settings.reducedMotion ? "auto" : "smooth" });
     return () => window.clearTimeout(syncArrival);
-  }, [currentPath, hydrated, openingActive, game.settings.reducedMotion]);
+  }, [currentPath, hydrated, openingActive, game.settings.reducedMotion, drumRecordLocked]);
 
   useEffect(() => {
     if (currentPath !== ROUTES.history || game.scaresSeen.includes("role-glitch")) return;
@@ -2302,6 +2307,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   }
 
   function renderPage() {
+    if (drumRecordLocked) return <article className="person-page"><h1>记录尚未开放</h1><p>继续调查，寻找相关旧物。</p></article>;
     switch (currentPath) {
       case ROUTES.home:
         return <GalleryHomePage onStart={() => navigate(ROUTES.exhibition)} />;
@@ -2346,7 +2352,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.wangKeding:
         return <WangKedingPage onOpenSociety={() => { setGame((previous) => ({ ...previous, societyMembersRevealed: true })); navigate(ROUTES.history); }} />;
       case ROUTES.xingWan:
-        return <XingWanPage drumRead={game.roomDrumRead} onReadDrum={() => setGame((previous) => ({ ...previous, roomDrumRead: true }))} />;
+        return <XingWanPage drumRead={game.roomDrumRead} onReadDrum={() => setGame((previous) => ({ ...previous, roomDrumRead: true }))} onOpenFamily={() => { if (game.roomDrumRead) navigate(ROUTES.duCheFamily); }} />;
       case ROUTES.liXiangDeath:
         return <LiXiangDeathPage />;
       case ROUTES.wangAutopsy:
@@ -3026,14 +3032,14 @@ function WangKedingPage({ onOpenSociety }: { onOpenSociety: () => void }) {
   );
 }
 
-function XingWanPage({ drumRead, onReadDrum }: { drumRead: boolean; onReadDrum: () => void }) {
+function XingWanPage({ drumRead, onReadDrum, onOpenFamily }: { drumRead: boolean; onReadDrum: () => void; onOpenFamily: () => void }) {
   return (
     <article className="person-page merged-person-page">
       <header className="person-masthead">
         <div><CacheStamp>PERSON / XW</CacheStamp><p className="section-kicker">人物档案</p><h1>邢万</h1><p>憎恶社早期成员，与杜南阳、徐惠相识，曾与方晚、王克定一同出现在社团合照中。</p></div>
       </header>
 
-      <RentedRoom image={browserPath("/archive/rented-room.webp")} drumImage={browserPath("/archive/pellet-drum-detail.webp")} drumRead={drumRead} onReadDrum={onReadDrum} />
+      <RentedRoom image={browserPath("/archive/rented-room.webp")} drumImage={browserPath("/archive/pellet-drum-detail.webp")} drumRead={drumRead} onReadDrum={onReadDrum} onOpenFamily={onOpenFamily} />
 
       <RecoveredScript id="05" section="瞽人篇 · 1.4" title="在兰道" reader="邢万">
         <p>紧张是一时的，去兰道看好的戏法吧<br />一环重一环。也无关抒情了<br />仅是绘画带来的乐趣已不足捱过昨夜</p>

@@ -90,7 +90,9 @@ test("public cemetery news does not unlock the late case index", () => {
 test("early Du Che family record supplies the name without granting late chapter progress", () => {
   const game = state();
   assert.equal(searchStatus(search("杜彻", game, "/")), "未命中");
-  const early = search("杜彻", game, "/news/cemetery-report").results[0];
+  assert.equal(searchStatus(search("杜彻", game, "/news/cemetery-report")), "未命中");
+  game.roomDrumRead = true;
+  const early = search("杜彻", game, "/members/xing-wan").results[0];
   assert.equal(early.path, "/members/du-che-family");
   assert.equal(early.unlock, undefined);
   assert.equal(early.recover, undefined);
@@ -105,7 +107,7 @@ test("early Du Che family record supplies the name without granting late chapter
   game.familyPhotoRead = true;
   assert.equal(getProgressHint(game).id, "li-xiang");
   assert.equal(search("莉香", game, early.path).results[0].path, "/archive/deaths/lixiang");
-  const late = run("杜彻", { unlocked: ["S23"] }).results[0];
+  const late = run("杜彻", { unlocked: ["S23"], roomDrumRead: true }).results[0];
   assert.equal(late.path, "/members/du-che");
   assert.deepEqual(late.unlock, ["S24"]);
   assert.equal(getProgressHint(state({ unlocked: ["S11"] })).id, "room-drum");
@@ -204,4 +206,21 @@ test("character directories wait for searches and the drum supplies the family l
   assert.equal(getProgressHint(state({ unlocked: ["S10"] })).id, "society-return");
   assert.equal(getProgressHint(state({ unlocked: ["S10"], societyMembersRevealed: true })).id, "xing-wan");
   assert.equal(getProgressHint(state({ unlocked: ["S11"], roomDrumRead: true })).id, "du-che-family");
+});
+
+
+test("only the drum opens Du Che and the old news, including bookmarked routes", async () => {
+  const { buildPublicCatalog, isDrumRecordLocked } = await vite.ssrLoadModule("/app/game-app.tsx");
+  const game = state({ unlocked: ["S11", "S23", "S24"], visited: ["/news/cemetery-report", "/members/du-che-family"] });
+  const paths = ["/news/cemetery-report", "/members/du-che-family", "/members/du-che"];
+  const visible = () => Object.values(buildPublicCatalog(game)).flat().map((entry) => entry.path);
+  assert.ok(paths.every((path) => !visible().includes(path)));
+  for (const path of paths) {
+    assert.equal(isDrumRecordLocked(game, path), true);
+    assert.equal(searchStatus(search("杜彻", game, path)), "未命中");
+  }
+  game.roomDrumRead = true;
+  assert.ok(visible().includes("/news/cemetery-report"));
+  assert.ok(visible().includes("/members/du-che"));
+  for (const path of paths) assert.equal(isDrumRecordLocked(game, path), false);
 });

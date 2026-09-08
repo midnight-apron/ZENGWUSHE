@@ -77,14 +77,11 @@ test("renders the public gallery directories without leaking locked records", as
   const news = await renderPath("/news");
   assert.match(news, /NEWS \/ ARCHIVE/);
   assert.match(news, /关于 A-07 展品状态的说明/);
-  assert.match(news, /他山地方公墓贪污案/);
+  assert.doesNotMatch(news, /他山地方公墓贪污案|他山晚讯/);
   assert.doesNotMatch(news, /五名参与者|死亡过程已/);
   const report = await renderPath("/news/cemetery-report");
-  assert.match(report, /随文材料/);
-  assert.match(report, /cemetery-newspaper\.webp/);
-  assert.doesNotMatch(report, /本报讯/);
-  assert.match(report, /杜彻 · 家属记录/);
-  assert.doesNotMatch(report, /杜万琳|方晚|王克定|莉香|刑万/);
+  assert.match(report, /记录尚未开放/);
+  assert.doesNotMatch(report, /cemetery-newspaper|杜彻 · 家属记录/);
 
   const publications = await renderPath("/publications");
   assert.match(publications, /PUBLICATIONS \/ TEXT/);
@@ -132,11 +129,8 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.doesNotMatch(xingWan, /杜彻/);
 
   const duCheFamily = await renderPath("/members/du-che-family");
-  assert.match(duCheFamily, /du-che-childhood\.webp/);
-  assert.match(duCheFamily, /翻看照片背面/);
-  assert.match(duCheFamily, /家庭关系/);
-  assert.match(duCheFamily, /杜万琳（旧名杜南阳）/);
-  assert.doesNotMatch(duCheFamily, /亲属记述|未曾谋面|姑姑莉香/);
+  assert.match(duCheFamily, /记录尚未开放/);
+  assert.doesNotMatch(duCheFamily, /du-che-childhood|翻看照片背面|家庭关系/);
   const xuHui = await renderPath("/members/xu-hui");
   assert.match(xuHui, /徐惠的婚纱照拼图/);
   assert.match(xuHui, /xu-hui-wedding\.webp/);
@@ -236,13 +230,8 @@ test("renders the cached news, cemetery mirror, and Du Che profile", async () =>
   assert.doesNotMatch(cemetery, /杜彻<[^>]*>.*?负责人/);
 
   const duChe = await renderPath("/members/du-che");
-  assert.match(duChe, /杜万琳与徐惠之子/);
-  assert.match(duChe, /<dt>配偶<\/dt><dd>李髮<\/dd>/);
-  assert.doesNotMatch(duChe, /\u674e\u9aea/);
-  assert.match(duChe, /编辑登录/);
-  assert.match(duChe, /朗读文件索引/);
-  assert.match(duChe, /刍味/);
-  assert.doesNotMatch(duChe, /成为他山市公墓系统中的负责人/);
+  assert.match(duChe, /记录尚未开放/);
+  assert.doesNotMatch(duChe, /杜万琳与徐惠之子|朗读文件索引|编辑登录/);
 });
 
 test("renders recovered scripts 07, 10, and 11 with the medical clue chain", async () => {

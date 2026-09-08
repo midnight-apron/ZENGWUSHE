@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-export function RentedRoom({ image, drumImage, drumRead, onReadDrum }: {
-  image: string; drumImage: string; drumRead: boolean; onReadDrum: () => void;
+export function RentedRoom({ image, drumImage, drumRead, onReadDrum, onOpenFamily }: {
+  image: string; drumImage: string; drumRead: boolean; onReadDrum: () => void; onOpenFamily: () => void;
 }) {
   const [message, setMessage] = useState("");
   const [detailOpen, setDetailOpen] = useState(false);
@@ -23,6 +23,7 @@ export function RentedRoom({ image, drumImage, drumRead, onReadDrum }: {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={drumImage} alt="旧拨浪鼓的细节，手柄抓握处刻着“杜彻”两个字" />
       <p>手柄握处，刻着：杜彻。</p>
+      {drumRead && <button className="independent-text-link" type="button" onClick={() => { setDetailOpen(false); onOpenFamily(); }}><b>杜彻 · 家属记录</b><small>查看人物档案</small></button>}
     </DialogContent></Dialog>
   </section>;
 }
