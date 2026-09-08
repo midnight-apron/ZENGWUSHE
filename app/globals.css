@@ -8603,3 +8603,28 @@ button {
   letter-spacing: 0.09em;
 }
 .opening-continue { font-size: 0.875rem; letter-spacing: 0.18em; }
+
+/* Seven openings: retain the photo's full frame so each target stays aligned. */
+.stone-inspection.stone-seven { display: block; padding: 1.5rem; }
+.stone-seven > h2 { margin: 0 0 1.2rem; font-size: 1.25rem; }
+.stone-seven .stone-image-stage { min-height: 0; aspect-ratio: 4 / 3; }
+.stone-seven .stone-image-stage > img { min-height: 0; width: 100%; height: 100%; object-fit: contain; }
+.stone-opening { position: absolute; transform: translate(-50%, -50%); border-radius: 50%; border: 1px solid transparent; background: transparent; cursor: crosshair; }
+.stone-opening:hover, .stone-opening:focus-visible { border-color: #dbc1ab; outline: 2px solid #a45249; outline-offset: 1px; }
+.stone-opening.is-touched { border-color: #a4524980; }
+.stone-opening:disabled { cursor: default; border-color: transparent; }
+.stone-seven-hint { margin: 1.5rem 0 0; max-width: 52rem; font-size: 1rem; line-height: 1.9; color: #d2c9bb; }
+.stone-fallen-note { position: absolute; z-index: 3; left: 50%; bottom: 6%; padding: 1rem 1.8rem; color: #352b23; background: #ded0ad; box-shadow: 1px 5px 15px #0008; transform: translateX(-50%) rotate(-5deg); animation: stone-note-fall 1600ms ease-out both; font: 1.5rem/1.6 KaiTi, STKaiti, serif; white-space: nowrap; }
+@keyframes stone-note-fall { 0% { opacity: 0; transform: translate(-50%, -240%) rotate(22deg); } 25% { opacity: 1; transform: translate(-70%, -160%) rotate(-18deg); } 65% { transform: translate(-25%, -60%) rotate(12deg); } 100% { opacity: 1; transform: translate(-50%, 0) rotate(-5deg); } }
+.stone-seven.motion-quiet .stone-image-blood { transition-duration: 400ms; }
+.stone-seven.motion-quiet .stone-fallen-note { animation: none; }
+.case-magazine { margin: 1.5rem 0 0; max-width: 48rem; }
+.case-magazine img { display: block; width: 100%; height: auto; }
+.cemetery-curse-dialog { width: 100vw; max-width: 100vw !important; height: 100dvh; border: 0; border-radius: 0; background: #080707; color: #db2525; padding: 0; overflow: hidden; }
+.cemetery-curse-dialog > button { z-index: 3; top: 1rem; right: 1rem; color: white; background: #171010; padding: .75rem; border-radius: 0; opacity: 1; }
+.cemetery-curse-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.cemetery-curse-field span { position: absolute; font-family: "Noto Serif SC", serif; font-weight: 800; white-space: nowrap; animation: curse-appear 350ms ease-out both; }
+@keyframes curse-appear { from { opacity: 0; } to { opacity: 1; } }
+.cemetery-curse-dialog.motion-quiet .cemetery-curse-field span { animation: none; }
+@media (prefers-reduced-motion: reduce) { .stone-fallen-note, .cemetery-curse-field span { animation: none; } }
+@media (max-width: 600px) { .stone-inspection.stone-seven { padding: .75rem; } .stone-fallen-note { padding: .5rem 1rem; font-size: 1.15rem; } }

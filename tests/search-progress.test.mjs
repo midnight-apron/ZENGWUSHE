@@ -160,3 +160,22 @@ test("wedding puzzle gates the alias, while existing saves retain access", () =>
   assert.equal(searchStatus(run("杜万琳", { unlocked: ["S07"] })), "有效");
   assert.equal(searchStatus(run("莉香", { unlocked: ["S12"] })), "有效");
 });
+
+
+test("投河 shares the exact autopsy gate and results", () => {
+  for (const progress of [{}, { unlocked: ["S12"] }, { unlocked: ["S12", "S16"] }]) {
+    assert.deepEqual(run("投河", progress), run("尸检报告", progress));
+  }
+});
+
+test("seven distinct openings are required; repeated clicks do not advance", async () => {
+  const { inspectStoneOpening } = await vite.ssrLoadModule("/app/stone-inspection.tsx");
+  let mask = 0;
+  for (const opening of [6, 2, 4, 0, 5, 1]) {
+    mask = inspectStoneOpening(mask, opening);
+    assert.equal(inspectStoneOpening(mask, opening), mask);
+    assert.notEqual(mask, 127);
+  }
+  assert.equal(inspectStoneOpening(mask, 3), 127);
+  assert.equal(inspectStoneOpening(mask, 7), mask);
+});

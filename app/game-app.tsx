@@ -40,6 +40,7 @@ import { Switch } from "@/components/ui/switch";
 import { type JuroutuanfeiTextBlock } from "./juroutuanfei-text";
 import { getReadingChapter } from "./juroutuanfei-layout";
 import { OpeningPrologue } from "./opening-prologue";
+import { StoneInspection, inspectStoneOpening } from "./stone-inspection";
 
 const STORAGE_KEY = "zengwu-she-prototype-v1";
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
@@ -61,6 +62,7 @@ type GameState = {
   frameClicks: number;
   stoneBreakClicks: number;
   stoneBaseClicks: number;
+  stoneOpenings: number;
   routeTrips: number;
   routeReachedBottom: boolean;
   medicalGlyphRevealed: boolean;
@@ -106,6 +108,7 @@ export const DEFAULT_STATE: GameState = {
   frameClicks: 0,
   stoneBreakClicks: 0,
   stoneBaseClicks: 0,
+  stoneOpenings: 0,
   routeTrips: 0,
   routeReachedBottom: false,
   medicalGlyphRevealed: false,
@@ -341,9 +344,9 @@ const HINTS: Record<string, string[]> = {
     "搜索：西岩寺。",
   ],
   [ROUTES.xiyanTemple]: [
-    "图注中的“六十七”也可以拆成两个动作次数。",
-    "先检查佛头断口，再检查石座。",
-    "断口点 6 次，石座点 7 次。",
+    "佛头的脸上还留有可触碰的位置。",
+    "双眼、双耳、两个鼻孔与嘴，共有七窍。",
+    "分别点击七窍，等血迹显现后查看掉落的纸条。",
   ],
   [ROUTES.phoenixRoute]: [
     "尸体路线需要回溯，不能只顺流看一遍。",
@@ -951,7 +954,7 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       return;
     }
 
-    if (["尸检报告", "王克定尸检", "王克定认尸"].includes(normalized)) {
+    if (["尸检报告", "投河", "王克定尸检", "王克定认尸"].includes(normalized)) {
       const allowed = game.unlocked.includes("S12") || currentPath === ROUTES.liXiangDeath;
       setResults([{
         id: "wang-autopsy",
@@ -1600,7 +1603,7 @@ const SEARCH_TERMS = [
   ["盲之春", "盲春", "看不见春天", "看不見春天"], ["憎恶社", "憎恶"],
   ["杜南阳"], ["徐惠"], ["杜万琳"], ["方晚", "fangwan", "方晚署名", "方晚代签", "方晚火化单", "方晚焚烧签字单"], ["东兴彼得"], ["王克定", "王克订"],
   ["刑万", "刑萬", "刑某"], ["莉香", "莉香溺水"],
-  ["尸检报告", "王克定尸检", "王克定认尸", "认尸记录"],
+  ["尸检报告", "投河", "王克定尸检", "王克定认尸", "认尸记录"],
   ["石立人", "石立人头", "石人头", "佛头"], ["西岩寺", "西岩寺院"],
   ["凤凰水库", "凤凰水庫", "鳳凰水庫"],
   ["右小手指", "右手小指", "小指", "尸检补充", "尸检补充报告"], ["野生白鹭"],
@@ -1724,7 +1727,6 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [plainText, setPlainText] = useState(false);
   const [openingActive, setOpeningActive] = useState(true);
   const [roleGlitch, setRoleGlitch] = useState(false);
-  const [stoneRevealActive, setStoneRevealActive] = useState(false);
   const [supplementPassword, setSupplementPassword] = useState("");
   const [supplementPasswordVisible, setSupplementPasswordVisible] = useState(false);
   const [supplementPasswordAttempts, setSupplementPasswordAttempts] = useState(0);
@@ -1814,6 +1816,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
           setGame({
             ...DEFAULT_STATE,
             ...parsed,
+            stoneOpenings: Number.isInteger(parsed.stoneOpenings) && (parsed.stoneOpenings ?? 0) >= 0 && (parsed.stoneOpenings ?? 0) <= 127 ? parsed.stoneOpenings! : 0,
             weddingPhotoTiles: Array.isArray(parsed.weddingPhotoTiles) && parsed.weddingPhotoTiles.length === 9 && new Set(parsed.weddingPhotoTiles).size === 9 && parsed.weddingPhotoTiles.every((tile) => Number.isInteger(tile) && tile >= 0 && tile <= 8) ? parsed.weddingPhotoTiles : INITIAL_WEDDING_TILES,
             searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory.filter((value): value is string => typeof value === "string").slice(0, 50) : [],
             settings: { ...DEFAULT_STATE.settings, ...(parsed.settings ?? {}) },
@@ -2125,31 +2128,21 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     setDeathScareActive(true);
   }
 
-  function inspectStone(part: "break" | "base") {
-    if (currentPath !== ROUTES.xiyanTemple || game.unlocked.includes("S15")) return;
-
-    if (part === "break") {
-      const nextBreakClicks = Math.min(6, game.stoneBreakClicks + 1);
-      setGame((previous) => ({ ...previous, stoneBreakClicks: nextBreakClicks }));
-      return;
-    }
-
-    if (game.stoneBreakClicks < 6) return;
-    const nextBaseClicks = Math.min(7, game.stoneBaseClicks + 1);
-    const completed = nextBaseClicks === 7;
-    setGame((previous) => ({
-      ...previous,
-      stoneBaseClicks: nextBaseClicks,
-      unlocked: completed ? unique([...previous.unlocked, "S15"]) : previous.unlocked,
-      recovered: completed ? unique([...previous.recovered, "09"]) : previous.recovered,
-      scaresSeen: completed ? unique([...previous.scaresSeen, "J02"]) : previous.scaresSeen,
+  function inspectStone(opening: number) {
+    if (currentPath !== ROUTES.xiyanTemple) return;
+    setGame((previous) => previous.unlocked.includes("S15") ? previous : ({
+      ...previous, stoneOpenings: inspectStoneOpening(previous.stoneOpenings, opening),
     }));
-
-    if (completed && !game.settings.reducedScares && !game.scaresSeen.includes("J02")) {
-      setStoneRevealActive(true);
-      window.setTimeout(() => setStoneRevealActive(false), 900);
-    }
   }
+
+  const finishStoneReveal = useCallback(() => {
+    setGame((previous) => previous.stoneOpenings !== 127 || previous.unlocked.includes("S15") ? previous : ({
+      ...previous,
+      unlocked: unique([...previous.unlocked, "S15"]),
+      recovered: unique([...previous.recovered, "09"]),
+      scaresSeen: unique([...previous.scaresSeen, "J02"]),
+    }));
+  }, []);
 
   function moveAlongRoute(destination: "top" | "bottom") {
     if (currentPath === ROUTES.phoenixRoute && game.routeTrips < 3) {
@@ -2349,13 +2342,11 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         return <StoneHeadEvidencePage />;
       case ROUTES.xiyanTemple:
         return <XiyanTemplePage
-          breakClicks={game.stoneBreakClicks}
-          baseClicks={game.stoneBaseClicks}
+          openings={game.stoneOpenings}
           completed={game.unlocked.includes("S15")}
-          revealActive={stoneRevealActive}
-          reducedScares={game.settings.reducedScares}
-          assisted={game.settings.assistedInteraction}
+          reducedMotion={game.settings.reducedMotion || game.settings.reducedScares}
           onInspect={inspectStone}
+          onRevealComplete={finishStoneReveal}
         />;
       case ROUTES.phoenixRoute:
         return <PhoenixRoutePage
@@ -2386,7 +2377,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       case ROUTES.xingNews:
         return <XingNewsPage />;
       case ROUTES.shouxiang:
-        return <ShouxiangPage imageUrl={browserPath("/archive/shouxiang-memorials.webp")} />;
+        return <ShouxiangPage imageUrl={browserPath("/archive/shouxiang-memorials.webp")} reducedMotion={game.settings.reducedMotion} />;
       case ROUTES.duChe:
         return <DuChePage onOpenSupplement={() => navigate(ROUTES.scatteredTiefangshan)} onOpenEditor={() => navigate(ROUTES.editorLogin)} />;
       case ROUTES.wedding:
@@ -2584,7 +2575,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
 
       <footer className="site-footer"><span>憎恶社 · 作品与旧档案</span><span>本页面为文学文本改编的虚构交互原型</span><button type="button" onClick={() => searchInputRef.current?.focus()}>搜索站内记录</button></footer>
 
-      <p className="sr-only" aria-live="polite">{searchSummary}{currentPath === ROUTES.dimensions ? `空框已检查 ${game.frameClicks} 次。` : ""}{currentPath === ROUTES.xiyanTemple ? `断口已检查 ${game.stoneBreakClicks} 次，石座已检查 ${game.stoneBaseClicks} 次。` : ""}{currentPath === ROUTES.phoenixRoute ? `河流路线已完成 ${game.routeTrips} 次往返。` : ""}</p>
+      <p className="sr-only" aria-live="polite">{searchSummary}{currentPath === ROUTES.dimensions ? `空框已检查 ${game.frameClicks} 次。` : ""}{currentPath === ROUTES.phoenixRoute ? `河流路线已完成 ${game.routeTrips} 次往返。` : ""}</p>
 
       {deathScareActive && (
         <div className="deleted-post-scare" role="dialog" aria-modal="true" aria-label="已删除帖子">
@@ -3058,13 +3049,13 @@ function LiXiangDeathPage() {
   return (
     <article className="death-record-page water-record">
       <header className="death-record-head">
-        <div><CacheStamp>DEATH RECORD / WATER DAMAGED</CacheStamp><p className="section-kicker">亲属档案 · 河流记录</p><h1>莉香</h1><p>姓名由刑万关联栏、杜家亲属记录与朗读稿共同补全。</p></div>
+        <div><CacheStamp>DEATH RECORD / WATER DAMAGED</CacheStamp><p className="section-kicker">亲属档案 · 河流记录</p><h1>莉香</h1></div>
         <div className="death-status"><span>死亡过程</span><b>溺亡</b><small>不记录原因与责任主体</small></div>
       </header>
 
       <section className="water-dossier">
         <dl><MetaLine label="姓名">莉香</MetaLine><MetaLine label="地点">T县河流</MetaLine><MetaLine label="过程">溺亡</MetaLine><MetaLine label="发现时间">未记载</MetaLine><MetaLine label="目击记录">未记载</MetaLine><MetaLine label="责任主体">未记载</MetaLine></dl>
-        <div className="kinship-note"><span>亲属关系合并</span><p>杜万琳的妹妹；早期诗稿亦写作堂妹。杜彻在童年合照背面写下了姑姑的姓名。</p><p>刑万的童年记忆与她相连，但现有材料没有补写婚姻或死亡原因。</p></div>
+        <div className="kinship-note"><span>亲属关系合并</span><p>杜万琳的堂妹。刑万的童年记忆与她相连。</p></div>
       </section>
 
       <section className="case-crossref"><span>交叉附件</span><div><h2>另一名河中死者</h2><p>人物：王克定</p><p>材料名称：尸检报告</p></div><code>INDEX AVAILABLE · BODY LOCKED</code></section>
@@ -3135,63 +3126,27 @@ function StoneHeadEvidencePage() {
       </figure>
       <section className="evidence-ledger">
         <dl><MetaLine label="物件">石立人头部塑像残件</MetaLine><MetaLine label="重量">数公斤（原文未给精确值）</MetaLine><MetaLine label="辨认来源">西岩寺后山</MetaLine><MetaLine label="关联">王克定尸体反绑处</MetaLine></dl>
-        <div><span>旧照附注</span><p>寺院后山曾排列六十七尊等身石像。断口与石座被分列为两个检查区域。</p><code>RELATED PLACE INDEX: 西岩寺</code></div>
+        <div><span>旧照附注</span><p>寺院后山曾排列六十七尊等身石像。佛头的面容仍可辨认。</p><code>RELATED PLACE INDEX: 西岩寺</code></div>
       </section>
     </article>
   );
 }
 
-function XiyanTemplePage({
-  breakClicks,
-  baseClicks,
-  completed,
-  revealActive,
-  reducedScares,
-  assisted,
-  onInspect,
-}: {
-  breakClicks: number;
-  baseClicks: number;
-  completed: boolean;
-  revealActive: boolean;
-  reducedScares: boolean;
-  assisted: boolean;
-  onInspect: (part: "break" | "base") => void;
+function XiyanTemplePage({ openings, completed, reducedMotion, onInspect, onRevealComplete }: {
+  openings: number; completed: boolean; reducedMotion: boolean;
+  onInspect: (opening: number) => void; onRevealComplete: () => void;
 }) {
-  const showCounts = assisted || breakClicks > 0 || baseClicks > 0;
   return (
     <article className="temple-page">
       <header className="evidence-masthead">
         <div><CacheStamp>PLACE CACHE / XY-67</CacheStamp><p className="section-kicker">西岩寺 · 后山旧照</p><h1>六十七尊</h1><p>旧图说明写着：等身石像从主殿排列至寝房。最后一尊只剩下头部与石座。</p></div>
-        <div className="document-notice"><span>检查规则</span><b>六／七</b><small>断口在先，石座在后</small></div>
       </header>
 
-      <section className={`stone-inspection${completed ? " is-complete" : ""}${revealActive ? " is-revealing" : ""}`}>
-        <div className="stone-image-stage">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="stone-image-clean" src={browserPath("/archive/stone-head-evidence.webp")} alt="可检查的断裂石质佛头；断口与底座分别设有互动区域" />
-          {/* The generated blood-state photograph is aligned with the clean archive image for a true crossfade. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="stone-image-blood" src={browserPath("/archive/stone-head-evidence-blood.webp")} alt="" aria-hidden="true" />
-          <div className="stone-hotspots">
-            <button className="stone-hotspot break-hotspot" type="button" onClick={() => onInspect("break")} aria-label={`检查佛头断口，已检查 ${breakClicks} 次`}><span>检查断口</span></button>
-            <button className="stone-hotspot base-hotspot" type="button" onClick={() => onInspect("base")} disabled={breakClicks < 6} aria-label={`检查石座，已检查 ${baseClicks} 次`}><span>检查石座</span></button>
-          </div>
-        </div>
-        <div className="stone-controls">
-          <div><span>图像检查</span><h2>{completed ? "佛头七窍正在渗出暗红血迹。" : breakClicks < 6 ? "先确认颈部断口。" : "断口已标记；现在检查石座。"}</h2><p>没有声音、喷溅或闪烁。完成既定顺序后，干燥入库照会缓慢显露七窍出血状态。</p></div>
-          {(breakClicks > 0 || baseClicks > 0) && (
-            <div className="stone-observations" aria-live="polite">
-              {breakClicks > 0 && <p><span>断口 / 首次检查</span>系统把断口拆为六处检查标记。首次点选确认了第一处；其余标记仍需逐处核对。</p>}
-              {baseClicks > 0 && <p><span>石座 / 首次检查</span>系统把石座拆为七处检查标记。首次点选确认了第一处；其余标记仍需逐处核对。</p>}
-            </div>
-          )}
-          {showCounts && <div className="stone-counts" aria-live="polite"><span>断口 <b>{breakClicks}/6</b></span><span>石座 <b>{baseClicks}/7</b></span></div>}
-          {completed && reducedScares && <p className="static-scare-note">减少惊吓：仅保留缓慢叠化，不伴随闪烁或声响。</p>}
-        </div>
-      </section>
+      <StoneInspection openings={openings} completed={completed} reducedMotion={reducedMotion}
+        cleanImage={browserPath("/archive/stone-head-evidence.webp")} bloodImage={browserPath("/archive/stone-head-evidence-blood.webp")}
+        onInspect={onInspect} onRevealComplete={onRevealComplete} />
 
-      <section className="xiyan-archive"><span>旧照转录</span><p>“六十七个等身像放在院墙，摆做一排。从主殿一直列到寝房。”</p><code>67 → 6 / 7</code></section>
+      <section className="xiyan-archive"><span>旧照转录</span><p>“六十七个等身像放在院墙，摆做一排。从主殿一直列到寝房。”</p></section>
 
       <section className="independent-leaf-prologue">
         <header><h2>西岩大火</h2></header>
@@ -3283,7 +3238,7 @@ function WangSupplementPage({
           <dl><MetaLine label="缺失部位">右小手指</MetaLine><MetaLine label="切口状态">人为切割痕迹</MetaLine><MetaLine label="发生顺序">落水之前</MetaLine><MetaLine label="时间批注">前一周六（原文相对时间）</MetaLine></dl>
           <p className="evidence-callout">该伤口不能由漂流撞击解释；它与脸颊伤痕、反绑双手和石质坠物共同要求重新判断死亡过程。</p>
           <div className="cross-index-grid"><span>交叉索引</span><b>302 室</b><b>3 × 3dm</b><b>老城河</b></div>
-          <aside className="evidence-callout"><span>关联文学索引</span><h3>野生白鹭</h3><p>补充页与一份被删除的文学文件共用这个标签。沿着它，继续核对王克定的死亡记录。</p><p>搜索：野生白鹭。</p></aside>
+          <aside className="evidence-callout"><span>关联文学索引</span><h3>野生白鹭</h3><p>补充页与一份被删除的文学文件共用这个标签。</p></aside>
         </section>
       )}
     </article>
@@ -3326,8 +3281,8 @@ function DuCremationPage({ revealed }: { revealed: boolean }) {
   return (
     <article className="cremation-page">
       <header className="evidence-masthead">
-        <div><CacheStamp>DISPOSITION FORM / DW</CacheStamp><p className="section-kicker">遗体处理手续 · {revealed ? "完整文字层" : "表面副本"}</p><h1>杜万琳</h1><p>死亡表面记录与代签信息分属两个图层；空缺字段保持空缺。</p></div>
-        <div className="document-notice"><span>页面状态</span><b>{revealed ? "代签人已交叉确认" : "签名遮挡"}</b><small>人物异名：杜南阳</small></div>
+        <div><CacheStamp>DISPOSITION FORM / DW</CacheStamp><p className="section-kicker">遗体处理手续 · {revealed ? "完整文字层" : "表面副本"}</p><h1>杜万琳</h1></div>
+
       </header>
 
       <section className="cremation-layout">
@@ -3336,7 +3291,7 @@ function DuCremationPage({ revealed }: { revealed: boolean }) {
           <dl><MetaLine label="死者">杜万琳</MetaLine><MetaLine label="死亡日期">未记载</MetaLine><MetaLine label="医院">未记载</MetaLine><MetaLine label="表面记录">病逝／肝病相关</MetaLine><MetaLine label="遗体处置">已火化</MetaLine><MetaLine label="家属状态">儿子在外；妻子留家</MetaLine></dl>
           <div className="signature-field"><span>代家属签字</span><b className={revealed ? "signature-reveal" : "signature-mask"}>{revealed ? "方晚" : "方＿"}</b><small>{revealed ? "与到院记录、诗文声部交叉确认" : "第二字被纸面灼痕覆盖"}</small></div>
         </div>
-        <aside className="transcription-panel"><ArtifactTag>{revealed ? "文字层已恢复" : "表面可见"}</ArtifactTag><h2>{revealed ? "方晚代杜家签字" : "最先到院的人"}</h2><p>方晚先到医院。由于杜万琳的儿子不在场、妻子留在家中，后续手续由这名朋友代签。</p><p>现有材料只记录过程，不把表面病逝说明扩写成未经证实的医学诊断。</p></aside>
+        <aside className="transcription-panel"><ArtifactTag>{revealed ? "文字层已恢复" : "表面可见"}</ArtifactTag><h2>{revealed ? "方晚代杜家签字" : "最先到院的人"}</h2><p>方晚先到医院。由于杜万琳的儿子不在场、妻子留在家中，后续手续由这名朋友代签。</p></aside>
       </section>
 
       {revealed && (
@@ -3376,7 +3331,7 @@ function CemeteryCasePage() {
     { name: "杜万琳", alias: "旧名：杜南阳", relation: "曾参与公墓项目；另有画廊活动及身后事记录", record: "焚烧签字单／方晚代签", death: "已故；表面记录为病逝、肝病相关，遗体已火化" },
     { name: "方晚", alias: "", relation: "项目参与者；杜万琳同乡、同学与画廊合伙人", record: "旧成员履历／焚烧签字单代签", death: "已故；死亡过程未公开" },
     { name: "王克定", alias: "", relation: "项目参与者；旧社团关系者", record: "认尸、尸检与物证补充", death: "已故；遭杀害，自杀现场系伪造" },
-    { name: "刑万", alias: "新闻匿名：刑某", relation: "项目参与者；旧社团名单与新闻缓存重合", record: "公开新闻／旧合照", death: "已故；死亡过程未公开" },
+    { name: "刑万", alias: "", relation: "项目参与者；旧社团名单与新闻缓存重合", record: "公开新闻／旧合照", death: "已故；死亡过程未公开" },
     { name: "莉香", alias: "", relation: "项目参与者；杜家亲属、刑万关联人", record: "亲属卡／河流档案", death: "已故；溺亡" },
   ];
 
@@ -3384,7 +3339,6 @@ function CemeteryCasePage() {
     <article className="case-index-page">
       <header className="case-index-head">
         <div><CacheStamp>CASE INDEX / 05 PERSONS</CacheStamp><p className="section-kicker">项目参与者交叉索引</p><h1>他山地方<br />公墓贪污案</h1></div>
-        <aside><span>索引原则</span><p>只呈现人物关系、可核对记录与死亡过程；不在现有文本之外推定任何责任归属。</p></aside>
       </header>
 
       <div className="case-table-wrap">
@@ -3394,7 +3348,10 @@ function CemeteryCasePage() {
         </table>
       </div>
 
-      <section className="case-index-foot"><span>下一条公开记录</span><h2>刑某</h2><p>新闻标题没有写出全名；合照与人物库将这个匿名写法合并到刑万。</p></section>
+      <section className="case-index-foot"><span>下一条公开记录</span><figure className="case-magazine">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={browserPath("/archive/xing-arrest-magazine.webp")} alt="‘他山地方公墓贪污案’涉案人员 刑某现已被警方依法逮捕" loading="lazy" />
+      </figure></section>
     </article>
   );
 }

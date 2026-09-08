@@ -160,8 +160,9 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
 
   const temple = await renderPath("/archive/evidence/xiyansi");
   assert.match(temple, /六十七尊/);
-  assert.match(temple, /检查断口/);
-  assert.match(temple, /检查石座/);
+  assert.doesNotMatch(temple, /检查断口|检查石座|断口在先|系统把断口|六／七/);
+  for (const part of ["右眼", "左眼", "右耳", "左耳", "右鼻孔", "左鼻孔", "口"]) assert.ok(temple.includes(`aria-label="${part}"`));
+  assert.doesNotMatch(temple, /stone-fallen-note/);
   assert.match(temple, /stone-head-evidence-blood\.webp/);
   assert.doesNotMatch(temple, /seep-line/);
 
@@ -201,6 +202,8 @@ test("keeps the missing-work clues and places the supplied image only in Ge Dong
 test("renders the five-person cemetery case without inventing missing deaths", async () => {
   const caseIndex = await renderPath("/archive/case/cemetery");
   assert.match(caseIndex, /CASE INDEX \/ 05 PERSONS/);
+  assert.match(caseIndex, /xing-arrest-magazine/);
+  assert.doesNotMatch(caseIndex, /索引原则|新闻匿名|新闻标题没有写出/);
   assert.match(caseIndex, /杜万琳/);
   assert.match(caseIndex, /方晚/);
   assert.match(caseIndex, /王克定/);
@@ -221,7 +224,8 @@ test("renders the cached news, cemetery mirror, and Du Che profile", async () =>
   const cemetery = await renderPath("/mirror/shouxiang/staff");
   assert.match(cemetery, /shouxiang\.invalid/);
   assert.match(cemetery, /杜彻/);
-  assert.match(cemetery, /来访与文学索引/);
+  assert.doesNotMatch(cemetery, /来访与文学索引/);
+  assert.match(cemetery, /投资人/);
   assert.doesNotMatch(cemetery, /杜彻<[^>]*>.*?负责人/);
 
   const duChe = await renderPath("/members/du-che");

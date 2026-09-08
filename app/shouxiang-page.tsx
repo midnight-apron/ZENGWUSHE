@@ -1,10 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const STAFF = [
+  { name: "杜彻", role: "投资人", duty: "无", detail: "", hours: "" },
 
   { name: "陈守安", role: "园务主管", duty: "公共区域与值班安排", detail: "负责步道巡查、雨季排水和节日值班。平时随身带一本巡园记录，遇到损坏的路牌会先记下位置，再交给维护组。", hours: "周一至周五 08:30—16:30" },
   { name: "林素贞", role: "服务接待", duty: "来访登记与物品借用", detail: "在南门服务室接待来访家属，协助查询园区位置，并管理轮椅、雨伞和手推车。借用物品请在离园前归还原处。", hours: "每日 08:00—17:00" },
@@ -22,8 +23,15 @@ const GRAVES = [
   { id: "sloped", name: "静岚式 · 斜碑", position: "图中", material: "深灰抛光石材", shape: "低矮斜面，横向碑身", text: "碑面微倾，文字与周围绿篱保持较低的视线高度。设于静岚区，步道旁有供停留的长椅。" },
   { id: "lawn", name: "归草式 · 草坪碑", position: "图右", material: "灰色石材嵌板", shape: "平卧铭牌，与草地相接", text: "铭牌沿草坪排列，整体平缓。鲜花置于指定位置，养护期间请沿石板路行走，避免踩踏新铺草皮。" },
 ];
-export function ShouxiangPage({ imageUrl }: { imageUrl: string }) {
+export function ShouxiangPage({ imageUrl, reducedMotion = false }: { imageUrl: string; reducedMotion?: boolean }) {
   const [staff, setStaff] = useState<(typeof STAFF)[number] | null>(null);
+  const [curseOpen, setCurseOpen] = useState(false);
+  const [curseCount, setCurseCount] = useState(1);
+  useEffect(() => {
+    if (!curseOpen) return;
+    const timer = window.setInterval(() => setCurseCount((count) => Math.min(180, count + Math.max(1, Math.ceil(count / 4)))), 300);
+    return () => window.clearInterval(timer);
+  }, [curseOpen]);
   return <article className="old-web-page shouxiang-interactive">
     <div className="old-browser-bar"><span>网页存档</span><code>http://shouxiang.invalid/staff/index.htm</code><b>旧版栏目存档</b></div>
     <header className="old-site-head"><div className="old-word-seal" aria-hidden="true">寿享</div><div><h1>寿享陵园</h1><p>让思念有处安放</p></div><span>园务公开 · 服务指南</span></header>
@@ -31,8 +39,7 @@ export function ShouxiangPage({ imageUrl }: { imageUrl: string }) {
     <Tabs defaultValue="staff" className="cemetery-tabs">
       <TabsList className="cemetery-nav" aria-label="陵园栏目"><TabsTrigger value="staff">管理人员</TabsTrigger><TabsTrigger value="services">园区服务</TabsTrigger><TabsTrigger value="graves">墓形展示</TabsTrigger><TabsTrigger value="directions">来园路线</TabsTrigger></TabsList>
       <TabsContent value="staff" className="cemetery-panel"><h2>工作人员名录</h2><p>点击姓名查看分工与接待安排。</p>
-        <div className="cemetery-table-scroll"><table><thead><tr><th>姓名</th><th>职务</th><th>工作内容</th></tr></thead><tbody>{STAFF.map((person) => <tr key={person.name}><th scope="row"><button type="button" onClick={() => setStaff(person)}>{person.name}</button></th><td>{person.role}</td><td>{person.duty}</td></tr>)}</tbody></table></div>
-        <div className="old-responsible"><span>来访与文学索引</span><b>杜彻</b><p>《刍味》写到世伯承办的寿享陵园，以及他向杜彻谈起的“死后的住处”。相关文字与家庭资料另列于杜彻的同名档案。</p></div>
+        <div className="cemetery-table-scroll"><table><thead><tr><th>姓名</th><th>职务</th><th>工作内容</th></tr></thead><tbody>{STAFF.map((person) => <tr key={person.name}><th scope="row"><button type="button" onClick={() => { if (person.name === "杜彻") { setCurseCount(1); setCurseOpen(true); } else setStaff(person); }}>{person.name}</button></th><td>{person.role}</td><td>{person.duty}</td></tr>)}</tbody></table></div>
       </TabsContent>
       <TabsContent value="services" className="cemetery-panel"><h2>园区服务</h2><p>接待时间 08:00—17:00；临时调整以南门公告栏为准。</p><Accordion type="single" collapsible>{SERVICES.map((service) => <AccordionItem key={service.id} value={service.id}><AccordionTrigger>{service.title}</AccordionTrigger><AccordionContent><p>{service.text}</p></AccordionContent></AccordionItem>)}</Accordion></TabsContent>
       <TabsContent value="graves" className="cemetery-panel"><h2>墓形展示</h2><p>园区样式图录 · 选择下方名称查看说明。</p>
@@ -49,6 +56,10 @@ export function ShouxiangPage({ imageUrl }: { imageUrl: string }) {
       </TabsContent>
     </Tabs>
     <Dialog open={staff !== null} onOpenChange={(open) => { if (!open) setStaff(null); }}><DialogContent className="cemetery-person-dialog"><DialogHeader><DialogTitle>{staff?.name}</DialogTitle><DialogDescription>{staff?.role} · {staff?.duty}</DialogDescription></DialogHeader><p>{staff?.detail}</p><p>{staff?.hours}</p></DialogContent></Dialog>
+    <Dialog open={curseOpen} onOpenChange={setCurseOpen}><DialogContent className={`cemetery-curse-dialog${reducedMotion ? " motion-quiet" : ""}`}>
+      <DialogHeader className="sr-only"><DialogTitle>杜彻</DialogTitle><DialogDescription>红色的“去死”逐渐填满画面。按 Escape 或关闭按钮返回。</DialogDescription></DialogHeader>
+      <div className="cemetery-curse-field" aria-hidden="true">{Array.from({ length: curseCount }, (_, index) => <span key={index} style={{ left: `${(index * 37 + 43) % 94}%`, top: `${(index * 53 + 42) % 91}%`, fontSize: `${1.3 + (index % 7) * 0.7}rem`, transform: `rotate(${(index * 17) % 35 - 17}deg)` }}>去死</span>)}</div>
+    </DialogContent></Dialog>
     <footer className="old-site-foot">Copyright 20— 寿享陵园 · 虚构旧站存档；所列地点、人员与路线属于游戏内容。</footer>
   </article>;
 }
