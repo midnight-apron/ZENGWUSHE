@@ -32,6 +32,8 @@ import {
   Settings2,
   Trash2,
   Upload,
+  Volume2,
+  Wifi,
   X,
 } from "lucide-react";
 import { WeddingPhotoPuzzle, FamilyPhoto, INITIAL_WEDDING_TILES, isWeddingPhotoComplete } from "../archive-photo-interactions";
@@ -123,11 +125,18 @@ function safeLoad(): V2Save {
   }
 }
 
-function AppIcon({ id, isNew, onOpen }: { id: AppId; isNew: boolean; onOpen: (id: AppId) => void }) {
+function AppIcon({ id, isNew, selected, onOpen, onSelect }: { id: AppId; isNew: boolean; selected: boolean; onOpen: (id: AppId) => void; onSelect: (id: AppId) => void }) {
   const meta = APP_META[id];
   const Icon = meta.icon;
   return (
-    <button className={styles.desktopIcon} type="button" onDoubleClick={() => onOpen(id)} onClick={() => onOpen(id)}>
+    <button
+      className={`${styles.desktopIcon} ${selected ? styles.selectedDesktopIcon : ""}`}
+      data-app={id}
+      type="button"
+      onDoubleClick={() => onOpen(id)}
+      onClick={() => window.matchMedia("(pointer: coarse)").matches ? onOpen(id) : onSelect(id)}
+      onKeyDown={(event) => { if (event.key === "Enter") onOpen(id); }}
+    >
       <span className={styles.iconTile}><Icon aria-hidden="true" /></span>
       <span><b>{meta.label}</b><small>{meta.subtitle}</small></span>
       {isNew ? <i>NEW</i> : null}
@@ -210,6 +219,9 @@ export function V2Game() {
   const [prologueStep, setPrologueStep] = useState(0);
   const [windows, setWindows] = useState<WindowState>(INITIAL_WINDOWS);
   const [activeApp, setActiveApp] = useState<AppId | null>(null);
+  const [selectedDesktopApp, setSelectedDesktopApp] = useState<AppId | null>(null);
+  const [startOpen, setStartOpen] = useState(false);
+  const [clock, setClock] = useState("");
   const [zCounter, setZCounter] = useState(5);
   const [browserTrail, setBrowserTrail] = useState<string[]>(["home"]);
   const [browserIndex, setBrowserIndex] = useState(0);
@@ -245,6 +257,13 @@ export function V2Game() {
     window.localStorage.setItem(V2_STORAGE_KEY, JSON.stringify(save));
   }, [ready, save]);
 
+  useEffect(() => {
+    const updateClock = () => setClock(new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit", hour12: false }));
+    updateClock();
+    const timer = window.setInterval(updateClock, 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const hasEvent = useCallback((event: string) => save.events.includes(event), [save.events]);
   const markEvent = useCallback((...events: string[]) => {
     setSave((previous) => ({ ...previous, events: unique([...previous.events, ...events]) }));
@@ -279,6 +298,8 @@ export function V2Game() {
     setZCounter((value) => value + 1);
     setWindows((previous) => ({ ...previous, [id]: { open: true, minimized: false, z: zCounter + 1 } }));
     setActiveApp(id);
+    setSelectedDesktopApp(id);
+    setStartOpen(false);
   }, [zCounter]);
 
   function minimizeApp(id: AppId) {
@@ -371,6 +392,7 @@ export function V2Game() {
     <main
       className={`${styles.desktop} ${save.settings.reducedMotion ? styles.reduceMotion : ""} ${save.settings.reducedFlashes ? styles.reduceFlashes : ""}`}
       style={{ fontSize: `${save.settings.textScale}%` }}
+      onPointerDown={() => setStartOpen(false)}
     >
       <a href="#v2-desktop-icons" className={styles.skipLink}>跳到桌面应用</a>
       <div className={styles.desktopTexture} aria-hidden="true" />
@@ -379,8 +401,8 @@ export function V2Game() {
         <time suppressHydrationWarning>{new Date().toLocaleDateString("zh-CN", { year: "numeric", month: "2-digit", day: "2-digit" })}</time>
       </header>
 
-      <section id="v2-desktop-icons" className={styles.desktopIcons} aria-label="桌面应用">
-        {(Object.keys(APP_META) as AppId[]).map((id) => <AppIcon key={id} id={id} isNew={newState[id]} onOpen={openApp} />)}
+      <section id="v2-desktop-icons" className={styles.desktopIcons} aria-label="桌面应用" onPointerDown={(event) => { if (event.target === event.currentTarget) setSelectedDesktopApp(null); }}>
+        {(Object.keys(APP_META) as AppId[]).map((id) => <AppIcon key={id} id={id} isNew={newState[id]} selected={selectedDesktopApp === id} onOpen={openApp} onSelect={setSelectedDesktopApp} />)}
       </section>
 
       <section className={styles.windowLayer} aria-label="已打开的应用">
@@ -403,18 +425,22 @@ export function V2Game() {
       </section>
 
       <footer className={styles.taskbar}>
-        <button type="button" className={styles.homeButton} onClick={() => setActiveApp(null)} aria-label="返回桌面"><Home /></button>
+        <button type="button" className={`${styles.homeButton} ${startOpen ? styles.startPressed : ""}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => setStartOpen((value) => !value)} aria-label="打开开始菜单"><span className={styles.windowsFlag} aria-hidden="true"><i /><i /><i /><i /></span><b>开始</b></button>
         <nav aria-label="应用切换器">
           {(Object.keys(APP_META) as AppId[]).map((id) => {
             const Icon = APP_META[id].icon;
-            return <button key={id} type="button" className={windows[id].open ? styles.running : ""} onClick={() => openApp(id)} aria-label={`打开${APP_META[id].label}`}><Icon />{newState[id] ? <i>NEW</i> : null}</button>;
+            return <button key={id} type="button" data-app={id} className={`${windows[id].open ? styles.running : ""} ${activeApp === id && !windows[id].minimized ? styles.activeTask : ""}`} onClick={() => openApp(id)} aria-label={`打开${APP_META[id].label}`}><Icon /><span>{APP_META[id].label}</span>{newState[id] ? <i>NEW</i> : null}</button>;
           })}
         </nav>
         <div className={styles.taskTools}>
           <button type="button" onClick={() => setHintOpen(true)} aria-label="打开调查提示"><CircleHelp /></button>
           {renderSettings()}
+          <span className={styles.trayIcons} aria-hidden="true"><Wifi /><Volume2 /></span>
+          <time suppressHydrationWarning>{clock}</time>
         </div>
       </footer>
+
+      {startOpen ? <StartMenu /> : null}
 
       <Dialog open={hintOpen} onOpenChange={setHintOpen}>
         <DialogContent className={styles.dialog}>
@@ -455,6 +481,28 @@ export function V2Game() {
         </header>
         <div className={styles.browserViewport}>{content}</div>
       </div>
+    );
+  }
+
+  function StartMenu() {
+    return (
+      <section className={styles.startMenu} aria-label="开始菜单" onPointerDown={(event) => event.stopPropagation()}>
+        <header><span className={styles.userTile}><MonitorCog aria-hidden="true" /></span><b>DUCHE-PC</b></header>
+        <div className={styles.startMenuBody}>
+          <div className={styles.startPrograms}>
+            {(Object.keys(APP_META) as AppId[]).map((id) => {
+              const Icon = APP_META[id].icon;
+              return <button type="button" key={id} data-app={id} onClick={() => openApp(id)}><span><Icon aria-hidden="true" /></span><b>{APP_META[id].label}</b><small>{APP_META[id].subtitle}</small></button>;
+            })}
+          </div>
+          <div className={styles.startPlaces}>
+            <button type="button" onClick={() => openApp("vault")}><FolderLock /><b>我的文档</b></button>
+            <button type="button" onClick={() => openApp("browser")}><Search /><b>搜索</b></button>
+            <button type="button" onClick={() => { setStartOpen(false); setHintOpen(true); }}><CircleHelp /><b>帮助和支持</b></button>
+          </div>
+        </div>
+        <footer><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><span aria-hidden="true">⇥</span>注销</button><button type="button" onClick={() => { setStartOpen(false); setWindows(INITIAL_WINDOWS); setActiveApp(null); }}><span aria-hidden="true">●</span>关闭计算机</button></footer>
+      </section>
     );
   }
 
@@ -508,6 +556,18 @@ export function V2Game() {
   }
 
   function BrowserNodePage({ node }: { node: BrowserNode }) {
+    const unlocked = hasAll(save.events, node.requires);
+    if (!unlocked) {
+      return (
+        <section className={styles.lockedRecord} aria-live="polite">
+          <FileLock2 aria-hidden="true" />
+          <span>ACCESS / PENDING</span>
+          <h1>{node.title.replace(/[\u4e00-\u9fff]/g, "□")}</h1>
+          <p>{node.lockedHint || "这份记录仍缺少前置材料。"}</p>
+          <button type="button" onClick={() => pushBrowser("home")}>返回检索首页</button>
+        </section>
+      );
+    }
     return (
       <article className={styles.nodePage}>
         <header><span>{node.kind}</span><h1>{node.title}</h1><p>{node.summary}</p></header>
@@ -644,6 +704,6 @@ export function V2Game() {
   }
 
   function renderSettings() {
-    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>关闭突发闪烁</b><small>红字与渗血仍保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-v2-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除新版调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除 V2 的事件、搜索历史、已恢复文件和结局。旧版存档不受影响。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); setSave(DEFAULT_V2_SAVE); setPrologueStep(0); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
+    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>减少惊吓</b><small>关闭突发闪烁；红字与渗血仅保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-v2-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除新版调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除 V2 的事件、搜索历史、已恢复文件和结局。旧版存档不受影响。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); setSave(DEFAULT_V2_SAVE); setPrologueStep(0); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
   }
 }

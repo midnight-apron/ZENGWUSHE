@@ -4,6 +4,8 @@ import test from "node:test";
 
 const data = await readFile(new URL("../app/v2/data.ts", import.meta.url), "utf8");
 const app = await readFile(new URL("../app/v2/v2-game.tsx", import.meta.url), "utf8");
+const rentedRoom = await readFile(new URL("../app/rented-room.tsx", import.meta.url), "utf8");
+const styles = await readFile(new URL("../app/v2/v2-game.module.css", import.meta.url), "utf8");
 
 test("V2 uses an independent semantic save and four-application desktop", () => {
   assert.match(data, /zengwu-she-v2-save/);
@@ -29,7 +31,23 @@ test("locked discoveries expose direction but not final bodies", () => {
   assert.match(data, /lockedHint/);
   assert.match(app, /尚未获得读取权限/);
   assert.match(app, /node\.title\.replace/);
+  assert.match(app, /const unlocked = hasAll\(save\.events, node\.requires\)/);
+  assert.match(app, /ACCESS \/ PENDING/);
   assert.match(app, /if \(!unlocked\) return/);
+});
+
+test("Du Che and the evening news stay behind the pellet-drum event", () => {
+  assert.match(data, /id: "du-che"[\s\S]*?requires: \["found_pellet_drum"\]/);
+  assert.match(data, /id: "evening-news"[\s\S]*?requires: \["found_pellet_drum"\]/);
+  assert.match(rentedRoom, /手柄握处，刻着：杜彻/);
+  assert.match(app, /减少惊吓/);
+});
+
+test("V2 uses a faithful Windows XP Luna shell without changing the investigation apps", () => {
+  for (const selector of ["startMenu", "windowsFlag", "activeTask", "trayIcons", "selectedDesktopIcon"]) assert.match(app + styles, new RegExp(selector));
+  for (const color of ["#245edb", "#3c9a37", "#ece9d8", "#0a246a"]) assert.match(styles.toLowerCase(), new RegExp(color));
+  assert.match(app, /<b>开始<\/b>/);
+  assert.match(app, /onDoubleClick=\{\(\) => onOpen\(id\)\}/);
 });
 
 test("V2 implements three neutral endings and delays the stage archive", () => {
