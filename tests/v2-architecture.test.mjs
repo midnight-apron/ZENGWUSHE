@@ -48,6 +48,22 @@ test("V2 uses a faithful Windows XP Luna shell without changing the investigatio
   for (const color of ["#245edb", "#3c9a37", "#ece9d8", "#0a246a"]) assert.match(styles.toLowerCase(), new RegExp(color));
   assert.match(app, /<b>开始<\/b>/);
   assert.match(app, /onDoubleClick=\{\(\) => onOpen\(id\)\}/);
+  assert.match(app, /onClick=\{onFocus\}/);
+  assert.match(app, /if \(activeApp === id\) return/);
+});
+
+test("摆渡首页只从画展新闻起步，并在账目线索后开放寿享陵园", () => {
+  const defaultSave = data.match(/export const DEFAULT_V2_SAVE[\s\S]*?\n\};/)?.[0] ?? "";
+  assert.match(app, /摆渡热搜/);
+  assert.match(app, /临展画作遭撤，艺术家生存环境堪忧/);
+  assert.match(app, /cemeteryLeadReady = hasEvent\("recovered_ledger_mail"\)/);
+  assert.match(app, /cemeteryLeadReady[\s\S]*?寿享陵园改建账目受质疑/);
+  assert.match(data, /id: "shouxiang"[\s\S]*?requires: \["recovered_ledger_mail"\]/);
+  assert.match(data, /id: "start"[\s\S]*?done: \["visited_exhibition"\]/);
+  assert.match(defaultSave, /赭红门展览/);
+  assert.doesNotMatch(defaultSave, /寿享陵园/);
+  assert.match(app, /events\.includes\("recovered_ledger_mail"\) \? searchHistory : searchHistory\.filter/);
+  for (const selector of ["browserBrand", "searchForm", "hotSearch"]) assert.match(styles, new RegExp(selector));
 });
 
 test("V2 implements three neutral endings and delays the stage archive", () => {

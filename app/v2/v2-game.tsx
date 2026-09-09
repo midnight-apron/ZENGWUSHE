@@ -110,14 +110,16 @@ function safeLoad(): V2Save {
         settings: { ...DEFAULT_V2_SAVE.settings, ...(old?.settings || {}) },
       };
     }
+    const events = Array.isArray(parsed.events) ? unique(parsed.events) : [];
+    const searchHistory = Array.isArray(parsed.searchHistory) ? parsed.searchHistory.slice(0, 50) : DEFAULT_V2_SAVE.searchHistory;
     return {
       ...DEFAULT_V2_SAVE,
       ...parsed,
-      events: Array.isArray(parsed.events) ? unique(parsed.events) : [],
+      events,
       visited: Array.isArray(parsed.visited) ? unique(parsed.visited) : [],
       readItems: Array.isArray(parsed.readItems) ? unique(parsed.readItems) : [],
       recovered: Array.isArray(parsed.recovered) ? unique(parsed.recovered) : [],
-      searchHistory: Array.isArray(parsed.searchHistory) ? parsed.searchHistory.slice(0, 50) : DEFAULT_V2_SAVE.searchHistory,
+      searchHistory: events.includes("recovered_ledger_mail") ? searchHistory : searchHistory.filter((entry) => entry.term !== "寿享陵园"),
       settings: { ...DEFAULT_V2_SAVE.settings, ...(parsed.settings || {}) },
     };
   } catch {
@@ -159,15 +161,15 @@ function AppWindow({ id, state, active, onFocus, onMinimize, onClose, children }
     <section
       className={`${styles.appWindow} ${styles[`window_${id}`]} ${active ? styles.activeWindow : ""}`}
       style={{ zIndex: state.z }}
-      onPointerDown={onFocus}
+      onClick={onFocus}
       aria-label={meta.label}
     >
       <header className={styles.windowBar}>
         <div><meta.icon aria-hidden="true" /><b>{meta.label}</b><span>DUCHE-PC / LOCAL</span></div>
         <nav aria-label={`${meta.label}窗口控制`}>
-          <button type="button" onClick={onMinimize} aria-label={`最小化${meta.label}`}><Minus /></button>
+          <button type="button" onClick={(event) => { event.stopPropagation(); onMinimize(); }} aria-label={`最小化${meta.label}`}><Minus /></button>
           <button type="button" disabled aria-label="窗口尺寸固定"><Maximize2 /></button>
-          <button type="button" onClick={onClose} aria-label={`关闭${meta.label}`}><X /></button>
+          <button type="button" onClick={(event) => { event.stopPropagation(); onClose(); }} aria-label={`关闭${meta.label}`}><X /></button>
         </nav>
       </header>
       <div className={styles.windowBody}>{children}</div>
@@ -289,10 +291,11 @@ export function V2Game() {
   }, [playingRecording, markEvent]);
 
   const focusApp = useCallback((id: AppId) => {
+    if (activeApp === id) return;
     setZCounter((value) => value + 1);
     setWindows((previous) => ({ ...previous, [id]: { ...previous[id], z: zCounter + 1 } }));
     setActiveApp(id);
-  }, [zCounter]);
+  }, [activeApp, zCounter]);
 
   const openApp = useCallback((id: AppId) => {
     setZCounter((value) => value + 1);
@@ -507,14 +510,32 @@ export function V2Game() {
   }
 
   function BrowserHome() {
+    const cemeteryLeadReady = hasEvent("recovered_ledger_mail");
+    const hotItems: Array<{ rank: number; title: string; node?: string; trend?: "up" | "new" }> = [
+      { rank: 1, title: "临展画作遭撤，艺术家生存环境堪忧", node: "exhibition", trend: "up" },
+      cemeteryLeadReady
+        ? { rank: 2, title: "寿享陵园改建账目受质疑，旧项目重新进入调查", node: "shouxiang", trend: "new" }
+        : { rank: 2, title: "阔南旧城区影像档案开放预约" },
+      { rank: 3, title: "青年艺术家驻留计划公布首批名单" },
+      { rank: 4, title: "西门车站周边改造方案进入公示期" },
+      { rank: 5, title: "地方旧书店联合发起手稿修复计划" },
+      { rank: 6, title: "航船诗歌社秋季朗读会即将开始" },
+    ];
     return (
       <section className={styles.searchHome}>
-        <div className={styles.browserBrand}><span>复</span><b>旧页检索</b><small>公开网页与本地缓存</small></div>
-        <SearchForm />
-        <div className={styles.initialHistory}>
-          <p>这台设备最后查询</p>
-          {save.searchHistory.filter((item) => ["赭红门展览", "寿享陵园"].includes(item.term)).map((item) => <button type="button" key={item.term} onClick={() => runSearch(item.term)}>{item.term}<ChevronRight /></button>)}
+        <div className={styles.browserBrand} aria-label="摆渡，公开网页与本地缓存">
+          <b><span>摆</span><span>渡</span></b>
+          <i aria-hidden="true"><span /><span /><span /></i>
+          <small>公开网页与本地缓存</small>
         </div>
+        <SearchForm />
+        <section className={styles.hotSearch} aria-labelledby="ferry-hot-title">
+          <header><h2 id="ferry-hot-title">摆渡热搜</h2><span>新闻线索榜</span></header>
+          <ol>
+            {hotItems.map((item) => <li key={item.rank}><button type="button" disabled={!item.node} onClick={() => item.node && openBrowserNode(item.node)}><em>{item.rank}</em><span>{item.title}</span>{item.trend ? <i data-trend={item.trend}>{item.trend === "new" ? "新" : "↑"}</i> : null}</button></li>)}
+          </ol>
+          <p>灰色条目来自普通新闻缓存，暂不属于可调查页面。</p>
+        </section>
       </section>
     );
   }
@@ -525,7 +546,7 @@ export function V2Game() {
         <Search aria-hidden="true" />
         <label className="sr-only" htmlFor="v2-search">检索公开网页与本地缓存</label>
         <input id="v2-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="输入人名、地点、作品或档案字段" autoComplete="off" />
-        <button type="submit">检索</button>
+        <button type="submit">摆渡检索</button>
       </form>
     );
   }

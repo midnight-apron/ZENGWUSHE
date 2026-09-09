@@ -35,7 +35,6 @@ export const DEFAULT_V2_SAVE: V2Save = {
   readItems: [],
   searchHistory: [
     { term: "赭红门展览", searchedAt: 2 },
-    { term: "寿享陵园", searchedAt: 1 },
   ],
   recovered: [],
   ending: null,
@@ -141,6 +140,8 @@ export const BROWSER_NODES: BrowserNode[] = [
     kind: "机构网站",
     summary: "他山公墓改建后的陵园旧站，含人员、服务、墓形与来园路线。",
     aliases: ["寿享陵园", "他山公墓", "陵园"],
+    requires: ["recovered_ledger_mail"],
+    lockedHint: "公墓项目的账目线索尚未恢复。",
     discoverEvent: "visited_shouxiang",
   },
   {
@@ -397,8 +398,8 @@ export const RECORDINGS = [
 export const HINTS = [
   {
     id: "start",
-    done: ["visited_exhibition", "visited_shouxiang"],
-    levels: ["先查看浏览器留下的两条历史。", "公开网页里有一个展览和一个陵园旧站。", "打开“赭红门展览”和“寿享陵园”。"],
+    done: ["visited_exhibition"],
+    levels: ["先查看摆渡热搜里唯一能够打开的新闻。", "这条新闻讨论一幅被撤下的临展画作。", "在摆渡热搜中打开“临展画作遭撤，艺术家生存环境堪忧”。"],
   },
   {
     id: "public-identities",
