@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "憎恶社｜作品与旧档案",
-  description: "一个以搜索为核心的浏览器文字解谜游戏。",
+  title: "憎恶社｜杜彻旧电脑",
+  description: "在浏览器、回收站、录音文件与上锁文件夹之间核对材料的网页解谜游戏。",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

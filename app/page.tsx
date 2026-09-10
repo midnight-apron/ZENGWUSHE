@@ -1,5 +1,5 @@
-import { GameApp } from "./game-app";
+import { V2Game } from "./v2/v2-game";
 
 export default function Home() {
-  return <GameApp initialPath="/" />;
+  return <V2Game />;
 }

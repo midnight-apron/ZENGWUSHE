@@ -7,6 +7,13 @@ const app = await readFile(new URL("../app/v2/v2-game.tsx", import.meta.url), "u
 const legacyApp = await readFile(new URL("../app/game-app.tsx", import.meta.url), "utf8");
 const rentedRoom = await readFile(new URL("../app/rented-room.tsx", import.meta.url), "utf8");
 const styles = await readFile(new URL("../app/v2/v2-game.module.css", import.meta.url), "utf8");
+const rootPage = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+
+test("the XP investigation is the single root game entry", () => {
+  assert.match(rootPage, /import \{ V2Game \} from "\.\/v2\/v2-game"/);
+  assert.match(rootPage, /return <V2Game \/>/);
+  assert.doesNotMatch(rootPage, /GameApp initialPath/);
+});
 
 test("V2 uses an independent semantic save and four-application desktop", () => {
   assert.match(data, /zengwu-she-v2-save/);
