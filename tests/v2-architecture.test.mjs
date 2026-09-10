@@ -51,6 +51,14 @@ test("V2 uses a faithful Windows XP Luna shell without changing the investigatio
   assert.match(app, /if \(activeApp === id\) return/);
 });
 
+test("V2 opens on an XP login screen gated by Du Che's lowercase pinyin", () => {
+  assert.match(app, /Windows XP 登录/);
+  assert.match(app, /prologuePassword\.trim\(\)\.toLowerCase\(\) === "duche"/);
+  assert.match(app, /提示：我的名字的拼音小写/);
+  assert.match(data, /献给玛赫、L 和杜彻/);
+  for (const selector of ["loginStage", "loginIntro", "loginAccount", "loginPasswordRow", "loginBottom"]) assert.match(styles, new RegExp(selector));
+});
+
 test("摆渡只开放两个本地站点，并在账目线索后开放寿享陵园", () => {
   const defaultSave = data.match(/export const DEFAULT_V2_SAVE[\s\S]*?\n\};/)?.[0] ?? "";
   assert.match(app, /摆渡热搜/);
@@ -75,6 +83,8 @@ test("V2 reuses the previous gallery layout, keeps gallery search, and leaves �
   assert.match(app, /runGallerySearch\(query\)/);
   assert.match(app, /gallery-search:/);
   assert.match(app, /无法连接互联网/);
+  assert.match(styles, /grid-template-areas: "brand" "sections" "search"/);
+  assert.match(styles, /\.galleryWebsite :global\(\.global-search\) \{ width: 100%; justify-self: stretch; \}/);
   assert.doesNotMatch(app, /pushBrowser\(`search:/);
   assert.doesNotMatch(app, /function BrowserResults/);
 });

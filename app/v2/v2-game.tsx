@@ -236,7 +236,8 @@ function EvidenceChoice({ title, options, correct, ready, completed, onCorrect }
 export function V2Game() {
   const [save, setSave] = useState<V2Save>(DEFAULT_V2_SAVE);
   const [ready, setReady] = useState(false);
-  const [prologueStep, setPrologueStep] = useState(0);
+  const [prologuePassword, setProloguePassword] = useState("");
+  const [prologueNote, setPrologueNote] = useState("");
   const [windows, setWindows] = useState<WindowState>(INITIAL_WINDOWS);
   const [activeApp, setActiveApp] = useState<AppId | null>(null);
   const [selectedDesktopApp, setSelectedDesktopApp] = useState<AppId | null>(null);
@@ -392,15 +393,46 @@ export function V2Game() {
   if (!save.prologueSeen) {
     return (
       <main className={`${styles.prologue} ${save.settings.reducedMotion ? styles.reduceMotion : ""}`}>
-        {prologueStep === 0 ? (
-          <button type="button" onClick={() => setPrologueStep(1)}>
-            <p>{PROLOGUE.source}</p><cite>——{PROLOGUE.citation}</cite><span>点击继续</span>
-          </button>
-        ) : (
-          <button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: true }))}>
-            <strong>{PROLOGUE.dedication}</strong><span>进入旧电脑</span>
-          </button>
-        )}
+        <div className={styles.loginTop} aria-hidden="true" />
+        <section className={styles.loginStage} aria-label="Windows XP 登录">
+          <div className={styles.loginIntro}>
+            <div className={styles.loginBrand} aria-label="Microsoft Windows XP">
+              <span className={`${styles.windowsFlag} ${styles.loginWindowsFlag}`} aria-hidden="true"><i /><i /><i /><i /></span>
+              <span className={styles.loginWindowsWord}><small>Microsoft</small><b>Windows</b><em>xp</em></span>
+            </div>
+            <div className={styles.loginTexts}>
+              <p>{PROLOGUE.source}</p>
+              <cite>——{PROLOGUE.citation}</cite>
+              <strong>{PROLOGUE.dedication}</strong>
+            </div>
+          </div>
+          <div className={styles.loginPanel}>
+            <form
+              className={styles.loginAccount}
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (prologuePassword.trim().toLowerCase() === "duche") {
+                  setSave((previous) => ({ ...previous, prologueSeen: true }));
+                  setPrologueNote("");
+                } else {
+                  setPrologueNote("密码不正确，请再试一次。");
+                }
+              }}
+            >
+              <span className={styles.loginAvatar}><MonitorCog aria-hidden="true" /></span>
+              <div className={styles.loginCredentials}>
+                <label htmlFor="duche-login-password"><b>杜彻</b><small>请输入您的密码</small></label>
+                <div className={styles.loginPasswordRow}>
+                  <input id="duche-login-password" type="password" value={prologuePassword} onChange={(event) => setProloguePassword(event.target.value)} autoComplete="current-password" autoFocus />
+                  <button type="submit" aria-label="登录到杜彻的旧电脑"><ArrowRight aria-hidden="true" /></button>
+                </div>
+                <p className={styles.loginHint}>提示：我的名字的拼音小写</p>
+                <p className={styles.loginError} role="status">{prologueNote}</p>
+              </div>
+            </form>
+          </div>
+        </section>
+        <footer className={styles.loginBottom}><span><i aria-hidden="true">●</i> 关闭计算机</span><small>登录后即可读取这台电脑中保存的本地资料。</small></footer>
       </main>
     );
   }
@@ -822,6 +854,6 @@ export function V2Game() {
   }
 
   function renderSettings() {
-    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>减少惊吓</b><small>关闭突发闪烁；红字与渗血仅保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-v2-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除新版调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除 V2 的事件、搜索历史、已恢复文件和结局。旧版存档不受影响。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); setSave(DEFAULT_V2_SAVE); setPrologueStep(0); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
+    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>减少惊吓</b><small>关闭突发闪烁；红字与渗血仅保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-v2-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除新版调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除 V2 的事件、搜索历史、已恢复文件和结局。旧版存档不受影响。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); setSave(DEFAULT_V2_SAVE); setProloguePassword(""); setPrologueNote(""); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
   }
 }

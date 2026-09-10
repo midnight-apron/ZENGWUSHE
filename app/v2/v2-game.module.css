@@ -23,57 +23,50 @@
 }
 
 .prologue {
-  min-height: 100vh;
-  background: #080808;
-  color: #c01120;
-}
-
-.prologue button {
   display: grid;
-  width: 100%;
-  min-height: 100vh;
-  padding: clamp(2rem, 8vw, 8rem);
-  place-content: center;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
+  min-height: 100dvh;
+  grid-template-rows: clamp(3.5rem, 9vh, 5.2rem) minmax(0, 1fr) clamp(4.5rem, 10vh, 6.2rem);
+  overflow: hidden;
+  background: #5b7fda;
+  color: #fff;
+  font-family: Tahoma, "Microsoft YaHei", sans-serif;
 }
 
-.prologue p {
-  max-width: 56rem;
-  margin: 0;
-  font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
-  font-size: clamp(1.15rem, 2.2vw, 1.75rem);
-  line-height: 2.1;
-  letter-spacing: 0.06em;
-}
-
-.prologue cite {
-  margin-top: 2rem;
-  color: #8e7a78;
-  font-size: 0.8rem;
-  font-style: normal;
-  letter-spacing: 0.12em;
-}
-
-.prologue strong {
-  font-family: "Noto Serif SC", "Songti SC", SimSun, serif;
-  font-size: clamp(1.6rem, 5vw, 4.5rem);
-  font-weight: 500;
-  letter-spacing: 0.15em;
-}
-
-.prologue span {
-  justify-self: start;
-  margin-top: 5rem;
-  border-bottom: 1px solid currentColor;
-  color: #958986;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-}
+.loginTop { background: linear-gradient(180deg, #053b9d, #00349a); border-bottom: 2px solid #8fb5ff; }
+.loginStage { display: grid; min-height: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; background: linear-gradient(110deg, #6e93e9 0%, #5d82de 52%, #5478d4 100%); }
+.loginIntro { display: grid; align-content: center; justify-items: end; min-height: 66%; border-right: 1px solid rgba(255,255,255,.23); padding: clamp(2rem, 5vw, 5rem); text-shadow: 1px 1px rgba(20,58,148,.45); }
+.loginBrand { display: flex; align-items: flex-end; gap: .8rem; margin-right: clamp(0rem, 2vw, 2rem); }
+.prologue .loginWindowsFlag { grid-template-columns: repeat(2, 1.2rem); grid-template-rows: repeat(2, 1.2rem); gap: .18rem; filter: drop-shadow(2px 2px 1px rgba(0,38,128,.5)); transform: skewY(-8deg); }
+.prologue .loginWindowsFlag i { width: 1.2rem; height: 1.2rem; }
+.loginWindowsWord { position: relative; display: flex; align-items: baseline; color: #fff; }
+.loginWindowsWord small { position: absolute; top: -.6rem; left: 0; font-size: .56rem; font-weight: 400; }
+.loginWindowsWord b { font-size: clamp(2rem, 4vw, 3rem); line-height: 1; letter-spacing: -.07em; }
+.loginWindowsWord em { color: #ef7d17; font-size: 1rem; font-style: normal; margin-left: .25rem; }
+.loginTexts { width: min(100%, 34rem); margin-top: 2rem; text-align: left; }
+.loginTexts p { margin: 0; font-family: "Noto Serif SC", "Songti SC", SimSun, serif; font-size: clamp(.84rem, 1.25vw, 1rem); line-height: 1.9; }
+.loginTexts cite { display: block; margin-top: .65rem; color: #e1ebff; font-size: .72rem; font-style: normal; text-align: right; }
+.loginTexts strong { display: block; margin-top: 1.8rem; font-family: "Noto Serif SC", "Songti SC", SimSun, serif; font-size: clamp(1.35rem, 2.1vw, 2rem); font-weight: 600; letter-spacing: .08em; }
+.loginPanel { display: flex; align-items: center; min-height: 66%; padding: clamp(2rem, 5vw, 5rem); }
+.loginAccount { display: grid; width: min(100%, 31rem); grid-template-columns: 4.6rem minmax(0, 1fr); gap: .9rem; border-top: 1px solid rgba(255,255,255,.34); border-bottom: 1px solid rgba(15,58,153,.42); background: linear-gradient(90deg, rgba(24,81,187,.72), rgba(68,115,210,.18)); padding: .65rem .85rem; }
+.loginAvatar { display: grid; width: 4.3rem; height: 4.3rem; place-items: center; border: 2px solid #fff; border-radius: .35rem; background: linear-gradient(145deg, #f4f6ee, #a8c7ec); color: #1758a7; box-shadow: 1px 2px 4px rgba(0,0,0,.42); }
+.loginAvatar svg { width: 2.7rem; height: 2.7rem; }
+.loginCredentials { min-width: 0; }
+.loginCredentials label { display: grid; gap: .1rem; }
+.loginCredentials label b { font-size: 1.16rem; text-shadow: 1px 1px #17428e; }
+.loginCredentials label small { font-size: .68rem; }
+.loginPasswordRow { display: grid; grid-template-columns: minmax(0, 12rem) 2rem; gap: .5rem; margin-top: .35rem; }
+.loginPasswordRow input { min-width: 0; height: 1.95rem; border: 2px inset #fff; border-radius: .18rem; background: #fff; color: #111; padding: .2rem .4rem; outline: 0; }
+.loginPasswordRow input:focus { box-shadow: 0 0 0 2px rgba(255,255,255,.4); }
+.loginPasswordRow button { display: grid; width: 2rem; height: 1.95rem; place-items: center; border: 2px outset #8fd48a; border-radius: .2rem; background: linear-gradient(135deg, #49ba38, #168b20); color: #fff; padding: 0; cursor: pointer; }
+.loginPasswordRow button:active { border-style: inset; }
+.loginPasswordRow svg { width: 1.25rem; height: 1.25rem; stroke-width: 3; }
+.loginHint, .loginError { margin: .35rem 0 0; font-size: .68rem; }
+.loginHint { color: #edf3ff; }
+.loginError { min-height: 1rem; color: #fff1a8; font-weight: 700; }
+.loginBottom { display: flex; align-items: center; justify-content: space-between; gap: 2rem; background: linear-gradient(180deg, #1746b2, #12379d); border-top: 2px solid #efab44; padding: 0 clamp(1.4rem, 4vw, 3rem); font-size: .82rem; }
+.loginBottom > span { display: flex; align-items: center; gap: .5rem; font-weight: 700; }
+.loginBottom > span i { display: grid; width: 1.35rem; height: 1.35rem; place-items: center; border: 2px outset #f6a071; border-radius: .2rem; background: #e05d32; color: #fff; font-size: .55rem; font-style: normal; }
+.loginBottom small { max-width: 25rem; color: #eef3ff; font-size: .7rem; text-align: right; }
 
 .desktop {
   position: relative;
@@ -326,8 +319,16 @@
   --ash: #625f58;
   --line: #aaa59a;
   --blood: #941b1f;
+  container-type: inline-size;
 }
-.galleryWebsite :global(.site-header) { position: relative; }
+.galleryWebsite :global(.site-header) {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "brand" "sections" "search";
+  gap: 1rem;
+}
+.galleryWebsite :global(.gallery-section-nav) { width: 100%; overflow-x: auto; padding-bottom: .2rem; }
+.galleryWebsite :global(.global-search) { width: 100%; justify-self: stretch; }
 .galleryWebsite :global(.game-main) { min-height: 0; }
 .embeddedCemeteryWebsite { min-height: 100%; background: var(--v2-paper); padding-top: 1.25rem; }
 .embeddedSearch { width: min(100% - 3rem, 66rem); margin: 0 auto; }
@@ -735,6 +736,17 @@
 }
 
 @media (max-width: 760px) {
+  .prologue { min-height: 100dvh; grid-template-rows: 2.5rem auto 3.8rem; overflow: auto; }
+  .loginStage { grid-template-columns: 1fr; align-content: center; }
+  .loginIntro { min-height: 0; justify-items: center; border-right: 0; border-bottom: 1px solid rgba(255,255,255,.25); padding: 2rem 1.25rem 1.5rem; }
+  .loginBrand { margin-right: 0; }
+  .loginTexts { margin-top: 1.2rem; }
+  .loginTexts p { font-size: .78rem; line-height: 1.75; }
+  .loginTexts strong { margin-top: 1rem; font-size: 1.25rem; }
+  .loginPanel { min-height: 0; justify-content: center; padding: 1.5rem 1rem 2rem; }
+  .loginAccount { width: min(100%, 27rem); }
+  .loginBottom { padding-inline: 1rem; }
+  .loginBottom small { display: none; }
   .desktop { min-height: 100dvh; }
   .desktopHeader { height: 2rem; }
   .desktopIcons { grid-template-columns: repeat(2, minmax(0, 1fr)); width: 100%; padding: 2rem 1rem 5rem; }
