@@ -155,7 +155,7 @@ function safeLoad(): V2Save {
   }
 }
 
-function AppIcon({ id, isNew, selected, onOpen, onSelect }: { id: AppId; isNew: boolean; selected: boolean; onOpen: (id: AppId) => void; onSelect: (id: AppId) => void }) {
+function AppIcon({ id, selected, onOpen, onSelect }: { id: AppId; selected: boolean; onOpen: (id: AppId) => void; onSelect: (id: AppId) => void }) {
   const meta = APP_META[id];
   const Icon = meta.icon;
   return (
@@ -169,7 +169,6 @@ function AppIcon({ id, isNew, selected, onOpen, onSelect }: { id: AppId; isNew: 
     >
       <span className={styles.iconTile}><Icon aria-hidden="true" /></span>
       <span><b>{meta.label}</b><small>{meta.subtitle}</small></span>
-      {isNew ? <i>NEW</i> : null}
     </button>
   );
 }
@@ -391,13 +390,6 @@ export function V2Game() {
   ];
   const vaultReady = vaultSlots.every(Boolean);
 
-  const newState = {
-    browser: BROWSER_NODES.some((node) => hasAll(save.events, node.requires) && !save.visited.includes(node.id) && node.requires?.length),
-    trash: TRASH_FILES.some((file) => hasAll(save.events, file.requires) && !save.recovered.includes(file.id)),
-    audio: RECORDINGS.some((recording) => hasAll(save.events, recording.requires) && !hasEvent(recording.event)),
-    vault: vaultReady && !hasEvent("unlocked_final_folder"),
-  };
-
   if (!ready) return <main className={styles.loading}>正在读取本地备份……</main>;
 
   if (!save.prologueSeen) {
@@ -461,7 +453,7 @@ export function V2Game() {
       </header>
 
       <section id="v2-desktop-icons" className={styles.desktopIcons} aria-label="桌面应用" onPointerDown={(event) => { if (event.target === event.currentTarget) setSelectedDesktopApp(null); }}>
-        {(Object.keys(APP_META) as AppId[]).map((id) => <AppIcon key={id} id={id} isNew={newState[id]} selected={selectedDesktopApp === id} onOpen={openApp} onSelect={setSelectedDesktopApp} />)}
+        {(Object.keys(APP_META) as AppId[]).map((id) => <AppIcon key={id} id={id} selected={selectedDesktopApp === id} onOpen={openApp} onSelect={setSelectedDesktopApp} />)}
       </section>
 
       <section className={styles.windowLayer} aria-label="已打开的应用">
@@ -488,7 +480,7 @@ export function V2Game() {
         <nav aria-label="应用切换器">
           {(Object.keys(APP_META) as AppId[]).map((id) => {
             const Icon = APP_META[id].icon;
-            return <button key={id} type="button" data-app={id} className={`${windows[id].open ? styles.running : ""} ${activeApp === id && !windows[id].minimized ? styles.activeTask : ""}`} onClick={() => openApp(id)} aria-label={`打开${APP_META[id].label}`}><Icon /><span>{APP_META[id].label}</span>{newState[id] ? <i>NEW</i> : null}</button>;
+            return <button key={id} type="button" data-app={id} className={`${windows[id].open ? styles.running : ""} ${activeApp === id && !windows[id].minimized ? styles.activeTask : ""}`} onClick={() => openApp(id)} aria-label={`打开${APP_META[id].label}`}><Icon /><span>{APP_META[id].label}</span></button>;
           })}
         </nav>
         <div className={styles.taskTools}>

@@ -4,6 +4,7 @@ import test from "node:test";
 
 const data = await readFile(new URL("../app/v2/data.ts", import.meta.url), "utf8");
 const app = await readFile(new URL("../app/v2/v2-game.tsx", import.meta.url), "utf8");
+const legacyApp = await readFile(new URL("../app/game-app.tsx", import.meta.url), "utf8");
 const rentedRoom = await readFile(new URL("../app/rented-room.tsx", import.meta.url), "utf8");
 const styles = await readFile(new URL("../app/v2/v2-game.module.css", import.meta.url), "utf8");
 
@@ -93,6 +94,12 @@ test("V2 embeds the complete legacy gallery game and separates the cemetery site
   assert.match(styles, /\.galleryWebsite :global\(\.global-search\) \{ width: 100%; justify-self: stretch; \}/);
   assert.doesNotMatch(app, /pushBrowser\(`search:/);
   assert.doesNotMatch(app, /function BrowserResults/);
+});
+
+test("NEW badges stay inside the gallery website instead of the XP desktop", () => {
+  assert.doesNotMatch(app, /newState|isNew=\{newState/);
+  assert.match(legacyApp, /entry\.isNew \? <b>NEW<\/b>/);
+  assert.match(legacyApp, /item\.hasNew \? <i>NEW<\/i>/);
 });
 
 test("V2 implements three neutral endings and delays the stage archive", () => {
