@@ -1847,9 +1847,12 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
 
   useEffect(() => {
     if (!embedded) return;
-    setPath(displayPath(initialPath));
-    setResults(null);
-    setResultNote("");
+    const synchronizeEmbeddedPath = window.setTimeout(() => {
+      setPath(displayPath(initialPath));
+      setResults(null);
+      setResultNote("");
+    }, 0);
+    return () => window.clearTimeout(synchronizeEmbeddedPath);
   }, [embedded, initialPath]);
 
   useEffect(() => {
