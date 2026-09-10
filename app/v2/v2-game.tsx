@@ -421,10 +421,10 @@ export function V2Game() {
             >
               <span className={styles.loginAvatar}><MonitorCog aria-hidden="true" /></span>
               <div className={styles.loginCredentials}>
-                <label htmlFor="duche-login-password"><b>杜彻</b><small>请输入您的密码</small></label>
+                <label htmlFor="duche-login-password"><b>Administrator</b><small>请输入您的密码</small></label>
                 <div className={styles.loginPasswordRow}>
                   <input id="duche-login-password" type="password" value={prologuePassword} onChange={(event) => setProloguePassword(event.target.value)} autoComplete="current-password" autoFocus />
-                  <button type="submit" aria-label="登录到杜彻的旧电脑"><ArrowRight aria-hidden="true" /></button>
+                  <button type="submit" aria-label="登录到 Administrator 账户"><ArrowRight aria-hidden="true" /></button>
                 </div>
                 <p className={styles.loginHint}>提示：我的名字的拼音小写</p>
                 <p className={styles.loginError} role="status">{prologueNote}</p>

@@ -53,6 +53,7 @@ test("V2 uses a faithful Windows XP Luna shell without changing the investigatio
 
 test("V2 opens on an XP login screen gated by Du Che's lowercase pinyin", () => {
   assert.match(app, /Windows XP 登录/);
+  assert.match(app, /<b>Administrator<\/b>/);
   assert.match(app, /prologuePassword\.trim\(\)\.toLowerCase\(\) === "duche"/);
   assert.match(app, /提示：我的名字的拼音小写/);
   assert.match(data, /献给玛赫、L 和杜彻/);
