@@ -550,7 +550,24 @@ export function V2Game() {
           <GameApp
             embedded
             initialPath={legacyPath}
-            onNavigate={(path) => pushBrowser(`legacy:${path}`)}
+            onNavigate={(path) => {
+              if (path === "/recovered/13-wang-keding") {
+                markEvent("verified_wang_poison", "verified_wang_staging");
+              }
+              if (path === "/archive/case/cemetery") {
+                markEvent("recovered_ledger_mail", "verified_lixiang_homicide");
+              }
+              if (["/stage/recovered-index", "/stage/zhuhongmen", "/stage/shinan"].includes(path)) {
+                markEvent(
+                  "verified_wang_poison",
+                  "verified_wang_staging",
+                  "recovered_ledger_mail",
+                  "verified_lixiang_homicide",
+                  "heard_duwanlin_confession",
+                );
+              }
+              pushBrowser(`legacy:${path}`);
+            }}
             onCemeteryVisit={() => markEvent("recovered_ledger_mail")}
           />
         </div>
@@ -913,8 +930,7 @@ export function V2Game() {
   }
 
   function ShinanArchive() {
-    const photos = ["01", "04", "07", "11", "15", "18"];
-    return <><figure className={styles.posterFigure}><img src={asset("/archive/shinan/shinan-poster.webp")} alt="诗喃诗歌剧场演出海报" /><figcaption>最终排演档案 / 海报</figcaption></figure><section className={styles.stageText}><span>场记末页</span><h2>诗喃，正式开演</h2><p>案件与角色映射已经完成。此处的表演不会推翻前面的事实；它只让被恢复的文本重新获得声音。</p></section><div className={styles.photoGrid}>{photos.map((photo) => <img key={photo} src={asset(`/archive/shinan/activity/photo-${photo}.webp`)} alt={`诗喃活动现场照片 ${photo}`} />)}</div></>;
+    return <section className={styles.stageText}><span>场记末页</span><h2>诗喃，正式开演</h2><p>案件与角色映射已经完成。此处的表演不会推翻前面的事实；它只让被恢复的文本重新获得声音。</p></section>;
   }
 
   function renderSettings() {

@@ -206,7 +206,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.recoveredOne]: "盲之春｜已恢复",
   [ROUTES.history]: "憎恶社｜旧社团历史",
   [ROUTES.duNanyangOld]: "杜南阳｜旧人物页",
-  [ROUTES.duWanlin]: "杜万琳｜合并人物档案",
+  [ROUTES.duWanlin]: "杜万琳｜人物原型档案",
   [ROUTES.fangWan]: "方晚｜人物档案",
   [ROUTES.dongxingPeter]: "东兴彼得｜城市旧照",
   [ROUTES.wangKeding]: "王克定｜人物档案",
@@ -305,7 +305,7 @@ const HINTS: Record<string, string[]> = {
     "搜索：徐惠，拼合那张照片。",
   ],
   [ROUTES.duWanlin]: [
-    "合并档案中有一张没有姓名的同乡履历卡。",
+    "人物原型档案中有一张没有姓名的同乡履历卡。",
     "他曾辍学务农、在果园劳动，后来去杭州学画。",
     "搜索：方晚。",
   ],
@@ -466,7 +466,7 @@ const HINTS: Record<string, string[]> = {
   ],
   [ROUTES.shinan]: [
     "全部文本已经就位。选择静音字幕版即可完成谢幕。",
-    "海报与 21 张活动照已经归档；点击现场照片可查看完整画面。成员录音仍待接入。",
+    "终场只保留排演文字与静音字幕；成员录音仍待接入。",
     "点击：静音字幕版开演。",
   ],
 };
@@ -537,11 +537,11 @@ export function buildPublicCatalog(game: GameState) {
     unlocked("S02") && { id: "li-tai", eyebrow: "旧成员缓存", title: "李泰", summary: "撤回作品记录中的策展与编辑人员。", path: ROUTES.curator, isNew: isUnvisited(ROUTES.curator) },
     unlocked("S06") && { id: "du-nanyang", eyebrow: "人物档案", title: "杜南阳", summary: "旧成员页与社团合照中的同一人物。", path: ROUTES.duNanyangOld, isNew: isUnvisited(ROUTES.duNanyangOld) },
     (unlocked("P-XU") || game.visited.includes(ROUTES.xuHui)) && { id: "xu-hui", eyebrow: "人物档案", title: "徐惠", summary: "一张未拼合的婚纱照。", path: ROUTES.xuHui, isNew: isUnvisited(ROUTES.xuHui) },
-    unlocked("S07") && { id: "du-wanlin", eyebrow: "合并人物档案", title: "杜万琳", summary: "创作者、家属关系与多份朗读文件的交叉节点。", path: ROUTES.duWanlin, isNew: isUnvisited(ROUTES.duWanlin) },
+    unlocked("S07") && { id: "du-wanlin", eyebrow: "人物原型档案", title: "杜万琳", summary: "杜南阳的现实原型；创作者、家属关系与手稿之间的交叉节点。", path: ROUTES.duWanlin, isNew: isUnvisited(ROUTES.duWanlin) },
     unlocked("S08") && { id: "fang-wan", eyebrow: "人物档案", title: "方晚", summary: "杜万琳的同乡、同学与画廊合伙人。", path: ROUTES.fangWan, isNew: isUnvisited(ROUTES.fangWan) },
     unlocked("S10") && { id: "wang-keding", eyebrow: "人物档案", title: "王克定", summary: "旧社团关系者；死亡记录与作品文本存在交叉。", path: ROUTES.wangKeding, isNew: isUnvisited(ROUTES.wangKeding) },
     unlocked("S11") && { id: "xing-wan", eyebrow: "人物档案", title: "邢万", summary: "憎恶社早期成员及其社会关系。", path: ROUTES.xingWan, isNew: isUnvisited(ROUTES.xingWan) },
-    unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、邢万关联人；档案只确认其溺亡过程。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
+    unlocked("S12") && { id: "li-xiang", eyebrow: "人物及死亡档案", title: "莉香", summary: "杜家亲属、邢万关联人；公开档案暂将其死亡写作溺亡。", path: ROUTES.liXiangDeath, isNew: isUnvisited(ROUTES.liXiangDeath) },
     unlocked("S24") && hasDuCheFamilyLead(game) && { id: "du-che", eyebrow: "人物档案", title: "杜彻", summary: "家庭资料与寿享陵园相关文学记录中的人物。", path: ROUTES.duChe, isNew: isUnvisited(ROUTES.duChe) },
     !unlocked("S24") && hasDuCheFamilyLead(game) && { id: "du-che-family", eyebrow: "家属记录", title: "杜彻", summary: "地方旧闻附存的杜家亲属记录。", path: ROUTES.duCheFamily, isNew: isUnvisited(ROUTES.duCheFamily) },
     unlocked("S32") && { id: "ye-shi", eyebrow: "编辑缓存", title: "叶是", summary: "旧站编辑与人物年表修订记录的署名者。", path: ROUTES.editorRevisions, isNew: isUnvisited(ROUTES.editorRevisions) },
@@ -555,7 +555,7 @@ export function buildPublicCatalog(game: GameState) {
     unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: isUnvisited(ROUTES.cemeteryCase) },
     unlocked("S22") && { id: "xing-news", eyebrow: "新闻原刊 / 缓存", title: "刑某被捕报道的两个版本", summary: "公开报道与缓存页面之间存在姓名和时间差异。", path: ROUTES.xingNews, isNew: isUnvisited(ROUTES.xingNews) },
     unlocked("S23") && { id: "shouxiang", eyebrow: "站点存档", title: "寿享陵园旧站镜像恢复", summary: "失效网站的人员目录和早期文字层重新可读。", path: ROUTES.shouxiang, isNew: isUnvisited(ROUTES.shouxiang) },
-    recovered("14") && { id: "shinan-open", eyebrow: "演出资料", title: "《诗喃》终场档案开放", summary: "完整排练文本、演出海报与现场照片已经归档。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
+    recovered("14") && { id: "shinan-open", eyebrow: "演出资料", title: "《诗喃》终场档案开放", summary: "完整排练文本、朗读声部与静音字幕终场已经归档。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const publications: DirectoryEntry[] = [
@@ -575,7 +575,7 @@ export function buildPublicCatalog(game: GameState) {
   const exhibitions: DirectoryEntry[] = [
     { id: "zhuhongmen", eyebrow: "正在展出 / 主厅", title: "赭红门", summary: "10.01—10.14｜憎恶社二层主厅", path: ROUTES.exhibition },
     unlocked("S01") && { id: "baishaorou", eyebrow: "撤回作品缓存", title: "白芍肉", summary: "展厅目录中缺失的 A-07 作品记录。", path: ROUTES.artwork, isNew: isUnvisited(ROUTES.artwork) },
-    recovered("14") && { id: "shinan-stage", eyebrow: "特别项目 / 终场", title: "诗喃", summary: "航船诗歌社国庆诗歌剧场及现场档案。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
+    recovered("14") && { id: "shinan-stage", eyebrow: "特别项目 / 终场", title: "诗喃", summary: "航船诗歌社国庆诗歌剧场的排演文本与静音字幕终场。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const about: DirectoryEntry[] = [
@@ -783,16 +783,16 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
     }
 
     if (normalized === "杜南阳") {
-      const merged = game.unlocked.includes("S07");
-      const allowed = game.unlocked.includes("S05") || currentPath === ROUTES.history || merged;
+      const mapped = game.unlocked.includes("S07");
+      const allowed = game.unlocked.includes("S05") || currentPath === ROUTES.history || mapped;
       setResults([{
-        id: merged ? "du-wanlin-redirect" : "du-nanyang-old",
-        kind: allowed ? (merged ? "规范人物档案 · 已合并" : "旧人物页 · 1条") : "受限元数据 · 1条",
-        title: merged ? "杜万琳（旧名：杜南阳）" : "杜南阳",
+        id: mapped ? "du-wanlin-prototype" : "du-nanyang-old",
+        kind: allowed ? (mapped ? "人物原型档案 · 已互证" : "文学人物页 · 1条") : "受限元数据 · 1条",
+        title: mapped ? "杜南阳／原型杜万琳" : "杜南阳",
         summary: allowed
-          ? (merged ? "旧姓名已永久映射到杜万琳的规范人物档案。" : "旧社团创办人；家庭栏保留着配偶徐惠的姓名。")
-          : "旧人物记录存在；相关组织档案尚未恢复。",
-        path: allowed ? (merged ? ROUTES.duWanlin : ROUTES.duNanyangOld) : undefined,
+          ? (mapped ? "文学人物杜南阳与现实人物杜万琳已建立原型对应；两者不是同一人的异名。" : "表层文学世界中的社团创办人；家庭栏保留着配偶徐惠的姓名。")
+          : "文学人物记录存在；相关组织档案尚未恢复。",
+        path: allowed ? (mapped ? ROUTES.duWanlin : ROUTES.duNanyangOld) : undefined,
         unlock: allowed ? ["S06"] : undefined,
         locked: !allowed,
         note: allowed ? undefined : "证据不足",
@@ -816,17 +816,17 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       const allowed = game.unlocked.includes("S07") || (game.unlocked.includes("S06") && game.weddingPhotoSolved);
       setResults([{
         id: "du-wanlin",
-        kind: allowed ? "合并人物档案 · 2个来源" : "现代成员 · 公开摘要",
+        kind: allowed ? "人物原型档案 · 2个来源" : "现实人物 · 公开摘要",
         title: "杜万琳",
         summary: allowed
-          ? "家庭、画廊与同乡记录均与旧人物杜南阳重合。"
-          : "现代成员记录存在；旧姓名映射尚未恢复。",
+          ? "现实人物杜万琳是文学人物杜南阳的创作原型；家庭与画廊线索构成对应关系。"
+          : "现实人物记录存在；与文学人物的对应关系尚未恢复。",
         path: allowed ? ROUTES.duWanlin : undefined,
         unlock: allowed ? ["S07"] : undefined,
         locked: !allowed,
         note: allowed ? undefined : "缺少旧页",
       }]);
-      setResultNote(allowed ? "婚纱照中的姓名与旧人物家庭关系吻合。" : "先到徐惠的人物页，拼合那张婚纱照。");
+      setResultNote(allowed ? "婚纱照与家庭线索建立了人物原型关系。" : "先到徐惠的人物页，拼合那张婚纱照。");
       return;
     }
 
@@ -1692,7 +1692,7 @@ export function getProgressHint(game: GameState) {
   if (has(8)) return from("photo", ROUTES.fangWan);
   if (has(7)) return from("fang", ROUTES.duWanlin);
   if (has(6)) return game.weddingPhotoSolved
-    ? from("du-wanlin", ROUTES.xuHui, ["婚纱照已经拼好，照片上浮现了两个人的姓名。", "将新郎的姓名与杜南阳的家庭关系互证。", "搜索：杜万琳。"] )
+    ? from("du-wanlin", ROUTES.xuHui, ["婚纱照已经拼好，照片上浮现了两个人的姓名。", "将现实人物的姓名与杜南阳的家庭关系互证。", "搜索：杜万琳。"] )
     : from("xu-hui-photo", ROUTES.duNanyangOld);
   if (has(5)) return from("du-nanyang", ROUTES.history);
   if (has(4) || game.recovered.includes("01")) return from("society", ROUTES.recoveredOne);
@@ -2326,7 +2326,7 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
       case ROUTES.damagedReader:
         return <DamagedReaderPage plainText={plainText} onTogglePlain={() => setPlainText((value) => !value)} />;
       case ROUTES.recoveredOne:
-        return <RecoveredOnePage />;
+        return <RecoveredOnePage onReturnToSearch={() => searchInputRef.current?.focus()} />;
       case ROUTES.history:
         return <HistoryPage roleGlitch={roleGlitch} membersRevealed={game.societyMembersRevealed} />;
       case ROUTES.duNanyangOld:
@@ -2819,8 +2819,19 @@ function DamagedReaderPage({ plainText, onTogglePlain }: { plainText: boolean; o
   );
 }
 
-function RecoveredOnePage() {
-  return <TransferredReading title="序诗：盲之春" />;
+function RecoveredOnePage({ onReturnToSearch }: { onReturnToSearch: () => void }) {
+  return (
+    <article className="recovered-one-page">
+      <TransferredReading title="序诗：盲之春" />
+      <section className="archive-next-step" aria-labelledby="mang-next-step-title">
+        <span>当前步骤 / 仍在画廊网站</span>
+        <h2 id="mang-next-step-title">加密文件夹尚未开放，现在不需要返回桌面。</h2>
+        <p>图像诗稿将在调查后期进入 Administrator 的“上锁文件夹”。此刻请先使用本页留下的分类残留，继续检索旧社团记录。</p>
+        <div className="archive-next-clue"><small>分类残留</small><strong>憎恶</strong></div>
+        <Button type="button" variant="outline" onClick={onReturnToSearch}>回到画廊搜索框</Button>
+      </section>
+    </article>
+  );
 }
 
 function HistoryPage({ roleGlitch, membersRevealed }: { roleGlitch: boolean; membersRevealed: boolean }) {
@@ -2876,14 +2887,14 @@ function DuWanlinPage() {
   return (
     <article className="person-page merged-person-page">
       <header className="person-masthead">
-        <div><CacheStamp>IDENTITY MERGE / 02 SOURCES</CacheStamp><p className="section-kicker">规范人物档案</p><h1 className="overwritten-name" aria-label="杜万琳，旧名杜南阳"><span aria-hidden="true">杜南阳</span><b aria-hidden="true">杜万琳</b></h1><p>两个姓名的家庭、画廊与人际关系完全重合，系统已建立双向映射。</p></div>
-        <div className="identity-status"><span>合并状态</span><b>CONFIRMED</b><small>旧名仍保留在来源标签中</small></div>
+        <div><CacheStamp>CHARACTER PROTOTYPE / 02 LAYERS</CacheStamp><p className="section-kicker">文学人物与现实原型</p><h1 className="overwritten-name" aria-label="文学人物杜南阳，现实原型杜万琳"><span aria-hidden="true">杜南阳</span><b aria-hidden="true">杜万琳</b></h1><p>杜万琳是杜南阳的创作原型。两层世界共享部分家庭与画廊线索，但两者不是同一人的异名。</p></div>
+        <div className="identity-status"><span>对应状态</span><b>CONFIRMED</b><small>文学层与现实层分别保留</small></div>
       </header>
 
       <section className="identity-compare" aria-label="两份人物来源对照">
-        <div><span>旧社团年表</span><h2>杜南阳</h2><p>徐惠的丈夫</p><p>经营县城画廊</p><p>方晚的同乡、同学</p></div>
-        <div className="identity-equals" aria-hidden="true">＝</div>
-        <div><span>现代人物库</span><h2>杜万琳</h2><p>徐惠的丈夫</p><p>经营同一画廊</p><p>同一位同乡合伙人</p></div>
+        <div><span>表层文学世界</span><h2>杜南阳</h2><p>徐惠的丈夫</p><p>憎恶社与公墓项目参与者</p><p>杜莉香的哥哥</p></div>
+        <div className="identity-equals" aria-hidden="true">↔</div>
+        <div><span>里层现实世界</span><h2>杜万琳</h2><p>徐惠的丈夫</p><p>杜彻的父亲与手稿作者</p><p>杜南阳的创作原型</p></div>
       </section>
 
       <section className="anonymous-profile">
@@ -2981,12 +2992,12 @@ function LiXiangDeathPage() {
     <article className="death-record-page water-record">
       <header className="death-record-head">
         <div><CacheStamp>DEATH RECORD / WATER DAMAGED</CacheStamp><p className="section-kicker">亲属档案 · 河流记录</p><h1>莉香</h1></div>
-        <div className="death-status"><span>死亡过程</span><b>溺亡</b><small>不记录原因与责任主体</small></div>
+        <div className="death-status"><span>公开说法</span><b>溺亡</b><small>尚未经过案卷交叉验证</small></div>
       </header>
 
       <section className="water-dossier">
-        <dl><MetaLine label="姓名">莉香</MetaLine><MetaLine label="地点">T县河流</MetaLine><MetaLine label="过程">溺亡</MetaLine><MetaLine label="发现时间">未记载</MetaLine><MetaLine label="目击记录">未记载</MetaLine><MetaLine label="责任主体">未记载</MetaLine></dl>
-        <div className="kinship-note"><span>亲属关系合并</span><p>杜万琳的堂妹。邢万的童年记忆与她相连。</p></div>
+        <dl><MetaLine label="姓名">莉香</MetaLine><MetaLine label="公开说法">意外溺亡</MetaLine><MetaLine label="遗体地点">西岩寺附近</MetaLine><MetaLine label="发现时间">未记载</MetaLine><MetaLine label="目击记录">未记载</MetaLine><MetaLine label="案卷状态">等待交叉验证</MetaLine></dl>
+        <div className="kinship-note"><span>两层亲属关系</span><p>文学层中，她是杜南阳的妹妹；现实原型资料中，她是杜万琳的堂妹。她后来与邢万结婚。</p></div>
       </section>
 
       <section className="case-crossref"><span>交叉附件</span><div><h2>另一名河中死者</h2><p>人物：王克定</p><p>材料名称：尸检报告</p></div><code>INDEX AVAILABLE · BODY LOCKED</code></section>
@@ -3168,14 +3179,14 @@ function WangDeathPage() {
       </header>
       <section className="case-verdict">
         <span>复核结论</span>
-        <h2>王克定并非自杀。他遭到杀害，现场被布置为投河自杀。</h2>
-        <p>责任主体：现有材料不指认。</p>
+        <h2>王克定因精神困境与艺术信念冲突服毒自杀；河中的投河现场由邢万在死后伪造。</h2>
+        <p>死亡性质：自杀。死后移尸、反绑与坠石者：邢万。</p>
       </section>
       <section className="evidence-verdict-grid">
-        <div><span>01</span><h3>反绑</h3><p>双手在背后受束，且连接数公斤重的石质人头。</p></div>
-        <div><span>02</span><h3>伤痕</h3><p>脸颊三道割伤不能仅靠河石碰撞闭合解释。</p></div>
-        <div><span>03</span><h3>缺指</h3><p>右小手指在人落水前已被人为切断。</p></div>
-        <div><span>04</span><h3>路线</h3><p>水位、时间与回水路线彼此留下矛盾。</p></div>
+        <div><span>01</span><h3>毒物</h3><p>胃内容物与血样检出致死剂量毒物。</p></div>
+        <div><span>02</span><h3>先后</h3><p>死亡时间早于入水时间，肺部征象不支持生前溺水。</p></div>
+        <div><span>03</span><h3>反绑</h3><p>双手反绑、石块坠附与拖拽擦痕均形成于死亡后。</p></div>
+        <div><span>04</span><h3>搬运</h3><p>尸体从住所被移至河道，公开的投河现场不是真实死亡现场。</p></div>
       </section>
 
       <TransferredReading title="王克定之死" />
@@ -3230,11 +3241,11 @@ function CemeteryReportPage({ onOpenFamily }: { onOpenFamily: () => void }) {
 
 function CemeteryCasePage() {
   const participants = [
-    { name: "杜万琳", alias: "旧名：杜南阳", relation: "曾参与公墓项目；另有画廊活动及身后事记录", record: "焚烧签字单／方晚代签", death: "已故；表面记录为病逝、肝病相关，遗体已火化" },
-    { name: "方晚", alias: "", relation: "项目参与者；杜万琳同乡、同学与画廊合伙人", record: "旧成员履历／焚烧签字单代签", death: "已故；死亡过程未公开" },
-    { name: "王克定", alias: "", relation: "项目参与者；旧社团关系者", record: "认尸、尸检与物证补充", death: "已故；遭杀害，自杀现场系伪造" },
-    { name: "邢万", alias: "", relation: "项目参与者；旧社团名单与新闻缓存重合", record: "公开新闻／旧合照", death: "已故；死亡过程未公开" },
-    { name: "莉香", alias: "", relation: "项目参与者；杜家亲属、邢万关联人", record: "亲属卡／河流档案", death: "已故；溺亡" },
+    { name: "杜万琳", alias: "杜南阳的创作原型", relation: "手稿作者；现实层人物，与表层公墓项目叙事相连", record: "焚烧签字单／方晚代签", death: "已故；肝硬化导致肝癌后病逝，遗体已火化" },
+    { name: "方晚", alias: "", relation: "杜南阳同乡与旧友；杜莉香账目材料收件人", record: "旧成员履历／寄件邮戳／谈话记录", death: "已故；晚年患阿尔茨海默症，后于养老院病逝" },
+    { name: "王克定", alias: "", relation: "憎恶社早期成员；杜莉香的前男友", record: "尸检、毒检与死后搬运痕迹", death: "已故；服毒自杀，投河现场由邢万伪造" },
+    { name: "邢万", alias: "新闻匿名写作刑某", relation: "公墓项目负责人；挪用公款；杜莉香的丈夫", record: "账目、供述、判决与逮捕报道", death: "被捕并判处无期徒刑" },
+    { name: "杜莉香", alias: "莉香", relation: "项目财务；杜南阳的妹妹；账目材料寄件人", record: "遗体鉴定／藏尸勘验／账目邮戳", death: "已故；遭邢万掐死，溺亡说法不成立" },
   ];
 
   return (
@@ -3246,7 +3257,7 @@ function CemeteryCasePage() {
       <div className="case-table-wrap">
         <table className="case-table">
           <thead><tr><th>人物</th><th>项目关系</th><th>公开／恢复记录</th><th>死亡过程</th></tr></thead>
-          <tbody>{participants.map((person) => <tr key={person.name}><th scope="row"><b>{person.name}</b>{person.alias && <small>{person.alias}</small>}</th><td>{person.relation}</td><td>{person.record}</td><td className={person.name === "王克定" ? "case-critical" : ""}>{person.death}</td></tr>)}</tbody>
+          <tbody>{participants.map((person) => <tr key={person.name}><th scope="row"><b>{person.name}</b>{person.alias && <small>{person.alias}</small>}</th><td>{person.relation}</td><td>{person.record}</td><td className={["王克定", "杜莉香"].includes(person.name) ? "case-critical" : ""}>{person.death}</td></tr>)}</tbody>
         </table>
       </div>
 
@@ -3279,7 +3290,7 @@ function DuCheFamilyPage({ onRead, familyPhotoRead }: { onRead: () => void; fami
   return <article className="person-page du-che-page">
     <header className="index-head"><div><h1>杜彻</h1></div></header>
     <FamilyPhoto front={browserPath("/archive/du-che-childhood.webp")} back={browserPath("/archive/du-che-photo-back.webp")} onRead={onRead} />
-    <section className="family-relations"><h2>家庭关系</h2><dl className="dossier-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine>{familyPhotoRead && <MetaLine label="姑姑">莉香 · 父亲的堂妹</MetaLine>}</dl></section>
+    <section className="family-relations"><h2>家庭关系</h2><dl className="dossier-facts"><MetaLine label="父亲">杜万琳（文学人物杜南阳的创作原型）</MetaLine><MetaLine label="母亲">徐惠</MetaLine>{familyPhotoRead && <MetaLine label="姑姑">莉香 · 父亲的堂妹</MetaLine>}</dl></section>
   </article>;
 }
 
@@ -3293,7 +3304,7 @@ function XuHuiPage({ tiles, solved, onChange }: { tiles: number[]; solved: boole
 function DuChePage({ onOpenSupplement, onOpenEditor }: { onOpenSupplement: () => void; onOpenEditor: () => void }) {
   return (
     <article className="person-page du-che-page">
-      <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子，写作并经营画廊；世伯曾向他介绍寿享陵园。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（旧名杜南阳）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮</MetaLine></dl></header>
+      <header className="person-masthead"><div><CacheStamp>PERSON / NEXT GENERATION</CacheStamp><p className="section-kicker">人物档案 · 家庭与职业</p><h1>杜彻</h1><p>杜万琳与徐惠之子，写作并经营画廊；世伯曾向他介绍寿享陵园。</p></div><dl className="person-quick-facts"><MetaLine label="父亲">杜万琳（杜南阳的创作原型）</MetaLine><MetaLine label="母亲">徐惠</MetaLine><MetaLine label="配偶">李髮</MetaLine></dl></header>
       <section className="du-che-grid"><div className="biography-sheet"><span>履历交叉</span><p>杜彻年轻时中断大学学业，回到家乡经营画廊。他在《刍味》中写到席间的世伯，以及对方承办的寿享陵园。</p><p>世伯向他谈起陵园与“死后的住处”。酒桌上的话题由婚姻转向死亡，那些没有问出口的话留在了诗里。</p></div><aside className="wedding-index-card"><span>家庭公告</span><h2>杜彻婚礼</h2><p>新娘姓名：李髮。</p><code>INDEX: LI_髮</code></aside></section>
       <button className="independent-text-link" type="button" onClick={onOpenSupplement}><b>篇目二：铁房山补</b><small>杜彻、李髮与铁房山的三则补遗 · 完整文本 <ArrowUpRight aria-hidden="true" /></small></button>
       <section className="version-history"><span>朗读文件索引 · 杜彻</span><div><h2>刍味</h2><p>一次席间谈话，世伯说起他承办的寿享陵园。杜彻把那些酒意、味觉与没有问出口的话写进这首诗。</p><p>文件状态：正文未并入人物档案。</p></div></section>
@@ -3539,7 +3550,7 @@ function StageZhuhongmenPage() {
       <header className="stage-warm-head"><div><ArtifactTag>场次 14 / 14</ArtifactTag><p className="section-kicker">结诗 · 合读</p><h1>赭红门</h1></div><aside><span>场记</span><p>文本已齐。<br />所有人请就位。</p></aside></header>
       <TransferredReading title="赭红门" />
       <section className="reader-call-sheet"><header><span>档案编号已转换为场次编号</span><b>朗读者就位</b></header><div><p>杜万琳 <span>朗读声部</span></p><p>方晚 <span>朗读声部</span></p><p>邢万 <span>朗读声部</span></p><p>徐惠 <span>朗读声部</span></p><p>杜彻 <span>朗读声部</span></p><p>合读 <span>终场</span></p></div></section>
-      <section className="stage-note-final"><span>终场场记</span><h2>演出名：诗喃</h2><p>案件索引到这里停止。下一页不会公布凶手，只会让所有人物回到朗读者的位置。</p></section>
+      <section className="stage-note-final"><span>终场场记</span><h2>演出名：诗喃</h2><p>案件索引到这里停止。下一页只让所有人物回到朗读者的位置。</p></section>
     </article>
   );
 }
@@ -3547,46 +3558,20 @@ function StageZhuhongmenPage() {
 function ShinanPage() {
   const [performanceStarted, setPerformanceStarted] = useState(false);
   const [cue, setCue] = useState(0);
-  const [selectedPhoto, setSelectedPhoto] = useState<number | null>(null);
-  const activityPhotos = [
-    ["现场投影", "“伪造入门及注意事项”开场画面"],
-    ["黎晏／杜彻", "蒙眼入场"],
-    ["黎晏／杜彻", "朗读现场"],
-    ["叶非／方晚", "吉他与话筒"],
-    ["郁绵／邢万", "朗读现场"],
-    ["郁绵／邢万", "舞台现场"],
-    ["林锐／徐惠", "朗读现场"],
-    ["林锐／徐惠", "舞步与话筒线"],
-    ["观众席", "现场记录"],
-    ["观众席", "现场记录"],
-    ["陳潮／杜万琳", "朗读现场"],
-    ["陳潮／杜万琳", "舞台现场"],
-    ["诗喃现场", "读诗"],
-    ["诗喃现场", "舞台装置"],
-    ["诗喃现场", "表演"],
-    ["诗喃现场", "吉他"],
-    ["诗喃现场", "合读"],
-    ["诗喃现场", "朗读"],
-    ["诗喃现场", "投影与朗读"],
-    ["诗喃现场", "合读"],
-    ["诗喃现场", "全景"],
-  ] as const;
   const cues = [
-    { title: "开场", copy: "投影亮起。有人试着把麦克风推近，第一位朗读者走到灯下。", photos: [0, 1, 2, 3] },
-    { title: "声部进入", copy: "黎晏读杜彻，叶非读方晚。剧中人与朗读者第一次在同一页相遇。", photos: [4, 5, 6, 7, 8] },
-    { title: "文本合流", copy: "郁绵读邢万，林锐读徐惠。那些曾被当成档案的人名，重新成为声部。", photos: [9, 10, 11, 12] },
-    { title: "赭红门", copy: "陳潮读杜万琳，所有声部进入最后一段合读。", photos: [13, 14, 15, 16] },
-    { title: "谢幕", copy: "灯光亮起。观众听见翻页，也看见台上的人从角色中退场。", photos: [17, 18, 19, 20] },
+    { title: "开场", copy: "投影亮起。有人试着把麦克风推近，第一位朗读者走到灯下。" },
+    { title: "声部进入", copy: "黎晏读杜彻，叶非读方晚。剧中人与朗读者第一次在同一页相遇。" },
+    { title: "文本合流", copy: "郁绵读邢万，林锐读徐惠。那些曾被当成档案的人名，重新成为声部。" },
+    { title: "赭红门", copy: "陳潮读杜万琳，所有声部进入最后一段合读。" },
+    { title: "谢幕", copy: "灯光亮起。观众听见翻页，也看见台上的人从角色中退场。" },
   ] as const;
   const currentCue = cues[cue];
   return (
     <article className="shinan-page">
-      <header className="shinan-hero"><div><span>航船诗歌社 · 国庆诗歌剧场</span><h1>诗喃</h1><p>你恢复的从来不是司法档案，而是一份被拆散、改写并藏进画廊网站的诗剧排练文本。</p></div><figure className="shinan-poster"><img src={browserPath("/archive/shinan/shinan-poster.webp")} alt="以蒙眼人物黑白网点照片为底图的《诗喃：青年之虚与实》演出海报" /><figcaption><span>演出海报</span><small>据上传原型图生成</small></figcaption></figure></header>
-      {!performanceStarted ? <section className="performance-choice"><div><span>选择终场版本</span><h2>声音不构成通关门槛</h2><p>原成员录音尚未接入。本版先开放完整静音字幕终场；取得授权录音后，可在同一位置替换。</p></div><div><Button type="button" disabled>有声版 · 素材待接入</Button><Button type="button" onClick={() => setPerformanceStarted(true)}>静音字幕版开演</Button></div></section> : <section className="silent-performance"><header><span>静音字幕终场</span><b>{cue + 1}/{cues.length}</b></header><div className="cue-stage"><small>{currentCue.title}</small><p>{currentCue.copy}</p><div className="cue-photos" aria-label={`${currentCue.title}活动照片`}>{currentCue.photos.map((photoIndex) => <button type="button" key={photoIndex} onClick={() => setSelectedPhoto(photoIndex)}><img src={browserPath(`/archive/shinan/activity/photo-${String(photoIndex + 1).padStart(2, "0")}.webp`)} alt={`${activityPhotos[photoIndex][0]}：${activityPhotos[photoIndex][1]}`} /><span>{activityPhotos[photoIndex][0]}</span></button>)}</div></div><footer><Button variant="outline" type="button" onClick={() => setCue((value) => Math.max(0, value - 1))} disabled={cue === 0}>上一场记</Button>{cue < cues.length - 1 ? <Button type="button" onClick={() => setCue((value) => Math.min(cues.length - 1, value + 1))}>下一场记</Button> : <span className="curtain-call">演出结束 · 谢幕</span>}</footer></section>}
-      <section className="shinan-truth"><span>最后一次身份转换</span><div><h2>他们是剧中人，也是朗读者。</h2><p>公墓案、死亡记录、人物年表和新闻缓存属于《诗喃》的剧内文本与舞台道具。现实层只留下航船诗歌社、海报、活动照片与成员声音。</p></div></section>
-      <section className="activity-archive"><header><div><span>现场档案 / 01—21</span><h2>青年之虚与实 · 石狮场</h2></div><p>活动照按原文档出现顺序归档。点击照片可查看完整画面。</p></header><div className="activity-grid">{activityPhotos.map(([title, detail], index) => <button type="button" key={index} onClick={() => setSelectedPhoto(index)}><img src={browserPath(`/archive/shinan/activity/photo-${String(index + 1).padStart(2, "0")}.webp`)} alt={`${title}：${detail}`} loading="lazy" /><span>{String(index + 1).padStart(2, "0")}</span><div><b>{title}</b><small>{detail}</small></div></button>)}</div></section>
-      <section className="material-status"><article><span>14/14</span><h3>朗读索引完成</h3><p>《目盲》文字稿已从画廊移除，图像原稿仅存于 Administrator 的加密文件夹。</p></article><article><span>已接入</span><h3>演出海报与活动照</h3><p>根据上传原型生成海报，21 张现场照片依文档顺序归档。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后保留舞台字幕，不要求玩家开启声音。</p></article></section>
-      {selectedPhoto !== null && <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`活动照片 ${selectedPhoto + 1}`} onClick={() => setSelectedPhoto(null)}><div onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setSelectedPhoto(null)} aria-label="关闭活动照片"><X aria-hidden="true" /></button><img src={browserPath(`/archive/shinan/activity/photo-${String(selectedPhoto + 1).padStart(2, "0")}.webp`)} alt={`${activityPhotos[selectedPhoto][0]}：${activityPhotos[selectedPhoto][1]}`} /><p><span>{String(selectedPhoto + 1).padStart(2, "0")} / 21</span><b>{activityPhotos[selectedPhoto][0]}</b><small>{activityPhotos[selectedPhoto][1]}</small></p></div></div>}
+      <header className="shinan-hero"><div><span>航船诗歌社 · 国庆诗歌剧场</span><h1>诗喃</h1><p>你恢复的从来不是司法档案，而是一份被拆散、改写并藏进画廊网站的诗剧排练文本。</p></div></header>
+      {!performanceStarted ? <section className="performance-choice"><div><span>选择终场版本</span><h2>声音不构成通关门槛</h2><p>原成员录音尚未接入。本版先开放完整静音字幕终场；取得授权录音后，可在同一位置替换。</p></div><div><Button type="button" disabled>有声版 · 素材待接入</Button><Button type="button" onClick={() => setPerformanceStarted(true)}>静音字幕版开演</Button></div></section> : <section className="silent-performance"><header><span>静音字幕终场</span><b>{cue + 1}/{cues.length}</b></header><div className="cue-stage"><small>{currentCue.title}</small><p>{currentCue.copy}</p></div><footer><Button variant="outline" type="button" onClick={() => setCue((value) => Math.max(0, value - 1))} disabled={cue === 0}>上一场记</Button>{cue < cues.length - 1 ? <Button type="button" onClick={() => setCue((value) => Math.min(cues.length - 1, value + 1))}>下一场记</Button> : <span className="curtain-call">演出结束 · 谢幕</span>}</footer></section>}
+      <section className="shinan-truth"><span>最后一次身份转换</span><div><h2>他们是剧中人，也是朗读者。</h2><p>公墓案、死亡记录、人物年表和新闻缓存属于《诗喃》的剧内文本与舞台道具。现实层留下航船诗歌社、排练文字与尚待接入的成员声音。</p></div></section>
+      <section className="material-status"><article><span>14/14</span><h3>朗读索引完成</h3><p>《目盲》文字稿已从画廊移除，图像原稿仅存于 Administrator 的加密文件夹。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后保留舞台字幕，不要求玩家开启声音。</p></article></section>
     </article>
   );
 }

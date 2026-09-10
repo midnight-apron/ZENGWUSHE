@@ -30,24 +30,12 @@ async function renderPath(pathname) {
   return (await response.text()).replaceAll("<!-- -->", "");
 }
 
-test("renders the gallery homepage and missing-work entrance", async () => {
+test("renders the XP investigation as the root entry", async () => {
   const html = await renderPath("/");
-  assert.match(html, /<title>憎恶社｜作品与旧档案<\/title>/);
-  assert.match(html, /opening-prologue/);
-  assert.doesNotMatch(html, /先听见，后看见/);
-  assert.match(html, /正在展出 \/ NOW ON VIEW/);
-  assert.match(html, /赭红门/);
-  assert.match(html, /展品丢失/);
-  assert.match(html, /\/gallery\/zhuhongmen-hall\.webp/);
-  assert.match(html, /VIEWING ROOM \/ 画作赏析/);
-  assert.match(html, /文艺复兴与早期尼德兰绘画选/);
-  assert.doesNotMatch(html, /凝视一幅画，直到它交出另一张脸/);
-  assert.match(html, /乔凡尼·阿尔诺芬尼夫妇像/);
-  assert.match(html, /维纳斯的诞生/);
-  assert.match(html, /\/gallery\/renaissance\/arnolfini\.webp/);
-  assert.doesNotMatch(html, /INDEX \/ 公开目录/);
-  assert.doesNotMatch(html, /从公开页面开始查找/);
-  assert.match(html, /搜索作品、人名、尺寸或文件标签/);
+  assert.match(html, /<title>憎恶社｜杜彻旧电脑<\/title>/);
+  assert.match(html, /正在读取本地备份/);
+  assert.match(html, /V2Game/);
+  assert.doesNotMatch(html, /诗喃.*archive\/shinan/s);
 });
 
 test("keeps the breakup interstitial and Xu Hui sketch behind their intended triggers", async () => {
@@ -72,7 +60,7 @@ test("renders the public gallery directories without leaking locked records", as
   const people = await renderPath("/people");
   assert.match(people, /PEOPLE \/ INDEX/);
   assert.doesNotMatch(people, /葛东平|徐惠/);
-  assert.doesNotMatch(people, /莉香|杜彻/);
+  assert.doesNotMatch(people, />莉香<|>杜彻</);
 
   const news = await renderPath("/news");
   assert.match(news, /NEWS \/ ARCHIVE/);
@@ -100,7 +88,8 @@ test("renders the recovered identity and death-record chapter routes", async () 
   const mergedIdentity = await renderPath("/members/du-wanlin");
   assert.match(mergedIdentity, /杜南阳/);
   assert.match(mergedIdentity, /杜万琳/);
-  assert.match(mergedIdentity, /IDENTITY MERGE/);
+  assert.match(mergedIdentity, /CHARACTER PROTOTYPE/);
+  assert.match(mergedIdentity, /两者不是同一人的异名/);
 
   const wangKeding = await renderPath("/members/wang-keding");
   assert.match(wangKeding, /公开死亡记录/);
@@ -126,7 +115,7 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(xingWan, /查看桌上的烟灰缸/);
   assert.match(xingWan, /查看地上的拨浪鼓/);
   assert.doesNotMatch(xingWan, /刑某|映射状态|异名合并/);
-  assert.doesNotMatch(xingWan, /杜彻/);
+  assert.doesNotMatch(xingWan, />杜彻</);
 
   const duCheFamily = await renderPath("/members/du-che-family");
   assert.match(duCheFamily, /记录尚未开放/);
@@ -143,13 +132,14 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.doesNotMatch(duCheFamily, /朗读文件索引|杜彻婚礼|编辑登录|寿享陵园/);
 
   const liXiang = await renderPath("/archive/deaths/lixiang");
-  assert.match(liXiang, /死亡过程/);
+  assert.match(liXiang, /公开说法/);
   assert.match(liXiang, /溺亡/);
-  assert.match(liXiang, /不记录原因与责任主体/);
+  assert.match(liXiang, /尚未经过案卷交叉验证/);
+  assert.match(liXiang, /文学层中，她是杜南阳的妹妹/);
   assert.match(liXiang, /材料名称：尸检报告/);
   assert.doesNotMatch(liXiang, /下一搜索词|搜索[“\"]?尸检报告/);
   assert.match(liXiang, /人体检验材料/);
-  assert.match(liXiang, /已恢复 06 \/ 14/);
+  assert.match(liXiang, /ARCHIVE MOVED/);
 });
 
 test("renders the forensic route, encrypted supplement, and completed cremation form", async () => {
@@ -172,15 +162,15 @@ test("renders the forensic route, encrypted supplement, and completed cremation 
   assert.match(supplement, /无失败锁定/);
 
   const wangDeath = await renderPath("/recovered/13-wang-keding");
-  assert.match(wangDeath, /王克定并非自杀/);
-  assert.match(wangDeath, /现场被布置为投河自杀/);
-  assert.match(wangDeath, /责任主体：现有材料不指认/);
+  assert.match(wangDeath, /服毒自杀/);
+  assert.match(wangDeath, /投河现场由邢万在死后伪造/);
+  assert.match(wangDeath, /死亡性质：自杀/);
   assert.match(wangDeath, /残留表单标题：焚烧签字单/);
   assert.doesNotMatch(wangDeath, /用这份单据的名称继续查找/);
 
   const cremation = await renderPath("/archive/forms/cremation-du-complete");
   assert.match(cremation, /方晚/);
-  assert.match(cremation, /已恢复 08 \/ 14/);
+  assert.match(cremation, /完整文字层/);
   assert.match(cremation, /cemetery-receipt\.webp/);
   assert.doesNotMatch(cremation, /旧闻关联|NEXT: CASE/);
 });
@@ -216,20 +206,21 @@ test("keeps the missing-work clues and places the supplied image only in Ge Dong
   assert.doesNotMatch(geDongping, /白芍肉/);
 });
 
-test("renders the five-person cemetery case without inventing missing deaths", async () => {
+test("renders the five-person cemetery case with the canonical outcomes", async () => {
   const caseIndex = await renderPath("/archive/case/cemetery");
   assert.match(caseIndex, /CASE INDEX \/ 05 PERSONS/);
   assert.match(caseIndex, /xing-arrest-magazine/);
-  assert.doesNotMatch(caseIndex, /索引原则|新闻匿名|新闻标题没有写出/);
+  assert.doesNotMatch(caseIndex, /索引原则|新闻标题没有写出/);
   assert.match(caseIndex, /杜万琳/);
   assert.match(caseIndex, /方晚/);
   assert.match(caseIndex, /王克定/);
   assert.match(caseIndex, /邢万/);
   assert.match(caseIndex, /莉香/);
-  assert.match(caseIndex, /自杀现场系伪造/);
-  assert.match(caseIndex, /溺亡/);
-  assert.match(caseIndex, /死亡过程未公开/);
-  assert.doesNotMatch(caseIndex, /责任单位|执行人|凶手/);
+  assert.match(caseIndex, /服毒自杀，投河现场由邢万伪造/);
+  assert.match(caseIndex, /遭邢万掐死，溺亡说法不成立/);
+  assert.match(caseIndex, /被捕并判处无期徒刑/);
+  assert.match(caseIndex, /晚年患阿尔茨海默症/);
+  assert.doesNotMatch(caseIndex, /王克定并非自杀|王克定.*遭杀害/);
 });
 
 test("renders the cached news, cemetery mirror, and Du Che profile", async () => {
@@ -250,16 +241,22 @@ test("renders the cached news, cemetery mirror, and Du Che profile", async () =>
   assert.doesNotMatch(duChe, /杜万琳与徐惠之子|朗读文件索引|编辑登录/);
 });
 
-test("renders recovered scripts 07, 10, and 11 with the medical clue chain", async () => {
+test("keeps recovered Mang scripts out of the gallery while retaining the clue chain", async () => {
+  const mangSpring = await renderPath("/recovered/01-mangzhichun");
+  assert.match(mangSpring, /当前步骤 \/ 仍在画廊网站/);
+  assert.match(mangSpring, /加密文件夹尚未开放/);
+  assert.match(mangSpring, /分类残留/);
+  assert.match(mangSpring, />憎恶</);
+  assert.match(mangSpring, /回到画廊搜索框/);
+
   const wedding = await renderPath("/archive/wedding/du-li");
-  assert.match(wedding, /已恢复 07 \/ 14/);
+  assert.match(wedding, /ARCHIVE MOVED/);
   assert.match(wedding, /舞/);
-  assert.match(wedding, /朗读声部：徐惠/);
+  assert.match(wedding, /图像原稿仅保存在 Administrator 的加密文件夹/);
 
   const taste = await renderPath("/recovered/10-chuwei-taste");
-  assert.match(taste, /已恢复 10 \/ 14/);
-  assert.match(taste, /寿享陵园/);
-  assert.match(taste, /朗读声部：杜彻/);
+  assert.match(taste, /ARCHIVE MOVED/);
+  assert.match(taste, /刍味/);
 
   const redacted = await renderPath("/archive/medical/redacted");
   assert.match(redacted, /××××××/);
@@ -267,10 +264,8 @@ test("renders recovered scripts 07, 10, and 11 with the medical clue chain", asy
   assert.match(redacted, /执行功能障碍/);
 
   const stomach = await renderPath("/recovered/11-chuwei-stomach");
-  assert.match(stomach, /阿尔茨海默病/);
-  assert.match(stomach, /已恢复 11 \/ 14/);
-  assert.match(stomach, /朗读声部：杜万琳/);
-  assert.match(stomach, /阔南会社/);
+  assert.match(stomach, /ARCHIVE MOVED/);
+  assert.match(stomach, /刍胃/);
 });
 
 test("renders the version history, letter, publication, and fictional editor gate", async () => {
@@ -325,21 +320,18 @@ test("renders the rewritten character history and encrypted fragment index", asy
   assert.match(fragments, /错误不会清空碎片/);
 });
 
-test("renders the warm stage reveal and Shinan curtain call without assigning a killer", async () => {
+test("renders the warm stage reveal and text-only Shinan curtain call", async () => {
   const finale = await renderPath("/stage/zhuhongmen");
   assert.match(finale, /场次 14 \/ 14/);
-  assert.match(finale, /追随潮退之狐/);
+  assert.match(finale, /ARCHIVE MOVED/);
   assert.match(finale, /所有人请就位/);
   assert.match(finale, /演出名：诗喃/);
-  assert.doesNotMatch(finale, /凶手姓名|责任单位/);
+  assert.doesNotMatch(finale, /下一页不会公布凶手/);
 
   const shinan = await renderPath("/stage/shinan");
   assert.match(shinan, /航船诗歌社 · 国庆诗歌剧场/);
   assert.match(shinan, /静音字幕版开演/);
-  assert.match(shinan, /\/archive\/shinan\/shinan-poster\.webp/);
-  assert.match(shinan, /现场档案 \/ 01—21/);
-  assert.match(shinan, /\/archive\/shinan\/activity\/photo-21\.webp/);
-  assert.doesNotMatch(shinan, /授权原图待接入/);
+  assert.doesNotMatch(shinan, /archive\/shinan|<img|演出海报|活动照|现场照片/);
   assert.match(shinan, /他们是剧中人，也是朗读者/);
   assert.match(shinan, /不构成通关门槛/);
 });

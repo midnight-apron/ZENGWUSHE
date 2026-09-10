@@ -91,12 +91,11 @@ export const CONTENT_ASSETS = [
   { id: "stone-clean", path: "/archive/stone-head-evidence.webp", disposition: "migrate", use: "佛头七窍初始态" },
   { id: "stone-blood", path: "/archive/stone-head-evidence-blood.webp", disposition: "migrate", use: "佛头七窍完成态" },
   { id: "zoudi", path: "/archive/scattered/zoudi-guoji.html", disposition: "verbatim", use: "最终文学层" },
-  { id: "shinan", path: "/archive/shinan/", disposition: "migrate", use: "诗喃终场" },
 ] as const;
 
 export const LITERARY_REGISTRY = [
   { id: "juroutuanfei", publicTitle: "句肉抟飞", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "展览、人物、出版与嵌套小说" },
-  { id: "mang", publicTitle: "目盲", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "朗读文本与人物视角" },
+  { id: "mang", publicTitle: "目盲", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "加密文件夹中的图像诗稿与人物视角" },
   { id: "xiyan", publicTitle: "西岩大火", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "罪疚、梦境与地方文本" },
   { id: "mahe", publicTitle: "玛赫", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "编辑层与诗剧关联" },
   { id: "zoudi", publicTitle: "走地国记", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "最终文件夹；不得改写或节选" },
@@ -319,7 +318,7 @@ export const BROWSER_NODES: BrowserNode[] = [
     id: "shinan",
     title: "诗喃｜最终排演档案",
     kind: "演出档案",
-    summary: "案件与角色映射确认后开放的排演稿、海报与现场资料。",
+    summary: "案件与角色映射确认后开放的排演文本与静音字幕终场。",
     aliases: ["诗喃", "詩喃"],
     requires: ["unlocked_final_folder"],
     lockedHint: "终场只能在案件与身份映射完成后出现。",

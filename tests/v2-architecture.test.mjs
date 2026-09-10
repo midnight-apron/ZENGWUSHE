@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const data = await readFile(new URL("../app/v2/data.ts", import.meta.url), "utf8");
@@ -28,6 +28,13 @@ test("V2 story bible preserves the corrected deaths and responsibility boundarie
   assert.match(data, /不是杀人共犯/);
   assert.match(data, /轻微、未越界的爱意/);
   assert.doesNotMatch(data + app, /王克定并非自杀|王克定遭到杀害|杜莉香确实溺亡/);
+  assert.match(legacyApp, /王克定因精神困境与艺术信念冲突服毒自杀/);
+  assert.match(legacyApp, /投河现场由邢万在死后伪造/);
+  assert.match(legacyApp, /遭邢万掐死，溺亡说法不成立/);
+  assert.doesNotMatch(
+    legacyApp,
+    /王克定并非自杀|王克定.*遭杀害|旧名：杜南阳|IDENTITY MERGE \/ 02 SOURCES/,
+  );
 });
 
 test("V2 uses normalized names and confirmed search aliases", () => {
@@ -103,6 +110,15 @@ test("V2 embeds the complete legacy gallery game and separates the cemetery site
   assert.doesNotMatch(app, /function BrowserResults/);
 });
 
+test("legacy gallery milestones unlock the desktop evidence vault", () => {
+  assert.match(app, /\/recovered\/13-wang-keding/);
+  assert.match(app, /verified_wang_poison/);
+  assert.match(app, /\/archive\/case\/cemetery/);
+  assert.match(app, /verified_lixiang_homicide/);
+  assert.match(app, /\/stage\/recovered-index/);
+  assert.match(app, /heard_duwanlin_confession/);
+});
+
 test("NEW badges stay inside the gallery website instead of the XP desktop", () => {
   assert.doesNotMatch(app, /newState|isNew=\{newState/);
   assert.match(legacyApp, /entry\.isNew \? <b>NEW<\/b>/);
@@ -113,6 +129,21 @@ test("V2 implements three neutral endings and delays the stage archive", () => {
   for (const id of ["publish-all", "case-only", "close"]) assert.match(app, new RegExp(id));
   assert.match(app, /三项选择建立在同一事实真相上，只改变公开范围，不进行道德评分/);
   assert.match(data, /requires: \["unlocked_final_folder"\]/);
+});
+
+test("Mang image archive contains all 19 entries and 51 supplied images", async () => {
+  const files = (await readdir(new URL("../public/archive/mang/", import.meta.url)))
+    .filter((name) => name.endsWith(".webp"));
+  assert.equal(files.length, 51);
+  assert.match(app, /共 19 个篇目、51 张图像/);
+  for (const prefix of ["00-prologue", "01-chapter", "01-01", "01-02", "01-03", "01-04", "02-chapter", "02-01", "02-02", "03-chapter", "03-01", "03-02", "04-chapter", "04-01", "04-02", "05-chapter", "05-01", "05-02", "06-epilogue"]) {
+    assert.ok(files.some((name) => name.startsWith(`${prefix}-`)), `missing ${prefix}`);
+  }
+});
+
+test("Shinan finale is text-only and its image archive is removed", async () => {
+  assert.doesNotMatch(data + app + legacyApp, /archive\/shinan|shinan-poster|现场档案 \/ 01—21|演出海报与活动照/);
+  await assert.rejects(access(new URL("../public/archive/shinan/", import.meta.url)));
 });
 
 test("literary sources are registered with the verbatim boundary", () => {

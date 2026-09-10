@@ -717,8 +717,6 @@
 .stageText { margin: 2rem 0; border: 1px solid var(--v2-red); padding: 1.5rem; }
 .stageText h2 { margin: .5rem 0; font-family: "Noto Serif SC", SimSun, serif; font-size: 2rem; font-weight: 500; }
 .stageText p { line-height: 1.8; }
-.photoGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
-.photoGrid img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; filter: grayscale(.45); }
 
 .dialog { max-height: min(48rem, calc(100vh - 2rem)); overflow: auto; border-radius: 0; background: var(--v2-paper); color: var(--v2-ink); }
 .historyList { display: grid; max-height: 24rem; overflow: auto; margin: 0; padding: 0; list-style: none; }
@@ -800,7 +798,6 @@
   .audioApp > aside { padding-bottom: .5rem; }
   .audioList { grid-template-columns: repeat(3, minmax(9rem, 1fr)); overflow-x: auto; }
   .vaultSlots { grid-template-columns: 1fr; }
-  .photoGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .personFacts dl,
   .roleMap dl { grid-template-columns: 1fr; }
   .personFacts dt,
@@ -828,7 +825,6 @@
   .hotSearch { margin-top: 2rem; }
   .hotSearch ol { grid-template-columns: 1fr; }
   .hotSearch button > span { white-space: normal; }
-  .photoGrid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
