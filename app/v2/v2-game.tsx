@@ -108,6 +108,32 @@ const GALLERY_DIRECTORY_IDS: Record<Exclude<GallerySection, "home" | "exhibition
   about: ["society"],
 };
 
+function mangImageSeries(prefix: string, count: number) {
+  return Array.from({ length: count }, (_, index) => `/archive/mang/${prefix}-${String(index + 1).padStart(2, "0")}.webp`);
+}
+
+const MANG_IMAGE_ARCHIVE = [
+  { id: "prologue", title: "序诗：盲之春", images: mangImageSeries("00-prologue", 2) },
+  { id: "chapter-one", title: "瞽人篇", images: mangImageSeries("01-chapter", 1) },
+  { id: "society", title: "1.1 憎恶社", images: mangImageSeries("01-01", 3) },
+  { id: "fang-wan", title: "1.2 方晚", images: mangImageSeries("01-02", 3) },
+  { id: "wang-keding", title: "1.3 王克定", images: mangImageSeries("01-03", 4) },
+  { id: "zai-landao", title: "1.4 在蘭道", images: mangImageSeries("01-04", 1) },
+  { id: "chapter-two", title: "闊南篇", images: mangImageSeries("02-chapter", 1) },
+  { id: "lixiang", title: "2.1 溺水的莉香", images: mangImageSeries("02-01", 3) },
+  { id: "dance", title: "2.2 舞", images: mangImageSeries("02-02", 3) },
+  { id: "chapter-three", title: "浣石篇", images: mangImageSeries("03-chapter", 1) },
+  { id: "confession", title: "3.1 自白", images: mangImageSeries("03-01", 2) },
+  { id: "washing-stone", title: "3.2 浣石", images: mangImageSeries("03-02", 2) },
+  { id: "chapter-four", title: "過曝篇", images: mangImageSeries("04-chapter", 3) },
+  { id: "taste", title: "4.1 芻味", images: mangImageSeries("04-01", 2) },
+  { id: "stomach", title: "4.2 芻胃", images: mangImageSeries("04-02", 2) },
+  { id: "chapter-five", title: "失焦篇", images: mangImageSeries("05-chapter", 1) },
+  { id: "fragments", title: "5.1 始末的碎点", images: mangImageSeries("05-01", 11) },
+  { id: "wang-death", title: "5.2 王克定之死", images: mangImageSeries("05-02", 5) },
+  { id: "epilogue", title: "结诗：赭紅門—點意象之歌", images: mangImageSeries("06-epilogue", 1) },
+] as const;
+
 function unique(values: string[]) {
   return Array.from(new Set(values));
 }
@@ -274,6 +300,7 @@ export function V2Game() {
   const [editorNote, setEditorNote] = useState("");
   const [hintOpen, setHintOpen] = useState(false);
   const [hintLevel, setHintLevel] = useState(0);
+  const [selectedMangPoem, setSelectedMangPoem] = useState<string | null>(null);
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -842,7 +869,29 @@ export function V2Game() {
   function renderVault() {
     const unlocked = hasEvent("unlocked_final_folder");
     if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>FINAL_ARCHIVE</span><h1>文件夹已加密</h1><p>三个验证槽位分别来自不同应用。槽位只显示完成状态，不提前透露答案。</p><div className={styles.vaultSlots}>{vaultSlots.map((complete, index) => <div key={index} className={complete ? styles.slotComplete : ""}><span>验证片段 {String.fromCharCode(65 + index)}</span><b>{complete ? "已核验" : "等待材料"}</b></div>)}</div><button type="button" disabled={!vaultReady} onClick={() => markEvent("unlocked_final_folder")}>{vaultReady ? "拼合验证片段并打开" : "尚缺验证材料"}</button></section>;
-    return <section className={styles.vaultOpen}><header><span>FINAL_ARCHIVE / VERIFIED</span><h1>杜彻整理的数字档案</h1><p>案件证据、角色映射与文学文本依次开放。案件结论不依赖文学隐喻。</p></header><div className={styles.finalEvidence}>{EVIDENCE_CLAIMS.map((item) => <article key={item.id}><span>{item.id}</span><h2>{item.claim}</h2><ul>{item.sources.map((source) => <li key={source}>{source}</li>)}</ul></article>)}</div><section className={styles.finalNarrative}><h2>两起死亡与责任边界</h2><p>{STORY_BIBLE.conclusions.wang}</p><p>{STORY_BIBLE.conclusions.lixiang}</p><p>{STORY_BIBLE.conclusions.nanyang}</p><p>{STORY_BIBLE.conclusions.fang}</p></section><section className={styles.roleMap}><h2>文学角色与真实原型</h2><dl><dt>表层文学世界</dt><dd>杜南阳、徐惠、方晚、邢万、王克定、杜莉香</dd><dt>里层档案世界</dt><dd>杜万琳是杜南阳的创作原型；徐惠与杜彻跨越两层。二者不是简单别名或损坏重定向。</dd><dt>杜彻为何持有材料</dt><dd>父亲去世后整理手稿、搜集案件细节，并向方晚核实往事。</dd></dl></section><section className={styles.literatureShelf}><h2>文学文本</h2><p>《走地国记》保持完整原稿，仅承担杜南阳的罪疚与梦境层；案件事实由上方证据包负责。</p><a href={asset("/archive/scattered/zoudi-guoji.html")} target="_blank" rel="noreferrer"><BookOpenText />阅读《走地国记》完整原文</a><a href={asset("/publications/juroutuanfei/")} target="_blank" rel="noreferrer"><BookOpenText />打开《句肉抟飞》五章连载</a></section>{save.ending ? <EndingCard ending={save.ending} /> : <EndingChoice />}</section>;
+    const selectedPoem = MANG_IMAGE_ARCHIVE.find((item) => item.id === selectedMangPoem);
+    return (
+      <>
+        <section className={styles.vaultOpen}>
+          <header><span>FINAL_ARCHIVE / VERIFIED</span><h1>杜彻整理的数字档案</h1><p>案件证据、角色映射与图像档案依次开放。案件结论不依赖文学隐喻。</p></header>
+          <div className={styles.finalEvidence}>{EVIDENCE_CLAIMS.map((item) => <article key={item.id}><span>{item.id}</span><h2>{item.claim}</h2><ul>{item.sources.map((source) => <li key={source}>{source}</li>)}</ul></article>)}</div>
+          <section className={styles.finalNarrative}><h2>两起死亡与责任边界</h2><p>{STORY_BIBLE.conclusions.wang}</p><p>{STORY_BIBLE.conclusions.lixiang}</p><p>{STORY_BIBLE.conclusions.nanyang}</p><p>{STORY_BIBLE.conclusions.fang}</p></section>
+          <section className={styles.roleMap}><h2>文学角色与真实原型</h2><dl><dt>表层文学世界</dt><dd>杜南阳、徐惠、方晚、邢万、王克定、杜莉香</dd><dt>里层档案世界</dt><dd>杜万琳是杜南阳的创作原型；徐惠与杜彻跨越两层。二者不是简单别名或损坏重定向。</dd><dt>杜彻为何持有材料</dt><dd>父亲去世后整理手稿、搜集案件细节，并向方晚核实往事。</dd></dl></section>
+          <section className={styles.mangArchive}>
+            <header><span>ENCRYPTED IMAGE ARCHIVE</span><h2>《目盲》图像诗稿</h2><p>共 19 个篇目、51 张图像。文字版朗读稿不再保存在画廊网页中。</p></header>
+            <div>{MANG_IMAGE_ARCHIVE.map((item) => <button type="button" key={item.id} onClick={() => setSelectedMangPoem(item.id)}><span>{item.images.length} 张</span><b>{item.title}</b><ChevronRight aria-hidden="true" /></button>)}</div>
+          </section>
+          <section className={styles.literatureShelf}><h2>其他文学文本</h2><p>《走地国记》保持完整原稿，仅承担杜南阳的罪疚与梦境层；案件事实由上方证据包负责。</p><a href={asset("/archive/scattered/zoudi-guoji.html")} target="_blank" rel="noreferrer"><BookOpenText />阅读《走地国记》完整原文</a><a href={asset("/publications/juroutuanfei/")} target="_blank" rel="noreferrer"><BookOpenText />打开《句肉抟飞》五章连载</a></section>
+          {save.ending ? <EndingCard ending={save.ending} /> : <EndingChoice />}
+        </section>
+        <Dialog open={Boolean(selectedPoem)} onOpenChange={(open) => { if (!open) setSelectedMangPoem(null); }}>
+          <DialogContent className={styles.mangViewer}>
+            <DialogHeader><DialogTitle>{selectedPoem?.title}</DialogTitle><DialogDescription>《目盲》加密图像档案 · {selectedPoem?.images.length ?? 0} 张</DialogDescription></DialogHeader>
+            <div>{selectedPoem?.images.map((image, index) => <figure key={image}><img src={asset(image)} alt={`${selectedPoem.title} 第 ${index + 1} 张`} loading="lazy" /><figcaption>{index + 1} / {selectedPoem.images.length}</figcaption></figure>)}</div>
+          </DialogContent>
+        </Dialog>
+      </>
+    );
   }
 
   function EndingChoice() {

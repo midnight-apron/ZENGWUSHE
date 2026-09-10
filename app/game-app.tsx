@@ -16,12 +16,9 @@ import {
   Eye,
   EyeOff,
   FileWarning,
-  FolderOpen,
-  HelpCircle,
   LockKeyhole,
   Search,
   History,
-  Settings2,
   UnlockKeyhole,
   X,
 } from "lucide-react";
@@ -36,7 +33,6 @@ import {
 } from "@/components/ui/dialog";
 import { ShouxiangPage } from "./shouxiang-page";
 import { FamilyPhoto, WeddingPhotoPuzzle, ShopPhoto, INITIAL_WEDDING_TILES, isWeddingPhotoComplete } from "./archive-photo-interactions";
-import { Switch } from "@/components/ui/switch";
 import { type JuroutuanfeiTextBlock } from "./juroutuanfei-text";
 import { getReadingChapter } from "./juroutuanfei-layout";
 import { OpeningPrologue } from "./opening-prologue";
@@ -474,23 +470,6 @@ const HINTS: Record<string, string[]> = {
     "点击：静音字幕版开演。",
   ],
 };
-
-const RECOVERED_FILES = [
-  { id: "01", title: "序诗：盲之春", source: "损坏朗读页" },
-  { id: "02", title: "1.1 憎恶社（杜万琳）", source: "旧社团历史" },
-  { id: "03", title: "1.2 方晚（杜万琳）", source: "方晚人物档案" },
-  { id: "04", title: "1.3 王克定（方晚）", source: "城市旧照片" },
-  { id: "05", title: "1.4 在兰道（邢万）", source: "邢万合并档案" },
-  { id: "06", title: "2.1 溺水的莉香（邢万）", source: "莉香溺亡记录" },
-  { id: "07", title: "2.2 舞（徐惠）", source: "婚礼档案" },
-  { id: "08", title: "3.1 自白（方晚）", source: "完整焚烧签字单" },
-  { id: "09", title: "3.2 浣石（方晚）", source: "西岩寺石像档案" },
-  { id: "10", title: "4.1 刍味（杜彻）", source: "寿享陵园" },
-  { id: "11", title: "4.2 刍胃（杜万琳）", source: "医学删除页" },
-  { id: "12", title: "5.1 始末的碎点", source: "碎点索引" },
-  { id: "13", title: "5.2 王克定之死（杜万琳）", source: "尸检补充" },
-  { id: "14", title: "结诗：赭红门", source: "终场" },
-];
 
 type JuroutuanfeiChapter = {
   number: 1 | 2 | 3 | 4 | 5;
@@ -1743,7 +1722,6 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
   const [resultNote, setResultNote] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [wrongAttempts, setWrongAttempts] = useState<Record<string, number>>({});
-  const [hintLevels, setHintLevels] = useState<Record<string, number>>({});
   const [frameNotice, setFrameNotice] = useState(false);
   const [plainText, setPlainText] = useState(false);
   const [openingActive, setOpeningActive] = useState(!embedded);
@@ -1771,7 +1749,6 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
   const drumRecordLocked = isDrumRecordLocked(game, currentPath);
   const currentHint = getProgressHint(game);
   const currentHints = currentHint.hints;
-  const hintLevel = Math.min(hintLevels[currentHint.id] ?? 0, currentHints.length - 1);
   const stageComplete = game.recovered.includes("14");
   const stageVocabulary = game.recovered.includes("12");
   const publicCatalog = useMemo(() => buildPublicCatalog(game), [game]);
@@ -2481,8 +2458,6 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
     }
   }
 
-  const recoveredLabel = `${game.recovered.length}/14`;
-  const progressPercent = Math.round((game.recovered.length / 14) * 100);
   const searchSummary = useMemo(() => {
     if (!results) return "";
     if (results.length === 0) return resultNote;
@@ -2558,40 +2533,6 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
                   return <li key={term}><button type="button" onClick={() => { setHistoryOpen(false); runSearch(term); }}><span>{term}</span><b className={status === "有效" ? "is-valid" : ""}>{status}</b></button></li>;
                 })}
               </ol> : <p>还没有搜索记录。找到的线索可以在这里随时重查。</p>}
-            </DialogContent>
-          </Dialog>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="ghost" className="header-button"><FolderOpen aria-hidden="true" /><span>已恢复</span><b>{recoveredLabel}</b></Button>
-            </DialogTrigger>
-            <DialogContent className="archive-dialog">
-              <DialogHeader><DialogTitle>已恢复的朗读文件</DialogTitle><DialogDescription>文件保存在这台设备上。完整游戏共 14 份。</DialogDescription></DialogHeader>
-              <div className="archive-progress" aria-label={`恢复进度 ${recoveredLabel}`}><span style={{ width: `${progressPercent}%` }} /></div>
-              <ol className="archive-list">
-                {RECOVERED_FILES.map((file) => {
-                  const found = game.recovered.includes(file.id);
-                  return <li key={file.id} className={found ? "is-found" : ""}><span>{file.id}</span><div><b>{found ? file.title : "未恢复"}</b><small>{found ? `来源：${file.source}` : "文件名未知"}</small></div></li>;
-                })}
-              </ol>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog>
-            <DialogTrigger asChild><Button variant="ghost" size="icon" className="header-icon" aria-label="打开线索"><HelpCircle aria-hidden="true" /></Button></DialogTrigger>
-            <DialogContent className="hint-dialog" aria-describedby={undefined}>
-              <DialogHeader><DialogTitle>调查进度提示</DialogTitle></DialogHeader>
-              <div className="hint-sheet"><span>提示 {hintLevel + 1}/3</span><p>{currentHints[hintLevel]}</p></div>
-              <Button variant="outline" onClick={() => setHintLevels((levels) => ({ ...levels, [currentHint.id]: Math.min(currentHints.length - 1, hintLevel + 1) }))} disabled={hintLevel >= 2}>{hintLevel >= 2 ? "已显示最终提示" : "再给我一点提示"}</Button>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog>
-            <DialogTrigger asChild><Button variant="ghost" size="icon" className="header-icon" aria-label="打开显示选项"><Settings2 aria-hidden="true" /></Button></DialogTrigger>
-            <DialogContent className="settings-dialog">
-              <DialogHeader><DialogTitle>显示与互动</DialogTitle><DialogDescription>不会改变谜题答案，只调整呈现方式。</DialogDescription></DialogHeader>
-              <label className="setting-row"><span><b>减少惊吓</b><small>跳过黑场与突发文字，直接进入内容。</small></span><Switch checked={game.settings.reducedScares} onCheckedChange={(checked) => setGame((previous) => ({ ...previous, settings: { ...previous.settings, reducedScares: checked } }))} aria-label="减少惊吓" /></label>
-              <label className="setting-row"><span><b>减少动态</b><small>关闭位移动画与平滑滚动。</small></span><Switch checked={game.settings.reducedMotion} onCheckedChange={(checked) => setGame((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} aria-label="减少动态" /></label>
-              <label className="setting-row"><span><b>简化互动</b><small>为重复点击显示明确次数。</small></span><Switch checked={game.settings.assistedInteraction} onCheckedChange={(checked) => setGame((previous) => ({ ...previous, settings: { ...previous.settings, assistedInteraction: checked } }))} aria-label="简化互动" /></label>
             </DialogContent>
           </Dialog>
         </nav>
@@ -2869,21 +2810,14 @@ function DamagedReaderPage({ plainText, onTogglePlain }: { plainText: boolean; o
     <article className="damaged-page">
       <header className="damaged-head"><div><CacheStamp>ARCHIVE / READER 01</CacheStamp><h1>损坏的朗读页</h1></div><Button variant="outline" onClick={onTogglePlain}>{plainText ? <EyeOff /> : <Eye />}{plainText ? "返回损坏层" : "查看纯文字"}</Button></header>
       <div className="file-name"><span>filename</span><code>mang_?_chun.reader</code></div>
-      {plainText ? <section className="plain-reader"><p>［可辨认转录］</p><blockquote>“我已<span className="reader-clue">看不见</span>这些<span className="reader-clue">春天</span>，你当依着屐痕，给经行此地的瞽人指明路——教他平稳抵达南方的温度里。”</blockquote><p>残留索引词：<span className="reader-clue">看不见</span> / <span className="reader-clue">春天</span> / 瞽人</p></section> : <section className="corrupted-reader" aria-label="损坏文字；可使用纯文字按钮读取同等线索"><p>说：“我已<span className="reader-clue">看不见</span>这些<span className="reader-clue">春天</span>你当</p><p className="shift-one">依着屐痕给经行此地的瞽人指明路</p><p className="noise">▒▒ 教他平稳抵达 南方的温度里 乱码_17%_▒▒▒</p><p className="shift-two">还要嘱咐他遇着僧众放生的蛇 便避着离去</p><p className="noise">00::mang / ? / chun::FILE HEADER LOST</p><p>感到让你惬意的好太阳便赞美 它如狮如虎方才醒过来</p><div className="corruption-block" aria-hidden="true">▓░▓▓░░▓░▓░░▓▓░</div><p className="last-line">给他们指一条明路：“得往<span className="reader-clue">春天</span>最好的地方走……”</p></section>}
-      <footer className="damaged-footer"><span>文字完整度：63%</span><span>标题字段：LOST</span><span>全文搜索：AVAILABLE</span></footer>
+      {plainText ? <section className="plain-reader"><p>［仅恢复索引字段］</p><p>残留词组：<span className="reader-clue">看不见</span> / <span className="reader-clue">春天</span> / 瞽人</p><p>正文已从画廊缓存中移除。</p></section> : <section className="corrupted-reader" aria-label="损坏文件索引"><p className="noise">▒▒ READER BODY REMOVED ▒▒▒</p><p className="shift-one"><span className="reader-clue">看不见</span> / ? / <span className="reader-clue">春天</span></p><p className="noise">00::mang / ? / chun::FILE HEADER LOST</p><div className="corruption-block" aria-hidden="true">▓░▓▓░░▓░▓░░▓▓░</div></section>}
+      <footer className="damaged-footer"><span>正文状态：REMOVED</span><span>标题字段：LOST</span><span>索引搜索：AVAILABLE</span></footer>
     </article>
   );
 }
 
 function RecoveredOnePage() {
-  return (
-    <article className="script-page">
-      <header className="script-head"><div><ArtifactTag>已恢复 01 / 14</ArtifactTag><p>《目盲》· 序诗</p></div><span className="recovered-seal">RECOVERED</span></header>
-      <div className="script-title"><span>序诗</span><h1>盲之春</h1></div>
-      <section className="poem-body"><p>说：“我已看不见这些春天你当<br />依着屐痕给经行此地的瞽人指明路<br />——教他平稳抵达南方的温度里”</p><p>还要嘱咐他遇着僧众放生的蛇<br />便避着离去遇着冬眠的兽<br />便停着听沉而紧的呼噜</p><p>感到让你惬意的好太阳便赞美<br />它如狮如虎方才醒过来<br />鬃毛含着白光可天底下真有俗套的肖像会把它画成狮</p><p>世人有意目睹这狮与斑蟒的搏击<br />你去扑它吧，我们大伙的好太阳<br />就算扑了个空也可以死在船道边</p><p>瞎！辨或辨不出它都得是些什么<br />是春天的兽、农人药死的耗子<br />给他们指一条明路：“得往春天<br />最好的地方走，之后退出一个完整。”</p></section>
-      <footer className="script-footer"><div><span>文件标签</span><button type="button">憎恶</button></div><div><span>后台残留分类</span><code>社 / voice_01</code></div><p>下一份朗读文件与一个同名组织共享索引。</p></footer>
-    </article>
-  );
+  return <TransferredReading title="序诗：盲之春" />;
 }
 
 function HistoryPage({ roleGlitch, membersRevealed }: { roleGlitch: boolean; membersRevealed: boolean }) {
@@ -2898,20 +2832,17 @@ function HistoryPage({ roleGlitch, membersRevealed }: { roleGlitch: boolean; mem
         <figcaption><span>社团合照 / 视觉复原层</span><strong>早期成员及同行者</strong><p>四名男性成员 · 一名女性同行者。照片背注的姓名层残损，暂不据此补全名单。</p><small>杭州 · 年份字段缺失</small></figcaption>
       </figure>
       <section className="history-layout timeline-only"><div className="timeline"><div className="timeline-item"><span>成立</span><div><b>创办人：杜南阳</b></div></div>{membersRevealed && <div className="timeline-item"><span>{roleGlitch ? "声部" : "成员"}</span><div><b>杜南阳 · 徐惠 · 邢万</b></div></div>}<div className="timeline-item"><span>状态</span><div><b>停止公开活动</b></div></div></div></section>
-      <section className="script-two" id="script-02"><header><ArtifactTag>已恢复 02 / 14</ArtifactTag><span>瞽人篇 · 1.1</span></header><h2>憎恶社 <small>（杜万琳）</small></h2><div className="script-two-copy"><p>“我听见有人在讲他的画社<br />他的艺术<br />他的徐惠”</p><p>告诉我你对那些旅游地区布置类景色感到烦厌<br />这周末，带你去做艺术采风。<br />画静物——静物你懂吧？</p><p>谁受“憎恶”的启发呢？<br />在杭州喝到干呕，玻璃渣扎破手掌<br />根丛丛地涌血。</p><p>你说：现在画吧，画彼此<br />思多愁苦、呆滞的神色。<br />直到把彼此描成一对好看的词。</p></div></section>
+      <TransferredReading title="1.1 憎恶社" />
     </article>
   );
 }
 
-function RecoveredScript({ id, section, title, reader, children }: { id: string; section: string; title: string; reader: string; children: ReactNode }) {
+function TransferredReading({ title }: { title: string }) {
   return (
-    <section className="embedded-script">
-      <header>
-        <div><ArtifactTag>已恢复 {id} / 14</ArtifactTag><span>{section}</span></div>
-        <span className="recovered-seal">RECOVERED</span>
-      </header>
-      <div className="embedded-script-title"><h2>{title}</h2><p>朗读声部：{reader}</p></div>
-      <div className="poem-body">{children}</div>
+    <section className="embedded-script archive-transfer-note">
+      <span>ARCHIVE MOVED</span>
+      <h2>{title}</h2>
+      <p>文字版朗读稿已从画廊网页移除；图像原稿仅保存在 Administrator 的加密文件夹中。</p>
     </section>
   );
 }
@@ -2980,13 +2911,7 @@ function FangWanPage() {
         </figure>
       </section>
 
-      <RecoveredScript id="03" section="瞽人篇 · 1.2" title="方晚" reader="杜万琳">
-        <p>如今想不起他究底怎样<br />诸如模样、年龄、生平喜恶<br />身边女人（如今是他的妻子或者情人）应该活得很好</p>
-        <p>印象里总是面色憔然。毕业后<br />我们之间互有往来，得知他开了<br />自己的小卖店，之后是再婚</p>
-        <p>娶了高中校友。让我们心怀诚恳地<br />赞美他的新感情就像受树之荫<br />也得为这一份破隳又拼接的感情<br />写上“此事良久”的尾注。</p>
-        <p>你说在东门外见过他，这样讲：<br />左臂稍长，遇着朋友的拥抱两手<br />的时机总有相差。发密遮耳后束为髻<br />不生油不显燥，像八十年代的老艺术家。</p>
-        <p>男人之肉，难于从中辨认属于<br />澎湃雄性的力量，像暴力边沿的<br />晚霞，从树与楼的夹缝中依稀瞥见。</p>
-      </RecoveredScript>
+      <TransferredReading title="方晚" />
     </article>
   );
 }
@@ -3029,14 +2954,7 @@ function WangKedingPage({ onOpenSociety }: { onOpenSociety: () => void }) {
         <button className="independent-text-link society-return-link" type="button" onClick={onOpenSociety}><b>憎恶社</b><small>旧社团档案 · 组织 / 朗读同名 <ArrowUpRight aria-hidden="true" /></small></button>
       </section>
 
-      <RecoveredScript id="04" section="瞽人篇 · 1.3" title="王克定" reader="方晚">
-        <p>王克定从没这样<br />掩着半张脸。站在“东兴彼得”的<br />招牌下面。像许多年前结婚的朋友<br />一个业务经理。</p>
-        <p>他说这几年带着受人威迫的钱款<br />穿过那些泥淖，人和人拥簇一起，穿过<br />那些旁窥的车窗玻璃。</p>
-        <p>有人告诉他：“这是你的妻子。”<br />“我没结婚。”他说。像毒蝮蛇的<br />上颚刺穿一样的夜晚，我渡过了很多。</p>
-        <p>“我没结婚。”不婚不育，住在西门车站的<br />政府廉租房，窗口的角度看得见湖，那里每年<br />都有赎买虚无的年轻人。</p>
-        <p>我搬出廉租房。凭着扑簌的碎银<br />找到湖水。像曾经在窗口目视的一样<br />目视着来向，冀望得到某些鸟<br />记录城市的视觉。</p>
-        <p>王克定从没这样掩着半张脸讲故事，<br />在“东兴彼得”的招牌下面。<br />残酷的一部分事实：<br />我们早已失去飞和描状形体的本事了。</p>
-      </RecoveredScript>
+      <TransferredReading title="王克定" />
     </article>
   );
 }
@@ -3050,13 +2968,7 @@ function XingWanPage({ drumRead, onReadDrum, onOpenFamily }: { drumRead: boolean
 
       <RentedRoom image={browserPath("/archive/rented-room.webp")} drumImage={browserPath("/archive/pellet-drum-detail.webp")} drumRead={drumRead} onReadDrum={onReadDrum} onOpenFamily={onOpenFamily} />
 
-      <RecoveredScript id="05" section="瞽人篇 · 1.4" title="在兰道" reader="邢万">
-        <p>紧张是一时的，去兰道看好的戏法吧<br />一环重一环。也无关抒情了<br />仅是绘画带来的乐趣已不足捱过昨夜</p>
-        <p>更棒的譬如抛球，三个轮着转圈<br />这已是次点。甭说那些迷人眼的扑克骗术<br />会更高明么？</p>
-        <p>当消愁时候喝多酒，你眼你耳<br />你神经你的嗅觉都高明地捂骗你<br />在水之花仿佛捧在手心。</p>
-        <p>棋差一招指的是理智偏偏<br />压住你一跃而下或抽刀刺腕。</p>
-        <p>为了这趟谎我们都要活去四十岁<br />给彼此办葬礼。其实这样算下来<br />帷幕足够大了，躲在其后那些拙劣的把戏<br />总把人骗得最深。</p>
-      </RecoveredScript>
+      <TransferredReading title="在兰道" />
     </article>
   );
 }
@@ -3076,17 +2988,7 @@ function LiXiangDeathPage() {
 
       <section className="case-crossref"><span>交叉附件</span><div><h2>另一名河中死者</h2><p>人物：王克定</p><p>材料名称：尸检报告</p></div><code>INDEX AVAILABLE · BODY LOCKED</code></section>
 
-      <RecoveredScript id="06" section="阔南篇 · 2.1" title="溺水的莉香" reader="邢万">
-        <p>T县热的夏天六月煞人心气<br />这段时间过完十岁生日的男孩<br />学着向街里同龄女孩表现——<br />像是爬树或者吹口哨。</p>
-        <p>偶尔也游水，湿的裤衩紧着大胯。<br />抬头两两三三之间推搡玩闹<br />要么是较量潜水的功夫<br />另外的人光着身子坐岸上打水漂。</p>
-        <p>疲累之余提早一步去小店<br />买廉价雪糕，没拆开包装的<br />刚登岸水渍拉紧皮肤。</p>
-        <p>和河流只隔了一个周末的距离。<br />肚腹鼓胀，夏天撺掇的猛火<br />跳上灼灼而炽的死畜尸首<br />你觉得它随时可能点燃这批炸药。</p>
-        <p>但引线攥她手里。她名字叫莉香。</p>
-        <p>也知道她堂哥是“阔南区”开画廊的杜万琳<br />你又想出一册浸水的油画册<br />分散的丙烯颜料和这些无关紧要称呼<br />连着汗也一齐出现她掌心。</p>
-        <p>朋友觉得你泳得并不好，开起玩笑<br />可不在乎，你有更好的乐趣、更完整的命。<br />哪怕她此刻并未站在这河流中某一岸，<br />甚至从未搭过一句话。</p>
-        <p>你要去打招呼呢，<br />可淹没着你半部身子的河水——<br />身体已经旧了。</p>
-        <p>啊，你想起那位莉香<br />就此时已是许多年前的事了。</p>
-      </RecoveredScript>
+      <TransferredReading title="溺水的莉香" />
 
       <section className="prototype-end"><span>交叉材料</span><div><h2>莉香并非这批河流记录中唯一的死者。</h2><p>王克定名下另存有一份未并入公开结论的人体检验材料。</p></div></section>
     </article>
@@ -3170,14 +3072,7 @@ function XiyanTemplePage({ openings, completed, reducedMotion, onInspect, onReve
       </section>
 
       {completed && (
-        <RecoveredScript id="09" section="句肉篇 · 3.2" title="浣石" reader="方晚">
-          <p>之后两年我一直想起<br />合伙做生意前的日子<br />那时还没接受政府的招标项目<br />得空就沿着西岩寺外小路<br />走一个上午。人们不知道<br />周末了无人烟的西岩寺<br />为何总有履印刻蚀在<br />寺门外一圈复叠一圈。</p>
-          <p>那时候你那凿石为佛的朋友<br />还健在，仍挥得起重几斤的<br />铁椎拟物刻像。<br />彼此身形都很完整<br />肝脏那么新鲜喜欢看<br />这人老派的造佛艺术<br />你能听到的敲击声往往是<br />一整个早晨，短促而惶惑。</p>
-          <p>六十七个等身像放在院墙<br />摆做一排。从主殿一直列到寝房。<br />到染疾逝世前两年<br />他没再雕。终日看着那些<br />逐步抵达释迦牟尼佛的仿品<br />在露天坝子被雨洗刷。</p>
-          <p>这故事讲并得不干净<br />你确切的脸容从那时便屡屡浮现<br />读颂经文的幸福感。被山雨乔装的<br />刀将佛面刻在腹下那么暗淡<br />像不啻宗门还俗的头陀。这是<br />为你刻造的石躯，山间昏暗的光<br />我们从中认出一张最隳败的脸。</p>
-          <p>左右反复比对。石英质地的胚子<br />青苔在其上缘皲裂纵向长开。<br />凹陷处晨露汇作一处。</p>
-          <p>你说那立像眼角窜流的水<br />多年后会同样出现在<br />你我二人的眼角。像我们各自<br />抵达的圆寂，你掏出雄踞在你<br />中庭的肝脏，它如磐石，反复洗濯。<br />到进炉火前它已很干净了。</p>
-        </RecoveredScript>
+        <TransferredReading title="浣石" />
       )}
     </article>
   );
@@ -3280,14 +3175,7 @@ function WangDeathPage() {
         <div><span>04</span><h3>路线</h3><p>水位、时间与回水路线彼此留下矛盾。</p></div>
       </section>
 
-      <RecoveredScript id="13" section="目盲 · 5.2" title="王克定之死" reader="杜万琳">
-        <p>第一天我们进城。房子独栋两不相接。<br />招徕客人的年青女孩在客房二楼<br />旁边是路灯。她很干净，手背有皮屑<br />在楼底能把握住，清清楚楚。</p>
-        <p>老人办住房登记，屏幕上说身份<br />信息缺失。我们上下打点，住进三楼<br />勉为其难。302室，左墙空的，向右是街。</p>
-        <p>警察背后牵着一组月亮，看得见<br />房间里落地窗仅一个方格<br />三个人挤在同一个区域，3×3dm<br />月光呈素色散开，颇显立体。那一刻<br />如果没有抒情警察和哨棍得空着手。<br />诗和发表，它们合法，没到89年前<br />今天单位在痛打西洋画家。</p>
-        <p>曾几何时，我们像这样围成一圈在<br />街道办前的小凳高谈阔论。一块空地<br />只有两个颜色，渗水的蓝和零食袋上<br />人像红（我们常吃的）。众人围作暴风<br />最深处站立他写文字，（也会鼓吹）<br />但肠胃不好。讲正话，或者是反话<br />是反话。无非是骂政委和军阀。</p>
-        <p>有人指明当今是看不见君王，也看不见臣属。<br />如同是歌剧里刺耳的女角色，<br />这个偌大的城池，古称是什么<br />还有些旧人，如扇骨一样重迭的身影。</p>
-        <p>你应该反思，为年青时狂暴的诗篇<br />有些不恰当的日子，他一头跳进老城河<br />以至于和谁又忘了这座城市<br />谁记得的，众人默不作声，全权算作祭奠。</p>
-      </RecoveredScript>
+      <TransferredReading title="王克定之死" />
       <section className="version-history"><span>版本历史</span><div><h2>另一名参与者的身后手续</h2><p>残留表单标题：焚烧签字单<br />死者姓名字段：杜万琳</p></div><code>FORM INDEX AVAILABLE</code></section>
     </article>
   );
@@ -3312,15 +3200,7 @@ function DuCremationPage({ revealed }: { revealed: boolean }) {
 
       {revealed && (
         <>
-          <RecoveredScript id="08" section="句肉篇 · 3.1" title="自白" reader="方晚">
-            <p>前几年你风光得意，总在思忖合适的死<br />会倒在哪里。想要突发暴疾<br />和朋友一起喝到胃穿孔<br />——你说这病非得不是肝硬化。</p>
-            <p>我们共有因贪杯而沾染的罪过<br />趔趄像失足的苍蝇<br />头脑昏沉连两翅都已濡湿。<br />想着就因此淹死吧。你挣脱<br />的意愿，将那份糜烂的肝脏剖划而出<br />如托起一枚玉石、裹着璞质的珍玩。<br />就因此淹死吧。</p>
-            <p>你反复声明<br />把摧折肝器的历史<br />比作好事多磨的象征。</p>
-            <p>后来你真走了。<br />尸检的报告单上写着<br />——小麦。徐惠发给我们这讯息<br />来不及吊唁，你生前少有的几个朋友<br />大家互相联系赶到殡仪馆。</p>
-            <p>那当天鼓起热风，你胸骨<br />哔剥作响从中辨认出红色的怪脸<br />像是你沉底的孽障欲将练成舍利。</p>
-            <p>徐惠哭至力竭很早便离开。<br />我代为家属在火化单署名<br />想到签下一个代号这门事儿<br />便裁定你惶惶的一生——<br />另一代号——自此变成土壤。</p>
-            <p>簇拥着喝得烂醉像以前一样<br />轻蔑地悲悼一条命的垂死<br />我们放弃审视各自毫无活性的肝脏<br />当天夜里织合一道谎言瞒过自己<br />杯酒相撞，庆幸仍活在世上。</p>
-          </RecoveredScript>
+          <TransferredReading title="自白" />
           <figure className="cemetery-receipt">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={browserPath("/archive/cemetery-receipt.webp")} alt="他山地方公墓收据" loading="lazy" />
@@ -3425,13 +3305,7 @@ function WeddingPage() {
     <article className="wedding-page">
       <header className="wedding-head"><div><CacheStamp>WEDDING ARCHIVE / 07</CacheStamp><p className="section-kicker">家庭公告与城市舞台指示</p><h1>杜彻 × 李髮</h1></div></header>
       <section className="wedding-record"><div><span>婚礼记录</span><p>“杜彻婚礼办得足够气派。”婚礼档案把画廊往来与新家庭放进同一个时间切面。</p></div><div><span>人物关系</span><p>杜彻：杜万琳与徐惠之子。李髮：杜彻的结婚对象。</p></div></section>
-      <RecoveredScript id="07" section="瞽人篇 · 2.2" title="舞" reader="徐惠">
-        <p>斗转直下的黑<br />负重之湿<br />还有云此间将要有雨</p>
-        <p>去到新康路<br />扔掉雨具<br />像这样左脚<br />轻曼地踏在双实线<br />像这样右脚<br />跨过排水口</p>
-        <p>舞在一个又一个<br />打夜场的铺面之前<br />唱一支新近的流行歌<br />抵着喉咙根<br />不必处处都唱得好</p>
-        <p>我们合着这朝夕复刻的濡湿声<br />今天它迟了半个拍子，比以往慢。<br />可是还得一样地跳起来，散射在侧身雨汽里的<br />前照灯扑在脸妆上</p>
-        <p>黄色晕圈早于粉彩使你更加鲜艳<br />在这盛大的湿润里<br />你还能舞到清晨。</p>
-      </RecoveredScript>
+      <TransferredReading title="舞" />
     </article>
   );
 }
@@ -3440,14 +3314,7 @@ function TastePage() {
   return (
     <article className="script-record-page">
       <header className="script-record-head"><div><ArtifactTag>已恢复 10 / 14</ArtifactTag><p className="section-kicker">句肉篇 · 4.1</p><h1>刍味</h1><p>朗读声部：杜彻</p></div><aside><span>相似标题</span><b>刍胃</b><p>只差一个同音字。</p></aside></header>
-      <RecoveredScript id="10" section="句肉篇 · 4.1" title="刍味" reader="杜彻">
-        <p>有可能只是一个问句<br />关于先前愤岖的酒瓶<br />——在它没抛出口的那一瞬间——他举得很高。<br />之后却失手沉重摔落地上，<br />碎片剥离的断口上沾着酒精带血。</p>
-        <p>你同旁人喝的第一场酒，<br />兴许是在城东的烧烤摊。<br />请教你胡须的割法，你记得<br />他一边还不停摸着下颌。</p>
-        <p>这反倒让你注意到他眉目舒展，<br />阴影里棱角分明。<br />你想问问某人关于婚姻，甚至是血或者月亮<br />颤巍的音节总不构成一段话<br />告诉自己再多喝两杯。</p>
-        <p>你想到可以有另外的问题，譬如从世伯<br />承办的寿享陵园着手，关于死后的住处<br />他很早就向你兜售一种活法<br />告诉你中国人古典的稳重和他眼里全部的社会。</p>
-        <p>真能这般说出口么<br />这些死和不安？究底是另外些什么？<br />这会儿你只是这样想<br />烟晕笼住顶棚打下的灯<br />面对着的中年男人愈来愈沉默。</p>
-        <p>血反冲到口腔的腥味快淹过来。<br />倒在地面，众人惊忙里赶来<br />拨着急救电话。</p>
-      </RecoveredScript>
+      <TransferredReading title="刍味" />
     </article>
   );
 }
@@ -3457,13 +3324,7 @@ function MedicalPage({ revealed, glyphRevealed, onToggleGlyph }: { revealed: boo
     <article className={`medical-page${revealed ? " is-revealed" : ""}`}>
       <header className="medical-head"><div><CacheStamp>{revealed ? "REDACTION REMOVED / 11" : "MEDICAL CACHE / REDACTED"}</CacheStamp><p className="section-kicker">标题校订与症状索引</p><h1>刍<button type="button" className="glyph-correction" onClick={onToggleGlyph} disabled={revealed || glyphRevealed} aria-label="把被划去的味字校订为胃"><del>味</del><ins className={glyphRevealed || revealed ? "is-visible" : ""}>胃</ins></button></h1></div><div className="time-reversal"><span>旧站修改记录</span><b>{revealed ? "18:14 ← 18:15" : "18:15"}</b><small>{revealed ? "时间戳短暂倒退一分钟" : "历史层未展开"}</small></div></header>
       <section className="medical-sheet"><div className="medical-title-line"><span>疾病名称</span><strong>{revealed ? "阿尔茨海默病" : "××××××"}</strong></div><p>一种起病隐匿、进行性发展的神经系统退行性疾病。现有文字层列出以下临床表现：</p><ul><li>记忆障碍</li><li>失语</li><li>失用</li><li>失认</li><li>视空间技能损害</li><li>执行功能障碍</li><li>人格和行为改变</li></ul>{!revealed && <p className="medical-search-note">病名被六个字符遮挡；症状列表仍可全文搜索。</p>}</section>
-      {revealed && <RecoveredScript id="11" section="句肉篇 · 4.2" title="刍胃" reader="杜万琳">
-        <p>时钟要敲打六点一刻的表面<br />它会多走一分钟。<br />这样的话偌大院子里<br />那些胡乱种下的果树<br />会抛出那枚剥开的橘子<br />经护工埋下再发新芽。</p>
-        <p>有时偶然落在其他人不大的墓碑跟前<br />你会抱怨修在养老院旁为何没有围墙。<br />它因此被判入室抢劫么？<br />还是和许多年前一样动人的枪毙<br />是含水的？</p>
-        <p>如今看见的像是<br />养老院发来的亡故通知<br />也带着果梗。<br />几个同住的老兄弟<br />站在碑前感叹<br />也许真已到暮年。</p>
-        <p>你会觉得呼吸依旧顺畅，子女们<br />偶尔会拿着那薄纸闻闻<br />寻橘子鲜活的气味无时无刻<br />在你油墨名字、<br />在你老的尸首上反刍。</p>
-        <p>你讲不出一个完整的故事<br />屏息前最后几个画面<br />以至于毫无干系。</p>
-      </RecoveredScript>}
+      {revealed && <TransferredReading title="刍胃" />}
       {revealed && <section className="old-history-reveal"><span>旧站命名残片</span><h2>阔南会社</h2><p>杜彻与葛东平改造画廊时曾考虑使用的名称。正文尚未进入当前恢复范围。</p></section>}
     </article>
   );
@@ -3659,22 +3520,10 @@ function YuanchangPage() {
 }
 
 function RecoveredIndexPage({ revealed, password, attempts, note, transformStep, onPasswordChange, onSubmit, onStable, onOpenSupplement }: { revealed: boolean; password: string; attempts: number; note: string; transformStep: number; onPasswordChange: (value: string) => void; onSubmit: (event: FormEvent<HTMLFormElement>) => void; onStable: () => void; onOpenSupplement: (path: string) => void }) {
-  const fragments = [
-    ["Ⅰ. 徐掖", <>下桥转身路过锦蜀饭馆，徐掖因死掉堂妹<br />约朋友坐其外打扑克<br />从口袋褶巴里摸出玉溪，给人散去半盒。</>],
-    ["Ⅱ. 徐惠其一", <>徐惠。去学画或者其他。家父习惯叫<br />这门技术为江南几省的罗网，<br />被着驳彩迷乱青年人底心性——他讲道理如是。</>],
-    ["Ⅲ. 憎恶社其一", <>我们捉对捞取缸中月。邢万肢端槁糙，手浸其中，<br />扒附指缝的颜料污了水体，于倒影上泛泛油光。<br />锌白底尤是多杂。他转头仆入其下。痛饮，隔天肚痛总难耐异常。</>],
-    ["Ⅳ. 徐惠其二", <>绿伞弄蝶憩息的一瞬<br />她睑皮块重，粉底被揉搡到眼角，背阔起而亘落，肋如囊。<br />飞离扑扑，一点三分炽阳布线。</>],
-    ["Ⅴ. 杜南阳·婚姻之一", <>期望的生活在官能层面上那么臃肿，为此<br />一定要在每日餐前最末了几句话时提到：<br />“妻子对于男人的馈赠”“永不可染上情人色彩，这是其一。”</>],
-    ["Ⅵ. 憎恶社其二", <>绵羊铺满中古的月亮，一起倒下<br />像是为此柔软的黑夜准备许久。</>],
-    ["Ⅶ. 杜南阳／徐惠·婚姻之二", <>是忧郁之臀、餐布、扭怩的刀叉一齐亮相。<br />我手法灵敏切下肱骨属于你，今夜啊<br />深蓝之臀的古典抒情也打败了你。</>],
-    ["Ⅷ. 杜南阳的焚烧签字单", <>那些寿命颀长的一代人在高温的导引中再度归去。<br />十六世纪是铁的厄运。英国色的铁。<br />从拼接到西阵织，展出西阵织的画馆是阔南会社。</>],
-    ["Ⅸ. 原稿编号缺页", <>源文件由Ⅷ直接进入Ⅹ；此处保留编号空缺，不擅自补写。</>],
-    ["Ⅹ. 邢万／莉香·婚姻之一", <>他曾经运用了哲辩抚慰了婚姻吗？</>],
-  ];
   return (
     <article className={`fragment-stage-page step-${transformStep}`}>
       <header className="fragment-head"><div><CacheStamp>{revealed ? "RECOVERED SCRIPT / 12" : "ENCRYPTED INDEX / Ⅰ—Ⅹ"}</CacheStamp><p className="section-kicker">{revealed ? "场记正在显影" : "文本解密"}</p><h1>始末的碎点</h1></div>{revealed ? <div className="transform-status"><span>界面转换</span><b>{transformStep}/3</b><Button variant="outline" type="button" onClick={onStable} disabled={transformStep >= 3}>显示稳定版</Button></div> : <form className="fragment-password" onSubmit={onSubmit}><label>作者被替换前的旧名<input value={password} onChange={(event) => onPasswordChange(event.target.value)} autoComplete="off" /></label><Button type="submit">解除十段索引</Button><p role="status">{note || `错误不会清空碎片${attempts ? `；已尝试 ${attempts} 次` : ""}。`}</p></form>}</header>
-      <section className="fragment-grid" aria-label="始末的碎点正文">{fragments.map(([title, copy], index) => <article key={String(title)} className={!revealed ? "is-locked" : ""}><span>{String(index + 1).padStart(2,"0")}</span><h2>{revealed ? title : `碎片 ${String(index + 1).padStart(2,"0")}`}</h2><div className="stable-fragment-copy">{revealed ? copy : "文字层已加密"}</div>{revealed && transformStep < 3 && <div className="glitch-overlay" aria-hidden="true">{index % 2 ? "剧本／声部／入场" : "▒ 场记_恢复中 ▒"}</div>}</article>)}</section>
+      {revealed ? <TransferredReading title="5.1 始末的碎点" /> : <section className="fragment-grid" aria-label="始末的碎点加密索引">{Array.from({ length: 10 }, (_, index) => <article key={index} className="is-locked"><span>{String(index + 1).padStart(2,"0")}</span><h2>碎片 {String(index + 1).padStart(2,"0")}</h2><div className="stable-fragment-copy">文字层已加密</div></article>)}</section>}
       {revealed && <section className="late-supplement-shelf"><header><h2>终局叙事补遗</h2><p>这两份文本含有比案卷结论更直接的主观叙述，因此只在“始末的碎点”解密后开放；它们作为文学文本呈现，不替代案件索引中的责任判断。</p></header><div><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredZoudi)}><span>篇目三</span><b>走地国记</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button><button type="button" onClick={() => onOpenSupplement(ROUTES.scatteredNanfuzi)}><span>篇目四</span><b>男腹子</b><small>完整文本 <ArrowUpRight aria-hidden="true" /></small></button></div></section>}
       {revealed && <section className="stage-call"><span>SCENE INDEX / 13 OF 14</span><h2>文本已接近就位</h2><p>恢复目录只剩结诗。标题字段缺失，但它与网站最初的当前展览使用同一个名称。</p></section>}
     </article>
@@ -3685,9 +3534,7 @@ function StageZhuhongmenPage() {
   return (
     <article className="stage-zhuhongmen-page">
       <header className="stage-warm-head"><div><ArtifactTag>场次 14 / 14</ArtifactTag><p className="section-kicker">结诗 · 合读</p><h1>赭红门</h1></div><aside><span>场记</span><p>文本已齐。<br />所有人请就位。</p></aside></header>
-      <RecoveredScript id="14" section="结诗 · 点意象之歌" title="赭红门" reader="合读">
-        <p>追随潮退之狐。</p><p>将阵羽披挂的海豚此刻要返回海。<br />溺亡在水中央的开刃刀要返回海。<br />而刀刃是藤壶动物的密交。</p><p>破腹产口诀，剖开<br />虎皮鲨胃囊取出的鱼翅，鲜美。<br />那一点断头蛇，咬住了赭红色之门。</p><p>而咬住了赭红色之门的蛇<br />又褪下了麂皮夹克。</p><p>追随退潮之狐的折扇开屏，<br />与海的一般质地的气融贯合一。</p>
-      </RecoveredScript>
+      <TransferredReading title="赭红门" />
       <section className="reader-call-sheet"><header><span>档案编号已转换为场次编号</span><b>朗读者就位</b></header><div><p>杜万琳 <span>朗读声部</span></p><p>方晚 <span>朗读声部</span></p><p>邢万 <span>朗读声部</span></p><p>徐惠 <span>朗读声部</span></p><p>杜彻 <span>朗读声部</span></p><p>合读 <span>终场</span></p></div></section>
       <section className="stage-note-final"><span>终场场记</span><h2>演出名：诗喃</h2><p>案件索引到这里停止。下一页不会公布凶手，只会让所有人物回到朗读者的位置。</p></section>
     </article>
@@ -3722,10 +3569,10 @@ function ShinanPage() {
     ["诗喃现场", "全景"],
   ] as const;
   const cues = [
-    { title: "开场", copy: "投影亮起：我已看不见这些太阳。有人试着把麦克风推近。", photos: [0, 1, 2, 3] },
+    { title: "开场", copy: "投影亮起。有人试着把麦克风推近，第一位朗读者走到灯下。", photos: [0, 1, 2, 3] },
     { title: "声部进入", copy: "黎晏读杜彻，叶非读方晚。剧中人与朗读者第一次在同一页相遇。", photos: [4, 5, 6, 7, 8] },
     { title: "文本合流", copy: "郁绵读邢万，林锐读徐惠。那些曾被当成档案的人名，重新成为声部。", photos: [9, 10, 11, 12] },
-    { title: "赭红门", copy: "陳潮读杜万琳。合读开始：追随潮退之狐。", photos: [13, 14, 15, 16] },
+    { title: "赭红门", copy: "陳潮读杜万琳，所有声部进入最后一段合读。", photos: [13, 14, 15, 16] },
     { title: "谢幕", copy: "灯光亮起。观众听见翻页，也看见台上的人从角色中退场。", photos: [17, 18, 19, 20] },
   ] as const;
   const currentCue = cues[cue];
@@ -3735,7 +3582,7 @@ function ShinanPage() {
       {!performanceStarted ? <section className="performance-choice"><div><span>选择终场版本</span><h2>声音不构成通关门槛</h2><p>原成员录音尚未接入。本版先开放完整静音字幕终场；取得授权录音后，可在同一位置替换。</p></div><div><Button type="button" disabled>有声版 · 素材待接入</Button><Button type="button" onClick={() => setPerformanceStarted(true)}>静音字幕版开演</Button></div></section> : <section className="silent-performance"><header><span>静音字幕终场</span><b>{cue + 1}/{cues.length}</b></header><div className="cue-stage"><small>{currentCue.title}</small><p>{currentCue.copy}</p><div className="cue-photos" aria-label={`${currentCue.title}活动照片`}>{currentCue.photos.map((photoIndex) => <button type="button" key={photoIndex} onClick={() => setSelectedPhoto(photoIndex)}><img src={browserPath(`/archive/shinan/activity/photo-${String(photoIndex + 1).padStart(2, "0")}.webp`)} alt={`${activityPhotos[photoIndex][0]}：${activityPhotos[photoIndex][1]}`} /><span>{activityPhotos[photoIndex][0]}</span></button>)}</div></div><footer><Button variant="outline" type="button" onClick={() => setCue((value) => Math.max(0, value - 1))} disabled={cue === 0}>上一场记</Button>{cue < cues.length - 1 ? <Button type="button" onClick={() => setCue((value) => Math.min(cues.length - 1, value + 1))}>下一场记</Button> : <span className="curtain-call">演出结束 · 谢幕</span>}</footer></section>}
       <section className="shinan-truth"><span>最后一次身份转换</span><div><h2>他们是剧中人，也是朗读者。</h2><p>公墓案、死亡记录、人物年表和新闻缓存属于《诗喃》的剧内文本与舞台道具。现实层只留下航船诗歌社、海报、活动照片与成员声音。</p></div></section>
       <section className="activity-archive"><header><div><span>现场档案 / 01—21</span><h2>青年之虚与实 · 石狮场</h2></div><p>活动照按原文档出现顺序归档。点击照片可查看完整画面。</p></header><div className="activity-grid">{activityPhotos.map(([title, detail], index) => <button type="button" key={index} onClick={() => setSelectedPhoto(index)}><img src={browserPath(`/archive/shinan/activity/photo-${String(index + 1).padStart(2, "0")}.webp`)} alt={`${title}：${detail}`} loading="lazy" /><span>{String(index + 1).padStart(2, "0")}</span><div><b>{title}</b><small>{detail}</small></div></button>)}</div></section>
-      <section className="material-status"><article><span>14/14</span><h3>完整排练文本</h3><p>序诗、五个篇章与结诗已经全部恢复。</p></article><article><span>已接入</span><h3>演出海报与活动照</h3><p>根据上传原型生成海报，21 张现场照片依文档顺序归档。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后仍保留字幕与全文，不要求玩家开启声音。</p></article></section>
+      <section className="material-status"><article><span>14/14</span><h3>朗读索引完成</h3><p>《目盲》文字稿已从画廊移除，图像原稿仅存于 Administrator 的加密文件夹。</p></article><article><span>已接入</span><h3>演出海报与活动照</h3><p>根据上传原型生成海报，21 张现场照片依文档顺序归档。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后保留舞台字幕，不要求玩家开启声音。</p></article></section>
       {selectedPhoto !== null && <div className="photo-lightbox" role="dialog" aria-modal="true" aria-label={`活动照片 ${selectedPhoto + 1}`} onClick={() => setSelectedPhoto(null)}><div onClick={(event) => event.stopPropagation()}><button type="button" onClick={() => setSelectedPhoto(null)} aria-label="关闭活动照片"><X aria-hidden="true" /></button><img src={browserPath(`/archive/shinan/activity/photo-${String(selectedPhoto + 1).padStart(2, "0")}.webp`)} alt={`${activityPhotos[selectedPhoto][0]}：${activityPhotos[selectedPhoto][1]}`} /><p><span>{String(selectedPhoto + 1).padStart(2, "0")} / 21</span><b>{activityPhotos[selectedPhoto][0]}</b><small>{activityPhotos[selectedPhoto][1]}</small></p></div></div>}
     </article>
   );
