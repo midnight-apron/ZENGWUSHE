@@ -12,4 +12,6 @@ while IFS= read -r -d '' exported_file; do
     "$exported_file"
 done < <(find dist/client -type f \( -name '*.html' -o -name '*.rsc' \) -print0)
 
+node scripts/verify-github-pages.mjs dist/client "$pages_base_path"
+
 echo "GitHub Pages export ready at dist/client (base path: ${pages_base_path})"

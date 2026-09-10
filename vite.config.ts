@@ -10,6 +10,7 @@ const { d1, r2 } = hostingConfig;
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
+const publicBasePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").replace(/\/+$/, "");
 
 const localBindingConfig = {
   main: "./worker/index.ts",
@@ -44,6 +45,7 @@ export default defineConfig(async () => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    base: publicBasePath ? `${publicBasePath}/` : "/",
     server: {
       host: "0.0.0.0",
       allowedHosts: ["terminal.local"],
