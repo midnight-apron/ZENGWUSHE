@@ -20,7 +20,6 @@ import {
   FileAudio,
   FileLock2,
   FolderLock,
-  History,
   Home,
   Maximize2,
   Minus,
@@ -37,6 +36,7 @@ import {
   X,
 } from "lucide-react";
 import { WeddingPhotoPuzzle, FamilyPhoto, INITIAL_WEDDING_TILES, isWeddingPhotoComplete } from "../archive-photo-interactions";
+import { DirectoryPage, ExhibitionPage, GalleryHomePage, type DirectoryEntry } from "../game-app";
 import { RentedRoom } from "../rented-room";
 import { StoneInspection, inspectStoneOpening } from "../stone-inspection";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,24 @@ const APP_META: Record<AppId, { label: string; subtitle: string; icon: typeof Se
   trash: { label: "回收站", subtitle: "删除文件与恢复", icon: Trash2 },
   audio: { label: "录音文件", subtitle: "逐字稿与证言", icon: FileAudio },
   vault: { label: "上锁文件夹", subtitle: "等待三项验证", icon: FolderLock },
+};
+
+type GallerySection = "home" | "exhibitions" | "people" | "news" | "publications" | "about";
+
+const GALLERY_SECTIONS: Array<{ id: GallerySection; label: string }> = [
+  { id: "home", label: "首页" },
+  { id: "exhibitions", label: "展览" },
+  { id: "people", label: "人物" },
+  { id: "news", label: "新闻" },
+  { id: "publications", label: "出版物" },
+  { id: "about", label: "关于" },
+];
+
+const GALLERY_DIRECTORY_IDS: Record<Exclude<GallerySection, "home" | "exhibitions">, string[]> = {
+  people: ["ge-dongping", "xu-hui", "wang-keding", "xing-wan", "du-che", "du-lixiang", "fang-wan"],
+  news: ["anonymous-xing", "evening-news", "wang-autopsy", "cremation-form", "stone-head", "phoenix-reservoir", "cemetery-case"],
+  publications: ["publisher", "alzheimer", "editor", "yuanchang", "shinan"],
+  about: ["society"],
 };
 
 function unique(values: string[]) {
@@ -228,6 +246,8 @@ export function V2Game() {
   const [browserTrail, setBrowserTrail] = useState<string[]>(["home"]);
   const [browserIndex, setBrowserIndex] = useState(0);
   const [query, setQuery] = useState("");
+  const [offlineOpen, setOfflineOpen] = useState(false);
+  const [frameNotice, setFrameNotice] = useState(false);
   const [selectedTrash, setSelectedTrash] = useState<string | null>(null);
   const [selectedRecording, setSelectedRecording] = useState<string | null>(null);
   const [playingRecording, setPlayingRecording] = useState<string | null>(null);
@@ -322,7 +342,7 @@ export function V2Game() {
 
   const currentBrowserKey = browserTrail[browserIndex] || "home";
 
-  function runSearch(term: string) {
+  function runGallerySearch(term: string) {
     const clean = term.trim();
     if (!clean) return;
     setQuery(clean);
@@ -333,7 +353,7 @@ export function V2Game() {
         ...previous.searchHistory.filter((item) => item.term !== clean),
       ].slice(0, 50),
     }));
-    pushBrowser(`search:${clean}`);
+    pushBrowser(`gallery-search:${clean}`);
   }
 
   function openNode(node: BrowserNode) {
@@ -348,12 +368,6 @@ export function V2Game() {
     if (!node || !hasAll(save.events, node.requires)) return;
     openApp("browser");
     openNode(node);
-  }
-
-  function getSearchStatus(term: string) {
-    const nodes = searchNodes(term);
-    if (!nodes.length) return "未命中";
-    return nodes.some((node) => hasAll(save.events, node.requires)) ? "有效" : "待核验";
   }
 
   const currentHint = useMemo(() => HINTS.find((hint) => !hint.done.every(hasEvent)) || HINTS[HINTS.length - 1], [hasEvent]);
@@ -452,13 +466,24 @@ export function V2Game() {
           <Button variant="outline" disabled={hintLevel === 2} onClick={() => setHintLevel((value) => Math.min(2, value + 1))}>{hintLevel === 2 ? "已显示完整提示" : "再给我一点提示"}</Button>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={offlineOpen} onOpenChange={setOfflineOpen}>
+        <DialogContent className={styles.dialog}>
+          <DialogHeader>
+            <DialogTitle>无法连接互联网</DialogTitle>
+            <DialogDescription>这台旧电脑没有可用的互联网连接。只能打开已经保存在本地的憎恶社画廊网站，以及线索解锁后的寿享陵园旧站。</DialogDescription>
+          </DialogHeader>
+          <Button type="button" onClick={() => setOfflineOpen(false)}>确定</Button>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 
   function renderBrowser() {
     let content: ReactNode;
     if (currentBrowserKey === "home") content = <BrowserHome />;
-    else if (currentBrowserKey.startsWith("search:")) content = <BrowserResults term={currentBrowserKey.slice(7)} />;
+    else if (currentBrowserKey.startsWith("gallery-search:")) content = <GallerySearchResults term={currentBrowserKey.slice(15)} />;
+    else if (currentBrowserKey.startsWith("gallery:")) content = <GallerySectionPage section={currentBrowserKey.slice(8) as GallerySection} />;
     else {
       const node = BROWSER_NODES.find((item) => item.id === currentBrowserKey.slice(5));
       content = node ? <BrowserNodePage node={node} /> : <BrowserHome />;
@@ -472,15 +497,7 @@ export function V2Game() {
             <button type="button" aria-label="浏览器首页" onClick={() => pushBrowser("home")}><Home /></button>
           </nav>
           <span className={styles.addressBar}>local://duche-backup/{currentBrowserKey.replace(":", "/")}</span>
-          <Dialog>
-            <DialogTrigger asChild><button type="button" aria-label="搜索历史"><History /></button></DialogTrigger>
-            <DialogContent className={styles.dialog}>
-              <DialogHeader><DialogTitle>搜索历史</DialogTitle><DialogDescription>点击任一词，按当前权限重新查询。状态会随调查进度更新。</DialogDescription></DialogHeader>
-              <ol className={styles.historyList}>
-                {save.searchHistory.map((entry) => <li key={`${entry.term}-${entry.searchedAt}`}><button type="button" onClick={() => runSearch(entry.term)}><span>{entry.term}</span><b data-status={getSearchStatus(entry.term)}>{getSearchStatus(entry.term)}</b></button></li>)}
-              </ol>
-            </DialogContent>
-          </Dialog>
+          <span className={styles.offlineBadge}>脱机工作</span>
         </header>
         <div className={styles.browserViewport}>{content}</div>
       </div>
@@ -513,9 +530,7 @@ export function V2Game() {
     const cemeteryLeadReady = hasEvent("recovered_ledger_mail");
     const hotItems: Array<{ rank: number; title: string; node?: string; trend?: "up" | "new" }> = [
       { rank: 1, title: "临展画作遭撤，艺术家生存环境堪忧", node: "exhibition", trend: "up" },
-      cemeteryLeadReady
-        ? { rank: 2, title: "寿享陵园改建账目受质疑，旧项目重新进入调查", node: "shouxiang", trend: "new" }
-        : { rank: 2, title: "阔南旧城区影像档案开放预约" },
+      { rank: 2, title: "他山地方公墓贪污案旧档重启核查", node: cemeteryLeadReady ? "shouxiang" : undefined, trend: cemeteryLeadReady ? "new" : undefined },
       { rank: 3, title: "青年艺术家驻留计划公布首批名单" },
       { rank: 4, title: "西门车站周边改造方案进入公示期" },
       { rank: 5, title: "地方旧书店联合发起手稿修复计划" },
@@ -534,7 +549,7 @@ export function V2Game() {
           <ol>
             {hotItems.map((item) => <li key={item.rank}><button type="button" disabled={!item.node} onClick={() => item.node && openBrowserNode(item.node)}><em>{item.rank}</em><span>{item.title}</span>{item.trend ? <i data-trend={item.trend}>{item.trend === "new" ? "新" : "↑"}</i> : null}</button></li>)}
           </ol>
-          <p>灰色条目来自普通新闻缓存，暂不属于可调查页面。</p>
+          <p>灰色条目仅保留新闻标题；“公墓贪污案”需取得账目线索后才能打开对应旧站。</p>
         </section>
       </section>
     );
@@ -542,7 +557,7 @@ export function V2Game() {
 
   function SearchForm() {
     return (
-      <form className={styles.searchForm} onSubmit={(event: FormEvent) => { event.preventDefault(); runSearch(query); }} role="search">
+      <form className={styles.searchForm} onSubmit={(event: FormEvent) => { event.preventDefault(); setOfflineOpen(true); }} role="search">
         <Search aria-hidden="true" />
         <label className="sr-only" htmlFor="v2-search">检索公开网页与本地缓存</label>
         <input id="v2-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="输入人名、地点、作品或档案字段" autoComplete="off" />
@@ -551,28 +566,93 @@ export function V2Game() {
     );
   }
 
-  function BrowserResults({ term }: { term: string }) {
-    const matches = searchNodes(term);
+  function GallerySearchForm() {
     return (
-      <section className={styles.resultsPage}>
-        <SearchForm />
-        <header><span>SEARCH / {term}</span><h1>{matches.length ? `${matches.length} 条相关记录` : "没有命中"}</h1><p>只显示当前权限可读的摘要；尚未开放的结果不会泄露正文。</p></header>
-        <div className={styles.resultList}>
-          {matches.map((node) => {
-            const allowed = hasAll(save.events, node.requires);
-            const isNew = allowed && !save.visited.includes(node.id);
-            return (
-              <button type="button" key={node.id} disabled={!allowed} onClick={() => openNode(node)}>
-                <span>{node.kind}{isNew ? <i>NEW</i> : null}</span>
-                <strong>{allowed ? node.title : node.title.replace(/[\u4e00-\u9fff]/g, "□")}</strong>
-                <p>{allowed ? node.summary : node.lockedHint}</p>
-                <b>{allowed ? "打开记录" : "尚未获得读取权限"}<ChevronRight /></b>
+      <form className="global-search" onSubmit={(event: FormEvent) => { event.preventDefault(); runGallerySearch(query); }} role="search">
+        <Search aria-hidden="true" />
+        <label className="sr-only" htmlFor="gallery-search">搜索憎恶社画廊</label>
+        <input id="gallery-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索作品、人物与档案" autoComplete="off" />
+        <button type="submit">搜索</button>
+      </form>
+    );
+  }
+
+  function GalleryWebsiteShell({ section, path, children }: { section: GallerySection | "search"; path: string; children: ReactNode }) {
+    return (
+      <section className={`${styles.galleryWebsite} game-shell ${section === "home" ? "is-gallery-home" : ""} ${!["home", "exhibitions"].includes(section) ? "is-directory-page" : ""}`}>
+        <header className="site-header">
+          <button type="button" className="wordmark" onClick={() => pushBrowser("gallery:home")}>
+            <span className="wordmark-mark">憎恶社</span>
+            <span><b>ZENGWU SOCIETY</b><small>当代艺术 · 诗歌 · 出版</small></span>
+          </button>
+          <nav className="gallery-section-nav" aria-label="憎恶社网站栏目">
+            {GALLERY_SECTIONS.map((item) => (
+              <button
+                type="button"
+                key={item.id}
+                className={section === item.id ? "is-current" : ""}
+                onClick={() => item.id === "exhibitions" ? openBrowserNode("exhibition") : pushBrowser(`gallery:${item.id}`)}
+              >
+                {item.label}
               </button>
-            );
-          })}
-          {!matches.length ? <div className={styles.emptyState}><span>∅</span><p>没有找到相关记录。可尝试材料里出现的完整人名、地点或档案字段。</p></div> : null}
-        </div>
+            ))}
+          </nav>
+          <GallerySearchForm />
+        </header>
+        <div className="path-strip"><span>LOCAL CACHE</span><code>{path}</code><i>互联网连接不可用</i></div>
+        <main className="game-main">{children}</main>
+        <footer className="site-footer"><span>© ZENGWU SOCIETY</span><span>本机缓存副本</span><button type="button" onClick={() => pushBrowser("home")}>返回摆渡</button></footer>
       </section>
+    );
+  }
+
+  function GallerySearchResults({ term }: { term: string }) {
+    const entries: DirectoryEntry[] = searchNodes(term)
+      .filter((node) => node.id !== "shouxiang" && hasAll(save.events, node.requires))
+      .map((node) => ({ id: node.id, eyebrow: node.kind, title: node.title, summary: node.summary, path: node.id, isNew: !save.visited.includes(node.id) }));
+    return (
+      <GalleryWebsiteShell section="search" path={`/search?q=${encodeURIComponent(term)}`}>
+        <DirectoryPage
+          kicker={`站内搜索 / ${String(entries.length).padStart(2, "0")} RESULTS`}
+          title={term ? `“${term}”` : "搜索"}
+          intro={entries.length ? "以下内容来自憎恶社画廊的本地站内索引。" : "画廊站内索引中没有找到相关页面。"}
+          entries={entries}
+          onOpen={openBrowserNode}
+        />
+      </GalleryWebsiteShell>
+    );
+  }
+
+  function sectionForNode(id: string): GallerySection {
+    if (id === "exhibition") return "exhibitions";
+    if (GALLERY_DIRECTORY_IDS.people.includes(id)) return "people";
+    if (GALLERY_DIRECTORY_IDS.news.includes(id)) return "news";
+    if (GALLERY_DIRECTORY_IDS.publications.includes(id)) return "publications";
+    return "about";
+  }
+
+  function GallerySectionPage({ section }: { section: GallerySection }) {
+    if (section === "home") {
+      return <GalleryWebsiteShell section="home" path="/"><GalleryHomePage onStart={() => openBrowserNode("exhibition")} /></GalleryWebsiteShell>;
+    }
+    if (section === "exhibitions") {
+      return <GalleryWebsiteShell section="exhibitions" path="/exhibitions/zhuhongmen"><ExhibitionPage frameNotice={frameNotice} onInspectFrame={() => setFrameNotice(true)} /></GalleryWebsiteShell>;
+    }
+    const directorySection = section as Exclude<GallerySection, "home" | "exhibitions">;
+    const copy = {
+      people: ["人物索引 / PEOPLE", "人物", "画廊公开人物页与本机已恢复的相关档案。"],
+      news: ["新闻与档案 / NEWS", "新闻", "公开报道、展览告示与调查过程中恢复的旧记录。"],
+      publications: ["出版与文本 / PUBLICATIONS", "出版物", "出版机构、编辑缓存与文学档案。"],
+      about: ["关于憎恶社 / ABOUT", "关于", "社团沿革与早期成员资料。"],
+    }[directorySection];
+    const entries: DirectoryEntry[] = GALLERY_DIRECTORY_IDS[directorySection]
+      .map((id) => BROWSER_NODES.find((node) => node.id === id))
+      .filter((node): node is BrowserNode => Boolean(node) && hasAll(save.events, node?.requires))
+      .map((node) => ({ id: node.id, eyebrow: node.kind, title: node.title, summary: node.summary, path: node.id, isNew: !save.visited.includes(node.id) }));
+    return (
+      <GalleryWebsiteShell section={section} path={`/${section}`}>
+        <DirectoryPage kicker={copy[0]} title={copy[1]} intro={copy[2]} entries={entries} onOpen={openBrowserNode} />
+      </GalleryWebsiteShell>
     );
   }
 
@@ -589,11 +669,28 @@ export function V2Game() {
         </section>
       );
     }
+    if (node.id === "exhibition") {
+      return <GalleryWebsiteShell section="exhibitions" path="/exhibitions/zhuhongmen"><ExhibitionPage frameNotice={frameNotice} onInspectFrame={() => setFrameNotice(true)} /></GalleryWebsiteShell>;
+    }
+    if (node.id === "shouxiang") {
+      return (
+        <section className={styles.embeddedCemeteryWebsite}>
+          <div className={styles.embeddedSearch}><SearchForm /></div>
+          <article className={styles.nodePage}>
+            <header><span>{node.kind}</span><h1>{node.title}</h1><p>{node.summary}</p></header>
+            {renderNodeBody(node.id)}
+          </article>
+        </section>
+      );
+    }
+    const section = sectionForNode(node.id);
     return (
-      <article className={styles.nodePage}>
-        <header><span>{node.kind}</span><h1>{node.title}</h1><p>{node.summary}</p></header>
-        {renderNodeBody(node.id)}
-      </article>
+      <GalleryWebsiteShell section={section} path={`/${section}/${node.id}`}>
+        <article className={styles.nodePage}>
+          <header><span>{node.kind}</span><h1>{node.title}</h1><p>{node.summary}</p></header>
+          {renderNodeBody(node.id)}
+        </article>
+      </GalleryWebsiteShell>
     );
   }
 
@@ -629,7 +726,7 @@ export function V2Game() {
       case "du-lixiang":
         return <><div className={styles.personFacts}><dl><dt>姓名</dt><dd>杜莉香</dd><dt>家庭</dt><dd>杜万琳的堂妹</dd><dt>婚姻</dt><dd>邢万的妻子</dd><dt>项目职务</dt><dd>财务</dd><dt>公开死因</dt><dd>意外溺亡</dd></dl></div><aside className={styles.disputed}><b>公开记录存在缺口</b><p>没有遗体告别仪式、失踪时间和财务举报未被写入同一份公开档案。</p></aside></>;
       case "cremation-form":
-        return <><div className={styles.formSheet}><span>他山地方公墓 / 遗体处理手续</span><h2>焚烧签字单</h2><dl><dt>申请人</dt><dd>杜万琳</dd><dt>死者</dt><dd>杜莉香</dd><dt>遗体</dt><dd>未到院</dd><dt>代签</dt><dd>方＿</dd><dt>后补收件</dt><dd>葬礼后第三日</dd><dt>项目编号</dt><dd>SX-2000-17</dd></dl></div><button type="button" className={styles.archiveAction} onClick={() => runSearch("方晚")}>以当前进度重新检索代签人<ChevronRight /></button></>;
+        return <><div className={styles.formSheet}><span>他山地方公墓 / 遗体处理手续</span><h2>焚烧签字单</h2><dl><dt>申请人</dt><dd>杜万琳</dd><dt>死者</dt><dd>杜莉香</dd><dt>遗体</dt><dd>未到院</dd><dt>代签</dt><dd>方＿</dd><dt>后补收件</dt><dd>葬礼后第三日</dd><dt>项目编号</dt><dd>SX-2000-17</dd></dl></div><button type="button" className={styles.archiveAction} onClick={() => openBrowserNode("fang-wan")}>打开画廊人物索引中的代签人<ChevronRight /></button></>;
       case "fang-wan":
         return <><div className={styles.personFacts}><dl><dt>关系</dt><dd>杜南阳同乡与旧友</dd><dt>与杜莉香</dt><dd>朋友；带有轻微、未越界的爱意</dd><dt>案件位置</dt><dd>告别仪式后收到杜莉香生前寄出的材料</dd></dl></div>{hasEvent("read_cremation_form") ? <div className={styles.documentSheet}><span>新增结果 / 收件记录</span><p>信封邮戳早于失踪时间。方晚签收时，杜莉香的无遗体告别仪式已经结束。</p></div> : null} <figure className={styles.archiveFigure}><img src={asset("/archive/dongxing-peter-2000.webp")} alt="千禧年前后的川渝店铺东兴彼得旧照" /><figcaption>方晚留存的城市旧照 / 东兴彼得</figcaption></figure></>;
       case "stone-head":
@@ -643,7 +740,7 @@ export function V2Game() {
       case "alzheimer":
         return <div className={styles.documentSheet}><span>医学删除页 / 标题修订</span><h2>《刍<span className={styles.struck}>味</span>胃》</h2><p>删除页列出的症状共同指向阿尔茨海默病。这一页属于文学与编辑层，不承担案件定案功能。</p></div>;
       case "editor":
-        return hasEvent("editor_verified") ? <div className={styles.documentSheet}><h2>编辑缓存已解锁</h2><p>初版人物年表把元昶与左君分开记录；批注要求恢复本名并将两条记录合并。</p><button className={styles.archiveAction} type="button" onClick={() => runSearch("元昶")}>检索人物修订<ChevronRight /></button></div> : <form className={styles.loginForm} onSubmit={(event) => { event.preventDefault(); if (editorUser.trim().toLowerCase() === "editor_ys" && editorPassword.trim().toUpperCase() === "MHDCF2019") { markEvent("editor_verified"); setEditorNote("身份核验通过。"); } else setEditorNote("账号或口令与两份来源不一致。"); }}><label>账号<input value={editorUser} onChange={(event) => setEditorUser(event.target.value)} autoComplete="username" /></label><label>口令<input type="password" value={editorPassword} onChange={(event) => setEditorPassword(event.target.value)} autoComplete="current-password" /></label><button type="submit">读取编辑缓存</button><p role="status">{editorNote}</p></form>;
+        return hasEvent("editor_verified") ? <div className={styles.documentSheet}><h2>编辑缓存已解锁</h2><p>初版人物年表把元昶与左君分开记录；批注要求恢复本名并将两条记录合并。</p><button className={styles.archiveAction} type="button" onClick={() => openBrowserNode("yuanchang")}>打开人物修订页<ChevronRight /></button></div> : <form className={styles.loginForm} onSubmit={(event) => { event.preventDefault(); if (editorUser.trim().toLowerCase() === "editor_ys" && editorPassword.trim().toUpperCase() === "MHDCF2019") { markEvent("editor_verified"); setEditorNote("身份核验通过。"); } else setEditorNote("账号或口令与两份来源不一致。"); }}><label>账号<input value={editorUser} onChange={(event) => setEditorUser(event.target.value)} autoComplete="username" /></label><label>口令<input type="password" value={editorPassword} onChange={(event) => setEditorPassword(event.target.value)} autoComplete="current-password" /></label><button type="submit">读取编辑缓存</button><p role="status">{editorNote}</p></form>;
       case "yuanchang":
         return <><div className={styles.documentSheet}><span>人物修订 / 叶是</span><h2>元昶，即左君</h2><p>法名与本名属于同一个小说角色。文学角色与真实人物的对应关系将在最终文件夹中解释，不再使用损坏重定向把杜南阳与杜万琳简单合并。</p></div></>;
       case "shinan":

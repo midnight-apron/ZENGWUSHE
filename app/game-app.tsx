@@ -91,7 +91,7 @@ type SearchResult = {
   searchTerm?: string;
 };
 
-type DirectoryEntry = {
+export type DirectoryEntry = {
   id: string;
   eyebrow: string;
   title: string;
@@ -2676,7 +2676,7 @@ const RENAISSANCE_WORKS = [
   },
 ] as const;
 
-function GalleryHomePage({ onStart }: { onStart: () => void }) {
+export function GalleryHomePage({ onStart }: { onStart: () => void }) {
   return (
     <article className="gallery-home">
       <section className="gallery-home-hero" aria-labelledby="current-exhibition-title">
@@ -2753,7 +2753,7 @@ function GalleryHomePage({ onStart }: { onStart: () => void }) {
   );
 }
 
-function DirectoryPage({ kicker, title, intro, entries, onOpen }: { kicker: string; title: string; intro: string; entries: DirectoryEntry[]; onOpen: (path: string) => void }) {
+export function DirectoryPage({ kicker, title, intro, entries, onOpen }: { kicker: string; title: string; intro: string; entries: DirectoryEntry[]; onOpen: (path: string) => void }) {
   return (
     <article className="directory-page">
       <header className="directory-head"><div><p>{kicker}</p><h1>{title}</h1></div><div><span>{String(entries.length).padStart(2, "0")} ENTRIES</span><p>{intro}</p></div></header>
@@ -2768,7 +2768,7 @@ function DirectoryPage({ kicker, title, intro, entries, onOpen }: { kicker: stri
   );
 }
 
-function ExhibitionPage({ frameNotice, onInspectFrame }: { frameNotice: boolean; onInspectFrame: () => void }) {
+export function ExhibitionPage({ frameNotice, onInspectFrame }: { frameNotice: boolean; onInspectFrame: () => void }) {
   return (
     <article className="exhibition-page">
       <header className="editorial-head">

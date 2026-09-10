@@ -254,7 +254,7 @@ export const BROWSER_NODES: BrowserNode[] = [
     id: "fang-wan",
     title: "方晚｜人物与收件记录",
     kind: "人物",
-    summary: "杜南阳同乡与旧友。签字单出现后，这一检索会增加一份收件材料。",
+    summary: "杜南阳同乡与旧友。签字单出现后，人物页会增加一份收件材料。",
     aliases: ["方晚", "方晩"],
     discoverEvent: "visited_fang_wan",
   },
@@ -404,17 +404,17 @@ export const HINTS = [
   {
     id: "public-identities",
     done: ["solved_wedding_photo", "visited_wang_keding"],
-    levels: ["从展览的人名与旧社团关系继续查找。", "葛东平的投诉、徐惠的照片和早期成员缓存互相连接。", "搜索“葛东平”“徐惠”“憎恶社”“王克定”。"],
+    levels: ["从展览的人名与旧社团关系继续查找。", "葛东平的投诉、徐惠的照片和早期成员缓存互相连接。", "打开画廊导航中的“人物”和“关于”，依次查看葛东平、徐惠、憎恶社与王克定。"],
   },
   {
     id: "wang-scene",
     done: ["verified_wang_poison", "verified_wang_staging", "found_pellet_drum"],
-    levels: ["王克定的档案需要与一个居所和法医学材料交叉核对。", "检查西门车站附近廉租房的烟灰缸、拨浪鼓，再查尸检。", "搜索“廉租房”和“尸检报告”，完成两项判断。"],
+    levels: ["王克定的档案需要与一个居所和法医学材料交叉核对。", "检查人物目录里的邢万居所与新闻目录里的法医学材料。", "打开“邢万｜人物与居所记录”和“王克定｜尸检与毒检摘要”，完成两项判断。"],
   },
   {
     id: "duche-family",
     done: ["read_duche_photo_back", "read_cremation_form"],
-    levels: ["儿童旧物打开了一段家庭关系。", "翻看杜彻童年照背面，再查完整姓名与遗体手续。", "搜索“杜彻”“杜莉香”“焚烧签字单”。"],
+    levels: ["儿童旧物打开了一段家庭关系。", "翻看杜彻童年照背面，再到画廊目录核对完整姓名与遗体手续。", "在“人物”中打开杜彻与杜莉香，再到“新闻”中查看焚烧签字单。"],
   },
   {
     id: "ledger",

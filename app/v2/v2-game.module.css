@@ -315,7 +315,22 @@
 .browserChrome button:disabled { color: #aaa69e; }
 .browserChrome svg { width: .95rem; height: .95rem; }
 .addressBar { overflow: hidden; border: 1px solid #b7b3aa; background: #f5f3ed; color: #77736b; padding: .45rem .7rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .64rem; text-overflow: ellipsis; white-space: nowrap; }
+.offlineBadge { color: #6d6961; font: 700 .6rem/1 Tahoma, "Microsoft YaHei", sans-serif; white-space: nowrap; }
 .browserViewport { flex: 1; overflow: auto; }
+
+.galleryWebsite {
+  min-height: 100%;
+  --canvas: #f3f1ea;
+  --paper: #f7f5ee;
+  --ink: #171612;
+  --ash: #625f58;
+  --line: #aaa59a;
+  --blood: #941b1f;
+}
+.galleryWebsite :global(.site-header) { position: relative; }
+.galleryWebsite :global(.game-main) { min-height: 0; }
+.embeddedCemeteryWebsite { min-height: 100%; background: var(--v2-paper); padding-top: 1.25rem; }
+.embeddedSearch { width: min(100% - 3rem, 66rem); margin: 0 auto; }
 
 .searchHome {
   display: flex;
@@ -734,6 +749,7 @@
   .taskTools { gap: 0; }
   .homeButton { width: 2.2rem !important; }
   .searchHome { padding: clamp(3rem, 9vh, 5rem) 1rem 3rem; }
+  .embeddedSearch { width: min(100% - 2rem, 66rem); }
   .resultsPage,
   .nodePage,
   .vaultOpen { width: min(100% - 2rem, 66rem); }
