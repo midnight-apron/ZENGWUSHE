@@ -36,7 +36,7 @@ import {
   X,
 } from "lucide-react";
 import { WeddingPhotoPuzzle, FamilyPhoto, INITIAL_WEDDING_TILES, isWeddingPhotoComplete } from "../archive-photo-interactions";
-import { DirectoryPage, ExhibitionPage, GalleryHomePage, type DirectoryEntry } from "../game-app";
+import { DirectoryPage, ExhibitionPage, GalleryHomePage, GameApp, type DirectoryEntry } from "../game-app";
 import { RentedRoom } from "../rented-room";
 import { StoneInspection, inspectStoneOpening } from "../stone-inspection";
 import { Button } from "@/components/ui/button";
@@ -114,6 +114,16 @@ function unique(values: string[]) {
 
 function asset(path: string) {
   return `${BASE_PATH}${path}`;
+}
+
+function browserAddress(key: string) {
+  if (key.startsWith("legacy:")) {
+    const path = key.slice(7) || "/";
+    return path === "/mirror/shouxiang/staff"
+      ? "http://shouxiang.invalid/staff/index.htm"
+      : `http://zengwushe.local${path}`;
+  }
+  return `local://duche-backup/${key.replace(":", "/")}`;
 }
 
 function safeLoad(): V2Save {
@@ -514,6 +524,19 @@ export function V2Game() {
   function renderBrowser() {
     let content: ReactNode;
     if (currentBrowserKey === "home") content = <BrowserHome />;
+    else if (currentBrowserKey.startsWith("legacy:")) {
+      const legacyPath = currentBrowserKey.slice(7) || "/";
+      content = (
+        <div className={styles.galleryWebsite}>
+          <GameApp
+            embedded
+            initialPath={legacyPath}
+            onNavigate={(path) => pushBrowser(`legacy:${path}`)}
+            onCemeteryVisit={() => markEvent("recovered_ledger_mail")}
+          />
+        </div>
+      );
+    }
     else if (currentBrowserKey.startsWith("gallery-search:")) content = <GallerySearchResults term={currentBrowserKey.slice(15)} />;
     else if (currentBrowserKey.startsWith("gallery:")) content = <GallerySectionPage section={currentBrowserKey.slice(8) as GallerySection} />;
     else {
@@ -528,7 +551,7 @@ export function V2Game() {
             <button type="button" aria-label="前进" disabled={browserIndex >= browserTrail.length - 1} onClick={() => setBrowserIndex((value) => Math.min(browserTrail.length - 1, value + 1))}><ArrowRight /></button>
             <button type="button" aria-label="浏览器首页" onClick={() => pushBrowser("home")}><Home /></button>
           </nav>
-          <span className={styles.addressBar}>local://duche-backup/{currentBrowserKey.replace(":", "/")}</span>
+          <span className={styles.addressBar}>{browserAddress(currentBrowserKey)}</span>
           <span className={styles.offlineBadge}>脱机工作</span>
         </header>
         <div className={styles.browserViewport}>{content}</div>
@@ -560,9 +583,9 @@ export function V2Game() {
 
   function BrowserHome() {
     const cemeteryLeadReady = hasEvent("recovered_ledger_mail");
-    const hotItems: Array<{ rank: number; title: string; node?: string; trend?: "up" | "new" }> = [
-      { rank: 1, title: "临展画作遭撤，艺术家生存环境堪忧", node: "exhibition", trend: "up" },
-      { rank: 2, title: "他山地方公墓贪污案旧档重启核查", node: cemeteryLeadReady ? "shouxiang" : undefined, trend: cemeteryLeadReady ? "new" : undefined },
+    const hotItems: Array<{ rank: number; title: string; target?: string; trend?: "up" | "new" }> = [
+      { rank: 1, title: "临展画作遭撤，艺术家生存环境堪忧", target: "legacy:/", trend: "up" },
+      { rank: 2, title: "他山地方公墓贪污案旧档重启核查", target: cemeteryLeadReady ? "legacy:/mirror/shouxiang/staff" : undefined, trend: cemeteryLeadReady ? "new" : undefined },
       { rank: 3, title: "青年艺术家驻留计划公布首批名单" },
       { rank: 4, title: "西门车站周边改造方案进入公示期" },
       { rank: 5, title: "地方旧书店联合发起手稿修复计划" },
@@ -579,7 +602,7 @@ export function V2Game() {
         <section className={styles.hotSearch} aria-labelledby="ferry-hot-title">
           <header><h2 id="ferry-hot-title">摆渡热搜</h2><span>新闻线索榜</span></header>
           <ol>
-            {hotItems.map((item) => <li key={item.rank}><button type="button" disabled={!item.node} onClick={() => item.node && openBrowserNode(item.node)}><em>{item.rank}</em><span>{item.title}</span>{item.trend ? <i data-trend={item.trend}>{item.trend === "new" ? "新" : "↑"}</i> : null}</button></li>)}
+            {hotItems.map((item) => <li key={item.rank}><button type="button" disabled={!item.target} onClick={() => item.target && pushBrowser(item.target)}><em>{item.rank}</em><span>{item.title}</span>{item.trend ? <i data-trend={item.trend}>{item.trend === "new" ? "新" : "↑"}</i> : null}</button></li>)}
           </ol>
           <p>灰色条目仅保留新闻标题；“公墓贪污案”需取得账目线索后才能打开对应旧站。</p>
         </section>

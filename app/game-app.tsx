@@ -1727,7 +1727,14 @@ export function matchesEditorCredentials(user: string, password: string) {
   return user.trim().toLowerCase() === "editor_ys" && password.trim().toLowerCase() === "mhdcf2019";
 }
 
-export function GameApp({ initialPath }: { initialPath: string }) {
+type GameAppProps = {
+  initialPath: string;
+  embedded?: boolean;
+  onNavigate?: (path: string) => void;
+  onCemeteryVisit?: () => void;
+};
+
+export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryVisit }: GameAppProps) {
   const [path, setPath] = useState(initialPath);
   const [game, setGame] = useState<GameState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState(false);
@@ -1739,7 +1746,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
   const [hintLevels, setHintLevels] = useState<Record<string, number>>({});
   const [frameNotice, setFrameNotice] = useState(false);
   const [plainText, setPlainText] = useState(false);
-  const [openingActive, setOpeningActive] = useState(true);
+  const [openingActive, setOpeningActive] = useState(!embedded);
   const [roleGlitch, setRoleGlitch] = useState(false);
   const [supplementPassword, setSupplementPassword] = useState("");
   const [supplementPasswordVisible, setSupplementPasswordVisible] = useState(false);
@@ -1782,7 +1789,9 @@ export function GameApp({ initialPath }: { initialPath: string }) {
 
   const navigate = useCallback((nextPath: string) => {
     const cleanPath = displayPath(nextPath);
-    window.history.pushState({}, "", browserPath(nextPath));
+    if (embedded) onNavigate?.(cleanPath);
+    else window.history.pushState({}, "", browserPath(nextPath));
+    if (cleanPath === ROUTES.shouxiang) onCemeteryVisit?.();
     setPath(cleanPath);
     setResults(null);
     setResultNote("");
@@ -1799,7 +1808,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     setFragmentAttempts(0);
     setFragmentNote("");
     setStableStage(false);
-  }, []);
+  }, [embedded, onCemeteryVisit, onNavigate]);
 
   const finishMangRecovery = useCallback(() => {
     mutateGame(["S03", "S04"], ["01"]);
@@ -1852,12 +1861,19 @@ export function GameApp({ initialPath }: { initialPath: string }) {
       setPath(displayPath(window.location.pathname));
       setResults(null);
     };
-    window.addEventListener("popstate", onPopState);
+    if (!embedded) window.addEventListener("popstate", onPopState);
     return () => {
       window.clearTimeout(initialize);
-      window.removeEventListener("popstate", onPopState);
+      if (!embedded) window.removeEventListener("popstate", onPopState);
     };
-  }, []);
+  }, [embedded]);
+
+  useEffect(() => {
+    if (!embedded) return;
+    setPath(displayPath(initialPath));
+    setResults(null);
+    setResultNote("");
+  }, [embedded, initialPath]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -1993,10 +2009,12 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         stageTransformStep: currentPath === ROUTES.stageZhuhongmen || currentPath === ROUTES.shinan ? Math.max(previous.stageTransformStep, 3) : previous.stageTransformStep,
       }));
     }, 0);
-    document.title = `${PAGE_TITLES[currentPath] ?? "憎恶社"}｜憎恶社`;
-    window.scrollTo({ top: 0, behavior: game.settings.reducedMotion ? "auto" : "smooth" });
+    if (!embedded) {
+      document.title = `${PAGE_TITLES[currentPath] ?? "憎恶社"}｜憎恶社`;
+      window.scrollTo({ top: 0, behavior: game.settings.reducedMotion ? "auto" : "smooth" });
+    }
     return () => window.clearTimeout(syncArrival);
-  }, [currentPath, hydrated, openingActive, game.settings.reducedMotion, drumRecordLocked]);
+  }, [currentPath, embedded, hydrated, openingActive, game.settings.reducedMotion, drumRecordLocked]);
 
   useEffect(() => {
     if (currentPath !== ROUTES.history || game.scaresSeen.includes("role-glitch")) return;
@@ -2470,13 +2488,14 @@ export function GameApp({ initialPath }: { initialPath: string }) {
     if (results.length === 0) return resultNote;
     return `${resultNote} ${results.length} 条结果。`;
   }, [results, resultNote]);
+  const independentCemeterySite = embedded && currentPath === ROUTES.shouxiang;
 
   return (
     <>
-    <div inert={openingActive} className={`game-shell${game.settings.reducedMotion ? " reduce-motion" : ""}${stageComplete ? " stage-complete" : stageVocabulary ? " stage-transition" : ""}${isGalleryHome ? " is-gallery-home" : ""}${isDirectoryPage ? " is-directory-page" : ""}`}>
-      <a className="skip-link" href="#main-content">跳到正文</a>
+    <div inert={!embedded && openingActive} className={`game-shell${embedded ? " is-embedded-game" : ""}${independentCemeterySite ? " is-independent-site" : ""}${game.settings.reducedMotion ? " reduce-motion" : ""}${stageComplete ? " stage-complete" : stageVocabulary ? " stage-transition" : ""}${isGalleryHome ? " is-gallery-home" : ""}${isDirectoryPage ? " is-directory-page" : ""}`}>
+      {!independentCemeterySite && <a className="skip-link" href="#main-content">跳到正文</a>}
 
-      <header className="site-header">
+      {!independentCemeterySite && <header className="site-header">
         <button className="wordmark" type="button" onClick={() => navigate(ROUTES.home)} aria-label="返回憎恶社首页">
           <span className="wordmark-mark" aria-hidden="true">憎恶社</span>
           <span><b>ZENGWU SOCIETY</b><small>当代艺术 · 诗歌 · 出版</small></span>
@@ -2576,13 +2595,13 @@ export function GameApp({ initialPath }: { initialPath: string }) {
             </DialogContent>
           </Dialog>
         </nav>
-      </header>
+      </header>}
 
-      {!isGalleryHome && <div className="path-strip" aria-label="当前位置"><span>INDEX</span><code>{currentPath}</code>{game.visited.includes(currentPath) && <i>LOCAL COPY</i>}</div>}
+      {!independentCemeterySite && !isGalleryHome && <div className="path-strip" aria-label="当前位置"><span>INDEX</span><code>{currentPath}</code>{game.visited.includes(currentPath) && <i>LOCAL COPY</i>}</div>}
 
-      <main id="main-content" className="game-main">{renderPage()}</main>
+      <main id={embedded ? undefined : "main-content"} className="game-main">{renderPage()}</main>
 
-      <footer className="site-footer"><span>憎恶社 · 作品与旧档案</span><span>本页面为文学文本改编的虚构交互原型</span><button type="button" onClick={() => searchInputRef.current?.focus()}>搜索站内记录</button></footer>
+      {!independentCemeterySite && <footer className="site-footer"><span>憎恶社 · 作品与旧档案</span><span>本页面为文学文本改编的虚构交互原型</span><button type="button" onClick={() => searchInputRef.current?.focus()}>搜索站内记录</button></footer>}
 
       <p className="sr-only" aria-live="polite">{searchSummary}{currentPath === ROUTES.dimensions ? `空框已检查 ${game.frameClicks} 次。` : ""}{currentPath === ROUTES.phoenixRoute ? `河流路线已完成 ${game.routeTrips} 次往返。` : ""}</p>
 
@@ -2607,7 +2626,7 @@ export function GameApp({ initialPath }: { initialPath: string }) {
         </div>
       )}
     </div>
-    <OpeningPrologue onActiveChange={setOpeningActive} onComplete={() => navigate(ROUTES.home)} />
+    {!embedded && <OpeningPrologue onActiveChange={setOpeningActive} onComplete={() => navigate(ROUTES.home)} />}
     </>
   );
 }

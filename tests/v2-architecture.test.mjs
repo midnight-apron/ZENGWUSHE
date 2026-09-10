@@ -66,7 +66,7 @@ test("摆渡只开放两个本地站点，并在账目线索后开放寿享陵�
   assert.match(app, /临展画作遭撤，艺术家生存环境堪忧/);
   assert.match(app, /他山地方公墓贪污案旧档重启核查/);
   assert.match(app, /cemeteryLeadReady = hasEvent\("recovered_ledger_mail"\)/);
-  assert.match(app, /node: cemeteryLeadReady \? "shouxiang" : undefined/);
+  assert.match(app, /target: cemeteryLeadReady \? "legacy:\/mirror\/shouxiang\/staff" : undefined/);
   assert.match(data, /id: "shouxiang"[\s\S]*?requires: \["recovered_ledger_mail"\]/);
   assert.match(data, /id: "start"[\s\S]*?done: \["visited_exhibition"\]/);
   assert.match(defaultSave, /赭红门展览/);
@@ -75,7 +75,12 @@ test("摆渡只开放两个本地站点，并在账目线索后开放寿享陵�
   for (const selector of ["browserBrand", "searchForm", "hotSearch"]) assert.match(styles, new RegExp(selector));
 });
 
-test("V2 reuses the previous gallery layout, keeps gallery search, and leaves 摆渡 offline", () => {
+test("V2 embeds the complete legacy gallery game and separates the cemetery site", () => {
+  assert.match(app, /import \{[^}]*GameApp/);
+  assert.match(app, /<GameApp[\s\S]*?embedded[\s\S]*?initialPath=\{legacyPath\}/);
+  assert.match(app, /target: "legacy:\/"/);
+  assert.match(app, /target: cemeteryLeadReady \? "legacy:\/mirror\/shouxiang\/staff"/);
+  assert.match(app, /onCemeteryVisit=\{\(\) => markEvent\("recovered_ledger_mail"\)\}/);
   for (const component of ["GalleryHomePage", "DirectoryPage", "ExhibitionPage"]) assert.match(app, new RegExp(component));
   for (const className of ["site-header", "gallery-section-nav", "global-search", "path-strip", "game-main", "site-footer"]) assert.match(app, new RegExp(className));
   assert.match(app, /<ExhibitionPage frameNotice=\{frameNotice\}/);
@@ -84,7 +89,7 @@ test("V2 reuses the previous gallery layout, keeps gallery search, and leaves �
   assert.match(app, /runGallerySearch\(query\)/);
   assert.match(app, /gallery-search:/);
   assert.match(app, /无法连接互联网/);
-  assert.match(styles, /grid-template-areas: "brand" "sections" "search"/);
+  assert.match(styles, /grid-template-areas: "brand" "sections" "search" "tools"/);
   assert.match(styles, /\.galleryWebsite :global\(\.global-search\) \{ width: 100%; justify-self: stretch; \}/);
   assert.doesNotMatch(app, /pushBrowser\(`search:/);
   assert.doesNotMatch(app, /function BrowserResults/);

@@ -324,11 +324,12 @@
 .galleryWebsite :global(.site-header) {
   position: relative;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-areas: "brand" "sections" "search";
+  grid-template-areas: "brand" "sections" "search" "tools";
   gap: 1rem;
 }
 .galleryWebsite :global(.gallery-section-nav) { width: 100%; overflow-x: auto; padding-bottom: .2rem; }
 .galleryWebsite :global(.global-search) { width: 100%; justify-self: stretch; }
+.galleryWebsite :global(.header-actions) { width: 100%; flex-wrap: wrap; justify-content: flex-start; }
 .galleryWebsite :global(.game-main) { min-height: 0; }
 .embeddedCemeteryWebsite { min-height: 100%; background: var(--v2-paper); padding-top: 1.25rem; }
 .embeddedSearch { width: min(100% - 3rem, 66rem); margin: 0 auto; }
