@@ -245,7 +245,8 @@ test("renders the cached news, cemetery mirror, and Du Che profile", async () =>
 test("keeps full Mang scripts in the folder while retaining only necessary gallery clues", async () => {
   const mangSpring = await renderPath("/recovered/01-mangzhichun");
   assert.match(mangSpring, /当前步骤 \/ 仍在画廊网站/);
-  assert.match(mangSpring, /加密文件夹尚未开放/);
+  assert.match(mangSpring, /“序诗：盲之春”已同步到桌面的上锁文件夹/);
+  assert.match(mangSpring, /逐篇加入/);
   assert.match(mangSpring, /分类残留/);
   assert.match(mangSpring, />憎恶</);
   assert.match(mangSpring, /回到画廊搜索框/);
@@ -259,6 +260,14 @@ test("keeps full Mang scripts in the folder while retaining only necessary galle
   assert.match(taste, /CLUE EXCERPT/);
   assert.match(taste, /刍味/);
   assert.match(taste, /承办的寿享陵园着手/);
+
+  const damagedSpring = await renderPath("/archive/damaged/reader-01");
+  assert.match(damagedSpring, /损坏文字；完整原文仍可辨认/);
+  assert.match(damagedSpring, /捕蛇者锈了的叉子就让它锈在草垛沟/);
+  assert.match(damagedSpring, /一辈子就数那些漂来又浮走的农药纸袋/);
+  assert.match(damagedSpring, /可是真的狮子不论捉蛇或者/);
+  assert.match(damagedSpring, /最好的地方走，之后退出一个完整/);
+  assert.doesNotMatch(damagedSpring, /READER BODY REMOVED|正文已从画廊缓存中移除/);
 
   const redacted = await renderPath("/archive/medical/redacted");
   assert.match(redacted, /××××××/);

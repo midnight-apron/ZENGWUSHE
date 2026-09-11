@@ -1690,9 +1690,10 @@ type GameAppProps = {
   embedded?: boolean;
   onNavigate?: (path: string) => void;
   onCemeteryVisit?: () => void;
+  onRecoveredChange?: (ids: string[]) => void;
 };
 
-export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryVisit }: GameAppProps) {
+export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryVisit, onRecoveredChange }: GameAppProps) {
   const [path, setPath] = useState(initialPath);
   const [game, setGame] = useState<GameState>(DEFAULT_STATE);
   const [hydrated, setHydrated] = useState(false);
@@ -1838,6 +1839,11 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
     if (!hydrated) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(game));
   }, [game, hydrated]);
+
+  useEffect(() => {
+    if (!embedded || !hydrated) return;
+    onRecoveredChange?.(game.recovered);
+  }, [embedded, game.recovered, hydrated, onRecoveredChange]);
 
   useEffect(() => {
     if (!hydrated || openingActive || drumRecordLocked) return;
@@ -2792,8 +2798,8 @@ function DamagedReaderPage({ plainText, onTogglePlain }: { plainText: boolean; o
     <article className="damaged-page">
       <header className="damaged-head"><div><CacheStamp>ARCHIVE / READER 01</CacheStamp><h1>损坏的朗读页</h1></div><Button variant="outline" onClick={onTogglePlain}>{plainText ? <EyeOff /> : <Eye />}{plainText ? "返回损坏层" : "查看纯文字"}</Button></header>
       <div className="file-name"><span>filename</span><code>mang_?_chun.reader</code></div>
-      {plainText ? <section className="plain-reader"><p>［仅恢复索引字段］</p><p>残留词组：<span className="reader-clue">看不见</span> / <span className="reader-clue">春天</span> / 瞽人</p><p>正文已从画廊缓存中移除。</p></section> : <section className="corrupted-reader" aria-label="损坏文件索引"><p className="noise">▒▒ READER BODY REMOVED ▒▒▒</p><p className="shift-one"><span className="reader-clue">看不见</span> / ? / <span className="reader-clue">春天</span></p><p className="noise">00::mang / ? / chun::FILE HEADER LOST</p><div className="corruption-block" aria-hidden="true">▓░▓▓░░▓░▓░░▓▓░</div></section>}
-      <footer className="damaged-footer"><span>正文状态：REMOVED</span><span>标题字段：LOST</span><span>索引搜索：AVAILABLE</span></footer>
+      {plainText ? <section className="plain-reader"><p>［完整文字层］</p><blockquote><p>说：“我已<span className="reader-clue">看不见</span>这些<span className="reader-clue">春天</span>你当<br />依着屐痕给经行此地的瞽人指明路<br />——教他平稳抵达南方的温度里”</p><p>还要嘱咐他遇着僧众放生的蛇<br />便避着离去遇着冬眠的兽<br />便停着听沉而紧的呼噜</p><p>感到让你惬意的好太阳便赞美<br />它如狮如虎方才醒过来<br />鬃毛含着白光可天底下真<br />有俗套的肖像会把它画成狮</p><p>捕蛇者锈了的叉子就让它锈在草垛沟</p><p>世人有意目睹这狮与斑蟒的搏击<br />你去扑它吧，我们大伙的好太阳<br />就算扑了个空也可以死在船道边</p><p>一辈子就数那些漂来又浮走的农药纸袋<br />使劲儿地坠下</p><p>但这样能把整个春季的败坏和惶恐<br />再拉高一分么?</p><p>可是真的狮子不论捉蛇或者<br />不捉，吼或者不吼一下笔<br />总会描得像个太阳。</p><p>瞎!辨或辨不出它都得是些什么<br />是春天的兽、农人药死的耗子</p><p>给他们指一条明路：“得往春天<br />最好的地方走，之后退出一个完整。”</p></blockquote><p>残留索引词：<span className="reader-clue">看不见</span> / <span className="reader-clue">春天</span> / 瞽人</p></section> : <section className="corrupted-reader" aria-label="损坏文字；完整原文仍可辨认"><p>说：“我已<span className="reader-clue">看不见</span>这些<span className="reader-clue">春天</span>你当</p><p className="shift-one">依着屐痕给经行此地的瞽人指明路<br />——教他平稳抵达南方的温度里”</p><p className="noise">▒▒ SECTOR 03 / EXPOSURE +41% / TEXT LAYER UNSTABLE ▒▒▒</p><p className="shift-two">还要嘱咐他遇着僧众放生的蛇<br />便避着离去遇着冬眠的兽<br />便停着听沉而紧的呼噜</p><p>感到让你惬意的好太阳便赞美<br />它如狮如虎方才醒过来<br />鬃毛含着白光可天底下真<br />有俗套的肖像会把它画成狮</p><div className="corruption-block" aria-hidden="true">▓░▓▓░░▓░▓░░▓▓░</div><p className="shift-one">捕蛇者锈了的叉子就让它锈在草垛沟</p><p>世人有意目睹这狮与斑蟒的搏击<br />你去扑它吧，我们大伙的好太阳<br />就算扑了个空也可以死在船道边</p><p className="noise">00::mang / ? / chun::LINE ORDER DAMAGED</p><p className="shift-two">一辈子就数那些漂来又浮走的农药纸袋<br />使劲儿地坠下</p><p>但这样能把整个春季的败坏和惶恐<br />再拉高一分么?</p><p className="shift-one">可是真的狮子不论捉蛇或者<br />不捉，吼或者不吼一下笔<br />总会描得像个太阳。</p><p className="noise">▒▒ OCR CONFIDENCE 63% / CONTINUE ▒▒▒</p><p>瞎!辨或辨不出它都得是些什么<br />是<span className="reader-clue">春天</span>的兽、农人药死的耗子</p><p className="last-line">给他们指一条明路：“得往<span className="reader-clue">春天</span><br />最好的地方走，之后退出一个完整。”</p></section>}
+      <footer className="damaged-footer"><span>文字完整度：100% / 显示损坏</span><span>标题字段：LOST</span><span>全文搜索：AVAILABLE</span></footer>
     </article>
   );
 }
@@ -2804,8 +2810,8 @@ function RecoveredOnePage({ onReturnToSearch }: { onReturnToSearch: () => void }
       <TransferredReading title="序诗：盲之春" />
       <section className="archive-next-step" aria-labelledby="mang-next-step-title">
         <span>当前步骤 / 仍在画廊网站</span>
-        <h2 id="mang-next-step-title">加密文件夹尚未开放，现在不需要返回桌面。</h2>
-        <p>图像诗稿将在调查后期进入 Administrator 的“上锁文件夹”。此刻请先使用本页留下的分类残留，继续检索旧社团记录。</p>
+        <h2 id="mang-next-step-title">“序诗：盲之春”已同步到桌面的上锁文件夹。</h2>
+        <p>文件夹已随第一份诗稿自动解锁；之后恢复的《目盲》图像诗稿也会逐篇加入。查看后，请使用本页留下的分类残留继续检索旧社团记录。</p>
         <div className="archive-next-clue"><small>分类残留</small><strong>憎恶</strong></div>
         <Button type="button" variant="outline" onClick={onReturnToSearch}>回到画廊搜索框</Button>
       </section>

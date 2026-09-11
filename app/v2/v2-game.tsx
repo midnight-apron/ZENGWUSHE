@@ -57,7 +57,6 @@ import {
 import {
   BROWSER_NODES,
   DEFAULT_V2_SAVE,
-  FINAL_FOLDER_REQUIREMENTS,
   FINAL_WORD_PASSWORD,
   FINAL_WORD_URL,
   HINTS,
@@ -116,26 +115,46 @@ function mangImageSeries(prefix: string, count: number) {
 }
 
 const MANG_IMAGE_ARCHIVE = [
-  { id: "prologue", title: "序诗：盲之春", images: mangImageSeries("00-prologue", 2) },
-  { id: "chapter-one", title: "瞽人篇", images: mangImageSeries("01-chapter", 1) },
-  { id: "society", title: "1.1 憎恶社", images: mangImageSeries("01-01", 3) },
-  { id: "fang-wan", title: "1.2 方晚", images: mangImageSeries("01-02", 3) },
-  { id: "wang-keding", title: "1.3 王克定", images: mangImageSeries("01-03", 4) },
-  { id: "zai-landao", title: "1.4 在蘭道", images: mangImageSeries("01-04", 1) },
-  { id: "chapter-two", title: "闊南篇", images: mangImageSeries("02-chapter", 1) },
-  { id: "lixiang", title: "2.1 溺水的莉香", images: mangImageSeries("02-01", 3) },
-  { id: "dance", title: "2.2 舞", images: mangImageSeries("02-02", 3) },
-  { id: "chapter-three", title: "浣石篇", images: mangImageSeries("03-chapter", 1) },
-  { id: "confession", title: "3.1 自白", images: mangImageSeries("03-01", 2) },
-  { id: "washing-stone", title: "3.2 浣石", images: mangImageSeries("03-02", 2) },
-  { id: "chapter-four", title: "過曝篇", images: mangImageSeries("04-chapter", 3) },
-  { id: "taste", title: "4.1 芻味", images: mangImageSeries("04-01", 2) },
-  { id: "stomach", title: "4.2 芻胃", images: mangImageSeries("04-02", 2) },
-  { id: "chapter-five", title: "失焦篇", images: mangImageSeries("05-chapter", 1) },
-  { id: "fragments", title: "5.1 始末的碎点", images: mangImageSeries("05-01", 11) },
-  { id: "wang-death", title: "5.2 王克定之死", images: mangImageSeries("05-02", 5) },
-  { id: "epilogue", title: "结诗：赭紅門—點意象之歌", images: mangImageSeries("06-epilogue", 1) },
+  { id: "prologue", recoveredAt: "01", title: "序诗：盲之春", images: mangImageSeries("00-prologue", 2) },
+  { id: "chapter-one", recoveredAt: "02", title: "瞽人篇", images: mangImageSeries("01-chapter", 1) },
+  { id: "society", recoveredAt: "02", title: "1.1 憎恶社", images: mangImageSeries("01-01", 3) },
+  { id: "fang-wan", recoveredAt: "03", title: "1.2 方晚", images: mangImageSeries("01-02", 3) },
+  { id: "wang-keding", recoveredAt: "04", title: "1.3 王克定", images: mangImageSeries("01-03", 4) },
+  { id: "zai-landao", recoveredAt: "05", title: "1.4 在蘭道", images: mangImageSeries("01-04", 1) },
+  { id: "chapter-two", recoveredAt: "06", title: "闊南篇", images: mangImageSeries("02-chapter", 1) },
+  { id: "lixiang", recoveredAt: "06", title: "2.1 溺水的莉香", images: mangImageSeries("02-01", 3) },
+  { id: "dance", recoveredAt: "07", title: "2.2 舞", images: mangImageSeries("02-02", 3) },
+  { id: "chapter-three", recoveredAt: "08", title: "浣石篇", images: mangImageSeries("03-chapter", 1) },
+  { id: "confession", recoveredAt: "08", title: "3.1 自白", images: mangImageSeries("03-01", 2) },
+  { id: "washing-stone", recoveredAt: "09", title: "3.2 浣石", images: mangImageSeries("03-02", 2) },
+  { id: "chapter-four", recoveredAt: "10", title: "過曝篇", images: mangImageSeries("04-chapter", 3) },
+  { id: "taste", recoveredAt: "10", title: "4.1 芻味", images: mangImageSeries("04-01", 2) },
+  { id: "stomach", recoveredAt: "11", title: "4.2 芻胃", images: mangImageSeries("04-02", 2) },
+  { id: "chapter-five", recoveredAt: "12", title: "失焦篇", images: mangImageSeries("05-chapter", 1) },
+  { id: "fragments", recoveredAt: "12", title: "5.1 始末的碎点", images: mangImageSeries("05-01", 11) },
+  { id: "wang-death", recoveredAt: "13", title: "5.2 王克定之死", images: mangImageSeries("05-02", 5) },
+  { id: "epilogue", recoveredAt: "14", title: "结诗：赭紅門—點意象之歌", images: mangImageSeries("06-epilogue", 1) },
 ] as const;
+
+const MANG_RECOVERY_IDS = Array.from({ length: 14 }, (_, index) => String(index + 1).padStart(2, "0"));
+
+function mangProgressEvents(recoveredIds: string[]) {
+  const events = recoveredIds
+    .filter((id) => MANG_RECOVERY_IDS.includes(id))
+    .map((id) => `recovered_mang_${id}`);
+  if (recoveredIds.includes("01")) events.push("unlocked_final_folder");
+  if (MANG_RECOVERY_IDS.every((id) => recoveredIds.includes(id))) events.push("recovered_all_mang_manuscripts");
+  return unique(events);
+}
+
+function loadLegacyGallerySave() {
+  if (typeof window === "undefined") return null;
+  try {
+    return JSON.parse(window.localStorage.getItem("zengwu-she-prototype-v1") || "null") as { recovered?: unknown; settings?: Partial<V2Save["settings"]>; openingSeen?: boolean } | null;
+  } catch {
+    return null;
+  }
+}
 
 function unique(values: string[]) {
   return Array.from(new Set(values));
@@ -158,16 +177,21 @@ function browserAddress(key: string) {
 function safeLoad(): V2Save {
   if (typeof window === "undefined") return DEFAULT_V2_SAVE;
   try {
+    const legacy = loadLegacyGallerySave();
+    const legacyRecovered = Array.isArray(legacy?.recovered)
+      ? legacy.recovered.filter((id): id is string => typeof id === "string")
+      : [];
+    const legacyProgressEvents = mangProgressEvents(legacyRecovered);
     const parsed = JSON.parse(window.localStorage.getItem(V2_STORAGE_KEY) || "null") as Partial<V2Save> | null;
     if (!parsed || parsed.schemaVersion !== 2) {
-      const old = JSON.parse(window.localStorage.getItem("zengwu-she-prototype-v1") || "null") as { settings?: Partial<V2Save["settings"]>; openingSeen?: boolean } | null;
       return {
         ...DEFAULT_V2_SAVE,
-        prologueSeen: Boolean(old?.openingSeen),
-        settings: { ...DEFAULT_V2_SAVE.settings, ...(old?.settings || {}) },
+        events: legacyProgressEvents,
+        prologueSeen: Boolean(legacy?.openingSeen),
+        settings: { ...DEFAULT_V2_SAVE.settings, ...(legacy?.settings || {}) },
       };
     }
-    const events = Array.isArray(parsed.events) ? unique(parsed.events) : [];
+    const events = unique([...(Array.isArray(parsed.events) ? parsed.events : []), ...legacyProgressEvents]);
     const searchHistory = Array.isArray(parsed.searchHistory) ? parsed.searchHistory.slice(0, 50) : DEFAULT_V2_SAVE.searchHistory;
     return {
       ...DEFAULT_V2_SAVE,
@@ -337,6 +361,11 @@ export function V2Game() {
     setSave((previous) => ({ ...previous, readItems: unique([...previous.readItems, ...items]) }));
   }, []);
 
+  const synchronizeMangRecovery = useCallback((recoveredIds: string[]) => {
+    const recoveredEvents = mangProgressEvents(recoveredIds);
+    if (recoveredEvents.length) markEvent(...recoveredEvents);
+  }, [markEvent]);
+
   useEffect(() => {
     if (!playingRecording) return;
     const timer = window.setInterval(() => {
@@ -416,7 +445,7 @@ export function V2Game() {
   const currentHint = useMemo(() => HINTS.find((hint) => !hint.done.every(hasEvent)) || HINTS[HINTS.length - 1], [hasEvent]);
   useEffect(() => setHintLevel(0), [currentHint.id]);
 
-  const finalFolderReady = FINAL_FOLDER_REQUIREMENTS.every(hasEvent);
+  const finalFolderReady = hasEvent("recovered_mang_01");
 
   useEffect(() => {
     if (!ready || !finalFolderReady || hasEvent("unlocked_final_folder")) return;
@@ -562,6 +591,7 @@ export function V2Game() {
           <GameApp
             embedded
             initialPath={legacyPath}
+            onRecoveredChange={synchronizeMangRecovery}
             onNavigate={(path) => {
               if (path === "/recovered/13-wang-keding") {
                 markEvent("verified_wang_poison", "verified_wang_staging");
@@ -577,9 +607,6 @@ export function V2Game() {
                   "verified_lixiang_homicide",
                   "heard_duwanlin_confession",
                 );
-              }
-              if (["/stage/zhuhongmen", "/stage/shinan"].includes(path)) {
-                markEvent("recovered_all_mang_manuscripts");
               }
               pushBrowser(`legacy:${path}`);
             }}
@@ -897,16 +924,19 @@ export function V2Game() {
   }
 
   function renderVault() {
-    const unlocked = hasEvent("unlocked_final_folder");
-    if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>文件夹仍受剧情进度保护。完成案件证据链、账目恢复与关键录音核验后，系统会自动解除锁定。</p><small>无需在此输入密码或完成额外验证。</small></section>;
-    const selectedPoem = MANG_IMAGE_ARCHIVE.find((item) => item.id === selectedMangPoem);
+    const unlocked = hasEvent("recovered_mang_01");
+    if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>文件夹仍受剧情进度保护。先在画廊中找到并恢复第一份诗稿，系统会自动解除锁定。</p><small>无需在此输入密码或完成额外验证。</small></section>;
+    const visiblePoems = MANG_IMAGE_ARCHIVE.filter((item) => hasEvent(`recovered_mang_${item.recoveredAt}`));
+    const visibleImageCount = visiblePoems.reduce((total, item) => total + item.images.length, 0);
+    const recoveredCount = MANG_RECOVERY_IDS.filter((id) => hasEvent(`recovered_mang_${id}`)).length;
+    const selectedPoem = visiblePoems.find((item) => item.id === selectedMangPoem);
     const allManuscriptsRecovered = hasEvent("recovered_all_mang_manuscripts");
     return (
       <>
         <section className={styles.vaultOpen}>
           <section className={styles.mangArchive}>
-            <header><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>共 19 个篇目、51 张图像。</p></header>
-            <div>{MANG_IMAGE_ARCHIVE.map((item) => <button type="button" key={item.id} onClick={() => setSelectedMangPoem(item.id)}><span>{item.images.length} 张</span><b>{item.title}</b><ChevronRight aria-hidden="true" /></button>)}</div>
+            <header><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>已恢复 {recoveredCount} / 14 份诗稿；当前收录 {visiblePoems.length} 个篇目、{visibleImageCount} 张图像。</p></header>
+            <div>{visiblePoems.map((item) => <button type="button" key={item.id} onClick={() => setSelectedMangPoem(item.id)}><span>{item.images.length} 张</span><b>{item.title}</b><ChevronRight aria-hidden="true" /></button>)}</div>
           </section>
           {allManuscriptsRecovered ? <section className={styles.hiddenTextArea} aria-label="新出现的隐藏文件"><button type="button" className={styles.hiddenTextFile} onClick={() => { markEvent("opened_final_password_txt"); setPasswordTextOpen(true); }}><FileText aria-hidden="true" /><span><b>mang-index.txt</b><small>隐藏文件 · 1 KB</small></span><ChevronRight aria-hidden="true" /></button></section> : null}
         </section>
@@ -963,6 +993,6 @@ export function V2Game() {
   }
 
   function renderSettings() {
-    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>减少惊吓</b><small>关闭突发闪烁；红字与渗血仅保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除当前调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除当前调查的事件、搜索历史、已恢复文件和最终文档状态。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); setSave(DEFAULT_V2_SAVE); setProloguePassword(""); setPrologueNote(""); setWordPassword(""); setWordNote(""); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
+    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>减少惊吓</b><small>关闭突发闪烁；红字与渗血仅保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除当前调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除当前调查的事件、搜索历史、已恢复文件和最终文档状态。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); window.localStorage.removeItem("zengwu-she-prototype-v1"); setSave(DEFAULT_V2_SAVE); setProloguePassword(""); setPrologueNote(""); setWordPassword(""); setWordNote(""); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
   }
 }

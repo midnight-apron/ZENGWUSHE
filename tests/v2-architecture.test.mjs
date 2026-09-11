@@ -110,17 +110,22 @@ test("V2 embeds the complete legacy gallery game and separates the cemetery site
   assert.doesNotMatch(app, /function BrowserResults/);
 });
 
-test("legacy gallery milestones automatically unlock the Mang folder and later reveal the password file", () => {
+test("legacy gallery recovery progressively fills the Mang folder and later reveals the password file", () => {
+  assert.match(legacyApp, /onRecoveredChange\?: \(ids: string\[\]\) => void/);
+  assert.match(legacyApp, /onRecoveredChange\?\.\(game\.recovered\)/);
+  assert.match(app, /onRecoveredChange=\{synchronizeMangRecovery\}/);
+  assert.match(app, /recovered_mang_01/);
+  assert.match(app, /MANG_RECOVERY_IDS\.every/);
   assert.match(app, /\/recovered\/13-wang-keding/);
   assert.match(app, /verified_wang_poison/);
   assert.match(app, /\/archive\/case\/cemetery/);
   assert.match(app, /verified_lixiang_homicide/);
   assert.match(app, /\/stage\/recovered-index/);
   assert.match(app, /heard_duwanlin_confession/);
-  assert.match(app, /\["\/stage\/zhuhongmen", "\/stage\/shinan"\]/);
   assert.match(app, /recovered_all_mang_manuscripts/);
-  assert.match(app, /FINAL_FOLDER_REQUIREMENTS\.every\(hasEvent\)/);
+  assert.match(app, /const finalFolderReady = hasEvent\("recovered_mang_01"\)/);
   assert.match(app, /markEvent\("unlocked_final_folder"\)/);
+  assert.doesNotMatch(app, /FINAL_FOLDER_REQUIREMENTS/);
   assert.doesNotMatch(app, /验证片段 [ABC]|vaultSlots|vaultReady|拼合验证片段/);
 });
 
@@ -133,7 +138,10 @@ test("NEW badges stay inside the gallery website instead of the XP desktop", () 
 test("the locked folder contains the Mang image manuscripts and a gated hidden TXT", () => {
   const vault = app.match(/function renderVault\(\)[\s\S]*?\n  function renderWord\(\)/)?.[0] ?? "";
   assert.match(vault, /《目盲》图像诗稿/);
-  assert.match(vault, /共 19 个篇目、51 张图像/);
+  assert.match(vault, /visiblePoems = MANG_IMAGE_ARCHIVE\.filter/);
+  assert.match(vault, /已恢复 \{recoveredCount\} \/ 14 份诗稿/);
+  assert.match(vault, /visiblePoems\.map/);
+  assert.match(app, /recoveredAt: "01", title: "序诗：盲之春"/);
   assert.match(vault, /allManuscriptsRecovered \? <section/);
   assert.match(vault, /mang-index\.txt/);
   assert.match(vault, /opened_final_password_txt/);
@@ -159,7 +167,7 @@ test("Mang image archive contains all 19 entries and 51 supplied images", async 
   const files = (await readdir(new URL("../public/archive/mang/", import.meta.url)))
     .filter((name) => name.endsWith(".webp"));
   assert.equal(files.length, 51);
-  assert.match(app, /共 19 个篇目、51 张图像/);
+  assert.equal(app.match(/recoveredAt: "\d{2}"/g)?.length, 19);
   for (const prefix of ["00-prologue", "01-chapter", "01-01", "01-02", "01-03", "01-04", "02-chapter", "02-01", "02-02", "03-chapter", "03-01", "03-02", "04-chapter", "04-01", "04-02", "05-chapter", "05-01", "05-02", "06-epilogue"]) {
     assert.ok(files.some((name) => name.startsWith(`${prefix}-`)), `missing ${prefix}`);
   }

@@ -55,14 +55,6 @@ export const PROLOGUE = {
 export const FINAL_WORD_PASSWORD = "shinan2024";
 export const FINAL_WORD_URL = "https://mp.weixin.qq.com/s/q1JOS5ufNDzoVLKh-BSaIA";
 
-export const FINAL_FOLDER_REQUIREMENTS = [
-  "verified_wang_poison",
-  "verified_wang_staging",
-  "recovered_ledger_mail",
-  "verified_lixiang_homicide",
-  "heard_duwanlin_confession",
-] as const;
-
 export const STORY_BIBLE = {
   names: {
     wang: "王克定",
@@ -118,8 +110,9 @@ export const PROGRESS_RULES = [
   { event: "verified_wang_staging", outputs: ["伪造投河现场结论槽"] },
   { event: "recovered_ledger_mail", outputs: ["公墓完整案卷", "杜莉香时间线"] },
   { event: "verified_lixiang_homicide", outputs: ["杜莉香他杀结论槽", "杜万琳临终录音"] },
-  { event: "heard_duwanlin_confession", outputs: ["杜南阳责任边界", "《目盲》文件夹自动解锁资格"] },
-  { event: "unlocked_final_folder", outputs: ["《目盲》图像诗稿（19个篇目、51张图像）"] },
+  { event: "heard_duwanlin_confession", outputs: ["杜南阳责任边界"] },
+  { event: "recovered_mang_01", outputs: ["桌面《目盲》文件夹", "序诗：盲之春图像诗稿"] },
+  { event: "unlocked_final_folder", outputs: ["随画廊恢复进度逐篇更新的《目盲》图像诗稿"] },
   { event: "recovered_all_mang_manuscripts", outputs: ["《目盲》文件夹中的隐藏 TXT"] },
   { event: "opened_final_password_txt", outputs: ["最终 Word 文件口令"] },
   { event: "unlocked_final_word", outputs: ["终局链接"] },
@@ -431,12 +424,12 @@ export const HINTS = [
   {
     id: "mang-folder",
     done: ["opened_mang_archive"],
-    levels: ["案件证据链与关键录音已经让加密文件夹自动解锁。", "加密文件夹位于桌面，里面保存《目盲》的完整图像诗稿。", "直接打开桌面的“上锁文件夹”；不再需要额外验证。"],
+    levels: ["第一份《目盲》诗稿恢复后，桌面文件夹已经自动解锁。", "加密文件夹位于桌面；画廊每恢复一份诗稿，图像档案就会同步增加。", "直接打开桌面的“上锁文件夹”，查看刚恢复的“序诗：盲之春”；不需要额外验证。"],
   },
   {
     id: "mang-manuscripts",
     done: ["recovered_all_mang_manuscripts"],
-    levels: ["文件夹已经开放，但最终口令文件尚未出现。", "继续画廊内的诗稿恢复流程，完成《始末的碎点》后寻找与当前展览同名的结诗。", "在画廊中搜索“赭红门”，完成第 14 / 14 份诗稿。"],
+    levels: ["文件夹已经开放，并会随画廊进度逐篇增加；最终口令文件尚未出现。", "继续画廊内的诗稿恢复流程，完成《始末的碎点》后寻找与当前展览同名的结诗。", "在画廊中搜索“赭红门”，完成第 14 / 14 份诗稿。"],
   },
   {
     id: "password-file",
