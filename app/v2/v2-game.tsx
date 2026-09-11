@@ -17,8 +17,10 @@ import {
   CircleHelp,
   FileArchive,
   FileAudio,
+  FileImage,
   FileLock2,
   FileText,
+  Folder,
   FolderLock,
   Home,
   Maximize2,
@@ -136,6 +138,16 @@ const MANG_IMAGE_ARCHIVE = [
   { id: "epilogue", recoveredAt: "14", title: "结诗：赭紅門—點意象之歌", images: mangImageSeries("06-epilogue", 1) },
 ] as const;
 
+const MANG_ARCHIVE_GROUPS = [
+  { id: "prologue", title: "序诗：盲之春", recoveredAt: "01", coverId: "prologue", poemIds: [] },
+  { id: "chapter-one", title: "瞽人篇", recoveredAt: "02", coverId: "chapter-one", poemIds: ["society", "fang-wan", "wang-keding", "zai-landao"] },
+  { id: "chapter-two", title: "闊南篇", recoveredAt: "06", coverId: "chapter-two", poemIds: ["lixiang", "dance"] },
+  { id: "chapter-three", title: "浣石篇", recoveredAt: "08", coverId: "chapter-three", poemIds: ["confession", "washing-stone"] },
+  { id: "chapter-four", title: "過曝篇", recoveredAt: "10", coverId: "chapter-four", poemIds: ["taste", "stomach"] },
+  { id: "chapter-five", title: "失焦篇", recoveredAt: "12", coverId: "chapter-five", poemIds: ["fragments", "wang-death"] },
+  { id: "epilogue", title: "结诗：赭紅門—點意象之歌", recoveredAt: "14", coverId: "epilogue", poemIds: [] },
+] as const;
+
 const MANG_RECOVERY_IDS = Array.from({ length: 14 }, (_, index) => String(index + 1).padStart(2, "0"));
 
 function mangProgressEvents(recoveredIds: string[]) {
@@ -162,6 +174,11 @@ function unique(values: string[]) {
 
 function asset(path: string) {
   return `${BASE_PATH}${path}`;
+}
+
+function mangImageFileName(title: string, index: number) {
+  const safeTitle = title.replace(/[：—·]/g, "_").replace(/\s+/g, "_");
+  return `${safeTitle}_${String(index + 1).padStart(2, "0")}.webp`;
 }
 
 function browserAddress(key: string) {
@@ -327,7 +344,10 @@ export function V2Game() {
   const [editorNote, setEditorNote] = useState("");
   const [hintOpen, setHintOpen] = useState(false);
   const [hintLevel, setHintLevel] = useState(0);
+  const [vaultGroupId, setVaultGroupId] = useState<string | null>(null);
+  const [vaultPoemId, setVaultPoemId] = useState<string | null>(null);
   const [selectedMangPoem, setSelectedMangPoem] = useState<string | null>(null);
+  const [selectedMangImageIndex, setSelectedMangImageIndex] = useState(0);
   const [passwordTextOpen, setPasswordTextOpen] = useState(false);
   const [wordPassword, setWordPassword] = useState("");
   const [wordNote, setWordNote] = useState("");
@@ -927,23 +947,83 @@ export function V2Game() {
     const unlocked = hasEvent("recovered_mang_01");
     if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>文件夹仍受剧情进度保护。先在画廊中找到并恢复第一份诗稿，系统会自动解除锁定。</p><small>无需在此输入密码或完成额外验证。</small></section>;
     const visiblePoems = MANG_IMAGE_ARCHIVE.filter((item) => hasEvent(`recovered_mang_${item.recoveredAt}`));
-    const visibleImageCount = visiblePoems.reduce((total, item) => total + item.images.length, 0);
+    const visibleGroups = MANG_ARCHIVE_GROUPS.filter((group) => hasEvent(`recovered_mang_${group.recoveredAt}`));
     const recoveredCount = MANG_RECOVERY_IDS.filter((id) => hasEvent(`recovered_mang_${id}`)).length;
+    const currentGroup = visibleGroups.find((group) => group.id === vaultGroupId);
+    const currentPoem = visiblePoems.find((poem) => poem.id === vaultPoemId && currentGroup?.poemIds.some((id) => id === poem.id));
+    const groupCover = visiblePoems.find((poem) => poem.id === currentGroup?.coverId);
+    const groupPoems = currentGroup
+      ? currentGroup.poemIds.map((id) => visiblePoems.find((poem) => poem.id === id)).filter((poem): poem is (typeof visiblePoems)[number] => Boolean(poem))
+      : [];
     const selectedPoem = visiblePoems.find((item) => item.id === selectedMangPoem);
+    const selectedImage = selectedPoem?.images[selectedMangImageIndex];
     const allManuscriptsRecovered = hasEvent("recovered_all_mang_manuscripts");
+    const atRoot = !currentGroup;
+    const addressParts = ["上锁文件夹", currentGroup?.title, currentPoem?.title].filter(Boolean);
+    const fileCount = atRoot
+      ? visibleGroups.length + (allManuscriptsRecovered ? 1 : 0)
+      : currentPoem
+        ? currentPoem.images.length
+        : (groupCover?.images.length ?? 0) + groupPoems.length;
+    const goBack = () => {
+      if (currentPoem) setVaultPoemId(null);
+      else {
+        setVaultGroupId(null);
+        setVaultPoemId(null);
+      }
+    };
+    const openImage = (poemId: string, index: number) => {
+      setSelectedMangPoem(poemId);
+      setSelectedMangImageIndex(index);
+    };
     return (
       <>
-        <section className={styles.vaultOpen}>
-          <section className={styles.mangArchive}>
-            <header><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>已恢复 {recoveredCount} / 14 份诗稿；当前收录 {visiblePoems.length} 个篇目、{visibleImageCount} 张图像。</p></header>
-            <div>{visiblePoems.map((item) => <button type="button" key={item.id} onClick={() => setSelectedMangPoem(item.id)}><span>{item.images.length} 张</span><b>{item.title}</b><ChevronRight aria-hidden="true" /></button>)}</div>
-          </section>
-          {allManuscriptsRecovered ? <section className={styles.hiddenTextArea} aria-label="新出现的隐藏文件"><button type="button" className={styles.hiddenTextFile} onClick={() => { markEvent("opened_final_password_txt"); setPasswordTextOpen(true); }}><FileText aria-hidden="true" /><span><b>mang-index.txt</b><small>隐藏文件 · 1 KB</small></span><ChevronRight aria-hidden="true" /></button></section> : null}
+        <section className={styles.vaultOpen} aria-label="Windows XP 文件资源管理器">
+          <div className={styles.explorerMenus}><button type="button">文件(F)</button><button type="button">编辑(E)</button><button type="button">查看(V)</button><button type="button">收藏(A)</button><button type="button">工具(T)</button><button type="button">帮助(H)</button></div>
+          <div className={styles.explorerToolbar}>
+            <button type="button" disabled={atRoot} onClick={goBack}><ArrowLeft aria-hidden="true" />后退</button>
+            <button type="button" disabled><ArrowRight aria-hidden="true" />前进</button>
+            <i aria-hidden="true" />
+            <button type="button" disabled><Search aria-hidden="true" />搜索</button>
+            <button type="button" onClick={() => { setVaultGroupId(null); setVaultPoemId(null); }}><Folder aria-hidden="true" />文件夹</button>
+          </div>
+          <div className={styles.explorerAddress}><span>地址</span><div><Folder aria-hidden="true" /><b>C:\Documents and Settings\Administrator\Desktop\{addressParts.join("\\")}</b></div><button type="button" disabled>转到</button></div>
+          <div className={styles.explorerWorkspace}>
+            <aside className={styles.explorerSidebar}>
+              <section><h2>文件和文件夹任务</h2><button type="button" disabled={atRoot} onClick={goBack}>返回上一级</button><button type="button" onClick={() => { setVaultGroupId(null); setVaultPoemId(null); }}>查看根目录</button></section>
+              <section><h2>其它位置</h2><button type="button" onClick={() => { setVaultGroupId(null); setVaultPoemId(null); }}>Administrator 的文档</button><span>我的电脑</span><span>桌面</span></section>
+              <section><h2>详细信息</h2><b>{currentPoem?.title ?? currentGroup?.title ?? "《目盲》图像诗稿"}</b><span>{fileCount} 个对象</span><span>已恢复 {recoveredCount} / 14</span></section>
+            </aside>
+            <main className={styles.explorerFiles}>
+              {atRoot ? visibleGroups.map((group) => (
+                <button type="button" className={styles.explorerItem} key={group.id} onClick={() => { setVaultGroupId(group.id); setVaultPoemId(null); }}>
+                  <Folder aria-hidden="true" /><span>{group.title}</span>
+                </button>
+              )) : null}
+              {!atRoot && !currentPoem && groupCover ? groupCover.images.map((image, index) => (
+                <button type="button" className={styles.explorerItem} key={image} onClick={() => openImage(groupCover.id, index)}>
+                  <FileImage aria-hidden="true" /><span>{mangImageFileName(currentGroup?.title ?? groupCover.title, index)}</span>
+                </button>
+              )) : null}
+              {!atRoot && !currentPoem ? groupPoems.map((poem) => (
+                <button type="button" className={styles.explorerItem} key={poem.id} onClick={() => setVaultPoemId(poem.id)}>
+                  <Folder aria-hidden="true" /><span>{poem.title}</span>
+                </button>
+              )) : null}
+              {currentPoem ? currentPoem.images.map((image, index) => (
+                <button type="button" className={styles.explorerItem} key={image} onClick={() => openImage(currentPoem.id, index)}>
+                  <FileImage aria-hidden="true" /><span>{mangImageFileName(currentPoem.title, index)}</span>
+                </button>
+              )) : null}
+              {atRoot && allManuscriptsRecovered ? <button type="button" className={`${styles.explorerItem} ${styles.hiddenTextFile}`} onClick={() => { markEvent("opened_final_password_txt"); setPasswordTextOpen(true); }}><FileText aria-hidden="true" /><span>mang-index.txt</span></button> : null}
+            </main>
+          </div>
+          <footer className={styles.explorerStatus}><span>{fileCount} 个对象</span><span>《目盲》图像诗稿 · 本地档案</span></footer>
         </section>
-        <Dialog open={Boolean(selectedPoem)} onOpenChange={(open) => { if (!open) setSelectedMangPoem(null); }}>
+        <Dialog open={Boolean(selectedPoem && selectedImage)} onOpenChange={(open) => { if (!open) setSelectedMangPoem(null); }}>
           <DialogContent className={styles.mangViewer}>
-            <DialogHeader><DialogTitle>{selectedPoem?.title}</DialogTitle><DialogDescription>《目盲》加密图像档案 · {selectedPoem?.images.length ?? 0} 张</DialogDescription></DialogHeader>
-            <div>{selectedPoem?.images.map((image, index) => <figure key={image}><img src={asset(image)} alt={`${selectedPoem.title} 第 ${index + 1} 张`} loading="lazy" /><figcaption>{index + 1} / {selectedPoem.images.length}</figcaption></figure>)}</div>
+            <DialogHeader><DialogTitle>{selectedPoem ? mangImageFileName(selectedPoem.title, selectedMangImageIndex) : "图像预览"}</DialogTitle><DialogDescription>{selectedPoem?.title} · {selectedMangImageIndex + 1} / {selectedPoem?.images.length ?? 0}</DialogDescription></DialogHeader>
+            {selectedPoem && selectedImage ? <figure><img src={asset(selectedImage)} alt={`${selectedPoem.title} 第 ${selectedMangImageIndex + 1} 张`} /><figcaption>{selectedMangImageIndex + 1} / {selectedPoem.images.length}</figcaption></figure> : null}
           </DialogContent>
         </Dialog>
         {allManuscriptsRecovered ? <Dialog open={passwordTextOpen} onOpenChange={setPasswordTextOpen}><DialogContent className={styles.passwordTextDialog}><DialogHeader><DialogTitle>mang-index.txt - 记事本</DialogTitle></DialogHeader><pre>{FINAL_WORD_PASSWORD}</pre></DialogContent></Dialog> : null}

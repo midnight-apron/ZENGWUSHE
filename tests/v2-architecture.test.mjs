@@ -139,10 +139,16 @@ test("the locked folder contains the Mang image manuscripts and a gated hidden T
   const vault = app.match(/function renderVault\(\)[\s\S]*?\n  function renderWord\(\)/)?.[0] ?? "";
   assert.match(vault, /《目盲》图像诗稿/);
   assert.match(vault, /visiblePoems = MANG_IMAGE_ARCHIVE\.filter/);
-  assert.match(vault, /已恢复 \{recoveredCount\} \/ 14 份诗稿/);
-  assert.match(vault, /visiblePoems\.map/);
+  assert.match(vault, /visibleGroups = MANG_ARCHIVE_GROUPS\.filter/);
+  assert.match(vault, /已恢复 \{recoveredCount\} \/ 14/);
+  assert.match(vault, /visibleGroups\.map/);
+  assert.match(vault, /groupPoems\.map/);
+  assert.match(vault, /currentPoem\.images\.map/);
+  assert.match(vault, /Windows XP 文件资源管理器/);
+  assert.match(vault, /文件和文件夹任务/);
+  assert.match(vault, /C:\\Documents and Settings\\Administrator\\Desktop/);
   assert.match(app, /recoveredAt: "01", title: "序诗：盲之春"/);
-  assert.match(vault, /allManuscriptsRecovered \? <section/);
+  assert.match(vault, /atRoot && allManuscriptsRecovered/);
   assert.match(vault, /mang-index\.txt/);
   assert.match(vault, /opened_final_password_txt/);
   assert.match(vault, /<pre>\{FINAL_WORD_PASSWORD\}<\/pre>/);
@@ -166,8 +172,13 @@ test("the final objective is a locked Word document containing only the supplied
 test("Mang image archive contains all 19 entries and 51 supplied images", async () => {
   const files = (await readdir(new URL("../public/archive/mang/", import.meta.url)))
     .filter((name) => name.endsWith(".webp"));
+  const archive = app.match(/const MANG_IMAGE_ARCHIVE = \[[\s\S]*?\] as const;/)?.[0] ?? "";
+  const groups = app.match(/const MANG_ARCHIVE_GROUPS = \[[\s\S]*?\] as const;/)?.[0] ?? "";
   assert.equal(files.length, 51);
-  assert.equal(app.match(/recoveredAt: "\d{2}"/g)?.length, 19);
+  assert.equal(archive.match(/recoveredAt: "\d{2}"/g)?.length, 19);
+  assert.equal(groups.match(/recoveredAt: "\d{2}"/g)?.length, 7);
+  assert.match(groups, /title: "瞽人篇"[\s\S]*?poemIds: \["society", "fang-wan", "wang-keding", "zai-landao"\]/);
+  for (const title of ["序诗：盲之春", "瞽人篇", "闊南篇", "浣石篇", "過曝篇", "失焦篇", "结诗：赭紅門—點意象之歌"]) assert.match(groups, new RegExp(title));
   for (const prefix of ["00-prologue", "01-chapter", "01-01", "01-02", "01-03", "01-04", "02-chapter", "02-01", "02-02", "03-chapter", "03-01", "03-02", "04-chapter", "04-01", "04-02", "05-chapter", "05-01", "05-02", "06-epilogue"]) {
     assert.ok(files.some((name) => name.startsWith(`${prefix}-`)), `missing ${prefix}`);
   }

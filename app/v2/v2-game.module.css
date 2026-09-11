@@ -688,8 +688,7 @@
 .vaultLocked h1 { margin: .7rem 0; font-family: "Noto Serif SC", SimSun, serif; font-size: 2.5rem; font-weight: 500; }
 .vaultLocked > p { max-width: 38rem; color: var(--v2-muted); line-height: 1.8; }
 .vaultLocked > small { max-width: 32rem; margin-top: 1rem; color: #777269; font-size: .72rem; }
-.vaultOpen { width: min(100% - 3rem, 70rem); margin: 0 auto; padding: 3rem 0 7rem; }
-.vaultOpen > header { margin-bottom: 2rem; border-bottom: 1px solid var(--v2-ink); padding-bottom: 2rem; }
+.vaultOpen { display: flex; width: 100%; height: 100%; flex-direction: column; overflow: hidden; background: #fff; color: #111; font-family: Tahoma, "Microsoft YaHei", sans-serif; font-size: 12px; }
 .finalEvidence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
 .finalEvidence article { border: 1px solid var(--v2-line); background: #f5f2ea; padding: 1.2rem; }
 .finalEvidence article > span { color: var(--v2-red); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .62rem; letter-spacing: .08em; }
@@ -697,33 +696,56 @@
 .finalEvidence ul { margin: .8rem 0 0; padding-left: 1.1rem; color: var(--v2-muted); font-size: .78rem; line-height: 1.8; }
 .finalNarrative,
 .roleMap,
-.mangArchive,
 .literatureShelf,
 .endingChoices,
 .endingCard { margin-top: 3rem; border-top: 1px solid var(--v2-ink); padding-top: 1.5rem; }
 .roleMap dd { color: var(--v2-muted); }
-.mangArchive > header span { color: var(--v2-red); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .65rem; letter-spacing: .1em; }
-.mangArchive > header h1,
-.mangArchive > header h2 { margin: .45rem 0; font-family: "Noto Serif SC", SimSun, serif; font-size: 1.7rem; font-weight: 500; }
-.mangArchive > header p { color: var(--v2-muted); line-height: 1.7; }
-.mangArchive > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .55rem; margin-top: 1.2rem; }
-.mangArchive button { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: .35rem .6rem; min-height: 5.5rem; border: 1px solid var(--v2-line); background: #f5f2ea; color: inherit; padding: .85rem; cursor: pointer; text-align: left; }
-.mangArchive button:hover { border-color: var(--v2-red); background: #fff; }
-.mangArchive button span { grid-column: 1 / 3; color: var(--v2-red); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .65rem; }
-.mangArchive button b { font-family: "Noto Serif SC", SimSun, serif; font-size: .92rem; font-weight: 500; line-height: 1.45; }
-.mangArchive button svg { width: 1rem; height: 1rem; }
-.hiddenTextArea { display: flex; justify-content: flex-end; margin-top: 1.4rem; border-top: 1px dashed var(--v2-line); padding-top: 1rem; }
-.hiddenTextFile { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .75rem; width: min(100%, 22rem); border: 1px dotted #88847c; background: #efede7; color: #5e5a53; padding: .75rem .9rem; cursor: pointer; opacity: .68; text-align: left; }
+.explorerMenus { display: flex; flex: 0 0 24px; align-items: center; gap: 1px; border-bottom: 1px solid #d2cfbd; background: #ece9d8; padding: 0 5px; }
+.explorerMenus button { height: 21px; border: 0; background: transparent; color: #111; padding: 0 7px; font: inherit; cursor: default; }
+.explorerMenus button:hover { outline: 1px solid #316ac5; background: #c1d2ee; }
+.explorerToolbar { display: flex; flex: 0 0 43px; align-items: center; gap: 4px; border-bottom: 1px solid #c7c4b5; background: linear-gradient(180deg, #fff 0%, #f4f1df 100%); padding: 3px 7px; }
+.explorerToolbar button { display: inline-flex; height: 32px; align-items: center; gap: 4px; border: 1px solid transparent; background: transparent; color: #222; padding: 0 7px; font: inherit; cursor: pointer; }
+.explorerToolbar button:hover:not(:disabled) { border-color: #316ac5; background: #dbe9ff; }
+.explorerToolbar button:disabled { color: #989898; cursor: default; }
+.explorerToolbar button svg { width: 23px; height: 23px; color: #2da531; stroke-width: 2.5; }
+.explorerToolbar button:nth-child(2) svg { color: #aaa; }
+.explorerToolbar button:nth-child(4) svg { color: #4784c9; }
+.explorerToolbar button:nth-child(5) svg { color: #e2b62f; fill: #ffe27a; }
+.explorerToolbar > i { width: 1px; height: 27px; margin: 0 3px; background: #c8c5b7; box-shadow: 1px 0 #fff; }
+.explorerAddress { display: grid; flex: 0 0 27px; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 5px; border-bottom: 1px solid #aaa; background: #ece9d8; padding: 2px 4px 3px 7px; }
+.explorerAddress > span { color: #686868; }
+.explorerAddress > div { display: flex; min-width: 0; height: 21px; align-items: center; gap: 5px; overflow: hidden; border: 1px solid #7f9db9; background: #fff; padding: 0 5px; }
+.explorerAddress > div svg { width: 16px; height: 16px; flex: 0 0 auto; color: #d39f13; fill: #ffe176; }
+.explorerAddress b { overflow: hidden; font-weight: 400; text-overflow: ellipsis; white-space: nowrap; }
+.explorerAddress > button { height: 22px; border: 1px solid #7f9db9; background: linear-gradient(#fff, #ddd9c7); padding: 0 8px; font: inherit; }
+.explorerWorkspace { display: grid; min-height: 0; flex: 1; grid-template-columns: 188px minmax(0, 1fr); overflow: hidden; }
+.explorerSidebar { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; background: linear-gradient(135deg, #7fa0e4 0%, #637fd1 65%, #7896df 100%); padding: 10px; }
+.explorerSidebar section { overflow: hidden; border: 1px solid #fff; border-radius: 8px 8px 5px 5px; background: #d6e3ff; box-shadow: 0 1px 1px rgba(24,55,143,.35); }
+.explorerSidebar h2 { margin: 0; border-bottom: 1px solid #aac1ed; background: linear-gradient(90deg, #fff, #c7d9f8); color: #2450a4; padding: 6px 9px; font-size: 12px; }
+.explorerSidebar button,
+.explorerSidebar span,
+.explorerSidebar b { display: block; width: 100%; border: 0; background: transparent; color: #1c4aa5; padding: 5px 10px; font: inherit; text-align: left; }
+.explorerSidebar button:not(:disabled) { cursor: pointer; }
+.explorerSidebar button:not(:disabled):hover { text-decoration: underline; }
+.explorerSidebar button:disabled { color: #8b97ac; }
+.explorerSidebar b { color: #253351; padding-bottom: 2px; }
+.explorerSidebar section:last-child span { color: #4a5871; padding-top: 2px; padding-bottom: 4px; }
+.explorerFiles { display: grid; align-content: start; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 19px 8px; overflow: auto; background: #fff; padding: 18px 15px 30px; }
+.explorerItem { display: flex; min-width: 0; min-height: 78px; flex-direction: column; align-items: center; gap: 5px; border: 1px solid transparent; background: transparent; color: #111; padding: 3px 5px; font: inherit; cursor: pointer; text-align: center; }
+.explorerItem:hover,
+.explorerItem:focus-visible { border-color: #316ac5; background: #e4edff; outline: 0; }
+.explorerItem > svg { width: 42px; height: 42px; flex: 0 0 auto; color: #cf9912; fill: #ffe270; stroke-width: 1.35; filter: drop-shadow(1px 1px 0 #9a7625); }
+.explorerItem > svg:first-child[aria-hidden="true"] { pointer-events: none; }
+.explorerItem > span { max-width: 100%; line-height: 1.25; overflow-wrap: anywhere; }
+.explorerItem:has(> svg[class*="lucide-file-image"]) > svg { color: #4f69ad; fill: #f4f4f4; filter: drop-shadow(1px 1px 0 #aaa); }
+.hiddenTextFile { opacity: .55; }
+.hiddenTextFile > svg { color: #5f6b79; fill: #fff; filter: drop-shadow(1px 1px 0 #aaa); }
 .hiddenTextFile:hover,
-.hiddenTextFile:focus-visible { border-color: var(--v2-red); background: #fff; color: var(--v2-ink); opacity: 1; }
-.hiddenTextFile > svg { width: 1.2rem; height: 1.2rem; }
-.hiddenTextFile > span { display: grid; gap: .15rem; }
-.hiddenTextFile b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .78rem; }
-.hiddenTextFile small { font-size: .63rem; }
+.hiddenTextFile:focus-visible { opacity: 1; }
+.explorerStatus { display: flex; flex: 0 0 23px; align-items: center; justify-content: space-between; border-top: 1px solid #aca899; background: #ece9d8; color: #555; padding: 0 8px; }
 .mangViewer { width: min(76rem, calc(100vw - 2rem)); max-width: none; max-height: calc(100vh - 2rem); overflow: auto; border-radius: 0; background: #1b1b1b; color: #fff; }
-.mangViewer > div:last-child { display: grid; gap: 1rem; }
 .mangViewer figure { margin: 0; }
-.mangViewer img { display: block; width: 100%; height: auto; background: #ddd; }
+.mangViewer img { display: block; width: auto; max-width: 100%; max-height: calc(100vh - 10rem); height: auto; margin: 0 auto; background: #ddd; }
 .mangViewer figcaption { padding: .45rem 0 1rem; color: #aaa; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .68rem; text-align: right; }
 .passwordTextDialog { width: min(34rem, calc(100vw - 2rem)); max-width: none; border-radius: 0; background: #fff; color: #111; padding: 0; }
 .passwordTextDialog > div:first-child { border-bottom: 1px solid #b8b8b8; background: #ece9d8; padding: .45rem .7rem; }
@@ -859,8 +881,7 @@
   .searchHome { padding: clamp(3rem, 9vh, 5rem) 1rem 3rem; }
   .embeddedSearch { width: min(100% - 2rem, 66rem); }
   .resultsPage,
-  .nodePage,
-  .vaultOpen { width: min(100% - 2rem, 66rem); }
+  .nodePage { width: min(100% - 2rem, 66rem); }
   .resultsPage { padding-top: 1rem; }
   .resultList > button { grid-template-columns: 1fr auto; gap: .4rem; }
   .resultList > button > span { grid-column: 1 / 3; grid-row: auto; }
@@ -870,8 +891,11 @@
   .nodePage > header { margin-bottom: 2rem; }
   .copyGrid,
   .finalEvidence,
-  .mangArchive > div,
   .endingChoices > div { grid-template-columns: 1fr; }
+  .explorerWorkspace { grid-template-columns: 145px minmax(0, 1fr); }
+  .explorerFiles { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); padding: 13px 8px 24px; }
+  .explorerToolbar button { padding: 0 4px; }
+  .explorerToolbar button svg { width: 19px; height: 19px; }
   .evidenceTabs { grid-template-columns: 1fr; }
   .fileApp,
   .audioApp { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); }
