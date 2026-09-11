@@ -52,8 +52,16 @@ export const PROLOGUE = {
   dedication: "献给玛赫、L 和杜彻",
 };
 
-export const FINAL_WORD_PASSWORD = "诗喃";
+export const FINAL_WORD_PASSWORD = "shinan2024";
 export const FINAL_WORD_URL = "https://mp.weixin.qq.com/s/q1JOS5ufNDzoVLKh-BSaIA";
+
+export const FINAL_FOLDER_REQUIREMENTS = [
+  "verified_wang_poison",
+  "verified_wang_staging",
+  "recovered_ledger_mail",
+  "verified_lixiang_homicide",
+  "heard_duwanlin_confession",
+] as const;
 
 export const STORY_BIBLE = {
   names: {
@@ -110,9 +118,10 @@ export const PROGRESS_RULES = [
   { event: "verified_wang_staging", outputs: ["伪造投河现场结论槽"] },
   { event: "recovered_ledger_mail", outputs: ["公墓完整案卷", "杜莉香时间线"] },
   { event: "verified_lixiang_homicide", outputs: ["杜莉香他杀结论槽", "杜万琳临终录音"] },
-  { event: "heard_duwanlin_confession", outputs: ["杜南阳责任边界", "最终验证片段"] },
+  { event: "heard_duwanlin_confession", outputs: ["杜南阳责任边界", "《目盲》文件夹自动解锁资格"] },
   { event: "unlocked_final_folder", outputs: ["《目盲》图像诗稿（19个篇目、51张图像）"] },
-  { event: "found_final_word_password", outputs: ["最终 Word 文件口令"] },
+  { event: "recovered_all_mang_manuscripts", outputs: ["《目盲》文件夹中的隐藏 TXT"] },
+  { event: "opened_final_password_txt", outputs: ["最终 Word 文件口令"] },
   { event: "unlocked_final_word", outputs: ["终局链接"] },
 ] as const;
 
@@ -421,18 +430,23 @@ export const HINTS = [
   },
   {
     id: "mang-folder",
-    done: ["unlocked_final_folder"],
-    levels: ["三组事实材料已经足够打开桌面上的加密文件夹。", "加密文件夹位于桌面，只保存《目盲》的图像诗稿。", "打开“上锁文件夹”，点击“打开《目盲》图像诗稿”。"],
+    done: ["opened_mang_archive"],
+    levels: ["案件证据链与关键录音已经让加密文件夹自动解锁。", "加密文件夹位于桌面，里面保存《目盲》的完整图像诗稿。", "直接打开桌面的“上锁文件夹”；不再需要额外验证。"],
   },
   {
-    id: "final-password",
-    done: ["found_final_word_password"],
-    levels: ["最终文件的口令藏在画廊流程最后一页。", "完成《始末的碎点》后，寻找与当前展览同名的结诗。", "在画廊中搜索“赭红门”，打开第 14 份文本并读取终场口令。"],
+    id: "mang-manuscripts",
+    done: ["recovered_all_mang_manuscripts"],
+    levels: ["文件夹已经开放，但最终口令文件尚未出现。", "继续画廊内的诗稿恢复流程，完成《始末的碎点》后寻找与当前展览同名的结诗。", "在画廊中搜索“赭红门”，完成第 14 / 14 份诗稿。"],
+  },
+  {
+    id: "password-file",
+    done: ["opened_final_password_txt"],
+    levels: ["全部诗稿完成后，加密文件夹的目录会发生变化。", "回到桌面的“上锁文件夹”，寻找新出现的半透明 TXT 文件。", "打开隐藏文件“mang-index.txt”，读取其中的完整字符串。"],
   },
   {
     id: "final-word",
-    done: ["unlocked_final_word"],
-    levels: ["终场口令对应桌面上的一个文档。", "关闭或最小化浏览器，打开桌面的“最终文件.doc”。", "在 Word 文件中输入口令“诗喃”。"],
+    done: ["opened_final_password_txt", "unlocked_final_word"],
+    levels: ["隐藏 TXT 中的字符串对应桌面上的一个文档。", "关闭或最小化文件夹，打开桌面的“最终文件.doc”。", "将 TXT 中的字符串完整输入 Word 密码框。"],
   },
 ];
 

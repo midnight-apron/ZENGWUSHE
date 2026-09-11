@@ -57,6 +57,7 @@ import {
 import {
   BROWSER_NODES,
   DEFAULT_V2_SAVE,
+  FINAL_FOLDER_REQUIREMENTS,
   FINAL_WORD_PASSWORD,
   FINAL_WORD_URL,
   HINTS,
@@ -303,6 +304,7 @@ export function V2Game() {
   const [hintOpen, setHintOpen] = useState(false);
   const [hintLevel, setHintLevel] = useState(0);
   const [selectedMangPoem, setSelectedMangPoem] = useState<string | null>(null);
+  const [passwordTextOpen, setPasswordTextOpen] = useState(false);
   const [wordPassword, setWordPassword] = useState("");
   const [wordNote, setWordNote] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
@@ -414,12 +416,17 @@ export function V2Game() {
   const currentHint = useMemo(() => HINTS.find((hint) => !hint.done.every(hasEvent)) || HINTS[HINTS.length - 1], [hasEvent]);
   useEffect(() => setHintLevel(0), [currentHint.id]);
 
-  const vaultSlots = [
-    hasEvent("verified_wang_poison") && hasEvent("verified_wang_staging"),
-    hasEvent("recovered_ledger_mail") && hasEvent("verified_lixiang_homicide"),
-    hasEvent("heard_duwanlin_confession"),
-  ];
-  const vaultReady = vaultSlots.every(Boolean);
+  const finalFolderReady = FINAL_FOLDER_REQUIREMENTS.every(hasEvent);
+
+  useEffect(() => {
+    if (!ready || !finalFolderReady || hasEvent("unlocked_final_folder")) return;
+    markEvent("unlocked_final_folder");
+  }, [finalFolderReady, hasEvent, markEvent, ready]);
+
+  useEffect(() => {
+    if (activeApp !== "vault" || !hasEvent("unlocked_final_folder") || hasEvent("opened_mang_archive")) return;
+    markEvent("opened_mang_archive");
+  }, [activeApp, hasEvent, markEvent]);
 
   if (!ready) return <main className={styles.loading}>正在读取本地备份……</main>;
 
@@ -572,7 +579,7 @@ export function V2Game() {
                 );
               }
               if (["/stage/zhuhongmen", "/stage/shinan"].includes(path)) {
-                markEvent("found_final_word_password");
+                markEvent("recovered_all_mang_manuscripts");
               }
               pushBrowser(`legacy:${path}`);
             }}
@@ -891,8 +898,9 @@ export function V2Game() {
 
   function renderVault() {
     const unlocked = hasEvent("unlocked_final_folder");
-    if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>此文件夹只保存《目盲》图像诗稿。完成三个验证片段后即可打开。</p><div className={styles.vaultSlots}>{vaultSlots.map((complete, index) => <div key={index} className={complete ? styles.slotComplete : ""}><span>验证片段 {String.fromCharCode(65 + index)}</span><b>{complete ? "已核验" : "等待材料"}</b></div>)}</div><button type="button" disabled={!vaultReady} onClick={() => markEvent("unlocked_final_folder")}>{vaultReady ? "打开《目盲》图像诗稿" : "尚缺验证材料"}</button></section>;
+    if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>文件夹仍受剧情进度保护。完成案件证据链、账目恢复与关键录音核验后，系统会自动解除锁定。</p><small>无需在此输入密码或完成额外验证。</small></section>;
     const selectedPoem = MANG_IMAGE_ARCHIVE.find((item) => item.id === selectedMangPoem);
+    const allManuscriptsRecovered = hasEvent("recovered_all_mang_manuscripts");
     return (
       <>
         <section className={styles.vaultOpen}>
@@ -900,6 +908,7 @@ export function V2Game() {
             <header><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>共 19 个篇目、51 张图像。</p></header>
             <div>{MANG_IMAGE_ARCHIVE.map((item) => <button type="button" key={item.id} onClick={() => setSelectedMangPoem(item.id)}><span>{item.images.length} 张</span><b>{item.title}</b><ChevronRight aria-hidden="true" /></button>)}</div>
           </section>
+          {allManuscriptsRecovered ? <section className={styles.hiddenTextArea} aria-label="新出现的隐藏文件"><button type="button" className={styles.hiddenTextFile} onClick={() => { markEvent("opened_final_password_txt"); setPasswordTextOpen(true); }}><FileText aria-hidden="true" /><span><b>mang-index.txt</b><small>隐藏文件 · 1 KB</small></span><ChevronRight aria-hidden="true" /></button></section> : null}
         </section>
         <Dialog open={Boolean(selectedPoem)} onOpenChange={(open) => { if (!open) setSelectedMangPoem(null); }}>
           <DialogContent className={styles.mangViewer}>
@@ -907,33 +916,35 @@ export function V2Game() {
             <div>{selectedPoem?.images.map((image, index) => <figure key={image}><img src={asset(image)} alt={`${selectedPoem.title} 第 ${index + 1} 张`} loading="lazy" /><figcaption>{index + 1} / {selectedPoem.images.length}</figcaption></figure>)}</div>
           </DialogContent>
         </Dialog>
+        {allManuscriptsRecovered ? <Dialog open={passwordTextOpen} onOpenChange={setPasswordTextOpen}><DialogContent className={styles.passwordTextDialog}><DialogHeader><DialogTitle>mang-index.txt - 记事本</DialogTitle></DialogHeader><pre>{FINAL_WORD_PASSWORD}</pre></DialogContent></Dialog> : null}
       </>
     );
   }
 
   function renderWord() {
-    const unlocked = hasEvent("unlocked_final_word");
+    const passwordSourceFound = hasEvent("opened_final_password_txt");
+    const unlocked = passwordSourceFound && hasEvent("unlocked_final_word");
     if (!unlocked) {
       return (
         <section className={styles.wordLocked}>
           <form onSubmit={(event) => {
             event.preventDefault();
-            if (!hasEvent("found_final_word_password")) {
+            if (!passwordSourceFound) {
               setWordNote("系统尚未找到可验证的口令来源。");
               return;
             }
-            if ([FINAL_WORD_PASSWORD, "詩喃"].includes(wordPassword.trim())) {
+            if (wordPassword.trim() === FINAL_WORD_PASSWORD) {
               markEvent("unlocked_final_word");
               setWordNote("");
               return;
             }
-            setWordNote("密码不正确。请核对画廊终场留下的名称。");
+            setWordNote("密码不正确。请核对隐藏 TXT 中的完整字符串。");
           }}>
             <span className={styles.wordFileIcon}><FileText aria-hidden="true" /><b>W</b></span>
             <div><span>Microsoft Word</span><h1>最终文件.doc</h1><p>此文档受密码保护。</p></div>
             <label htmlFor="final-word-password">打开文件所需密码</label>
             <input id="final-word-password" type="password" value={wordPassword} onChange={(event) => setWordPassword(event.target.value)} autoComplete="off" autoFocus />
-            <p role="status">{wordNote || (hasEvent("found_final_word_password") ? "口令来源已找到。" : "请先完成画廊中的最后一份文本。")}</p>
+            <p role="status">{wordNote || (passwordSourceFound ? "口令文件已找到。" : "请先完成全部诗稿，并检查上锁文件夹中新出现的隐藏 TXT。")}</p>
             <button type="submit">确定</button>
           </form>
         </section>

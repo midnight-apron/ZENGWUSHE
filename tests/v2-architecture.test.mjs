@@ -18,7 +18,7 @@ test("the XP investigation is the single root game entry", () => {
 test("V2 uses an independent semantic save and five-application desktop", () => {
   assert.match(data, /zengwu-she-v2-save/);
   for (const appName of ["浏览器", "回收站", "录音文件", "上锁文件夹", "最终文件\\.doc"]) assert.match(app, new RegExp(appName));
-  for (const event of ["found_pellet_drum", "verified_wang_poison", "verified_wang_staging", "recovered_ledger_mail", "verified_lixiang_homicide", "heard_duwanlin_confession", "unlocked_final_folder", "found_final_word_password", "unlocked_final_word"]) assert.match(data + app, new RegExp(event));
+  for (const event of ["found_pellet_drum", "verified_wang_poison", "verified_wang_staging", "recovered_ledger_mail", "verified_lixiang_homicide", "heard_duwanlin_confession", "unlocked_final_folder", "recovered_all_mang_manuscripts", "opened_final_password_txt", "unlocked_final_word"]) assert.match(data + app, new RegExp(event));
 });
 
 test("V2 story bible preserves the corrected deaths and responsibility boundaries", () => {
@@ -110,7 +110,7 @@ test("V2 embeds the complete legacy gallery game and separates the cemetery site
   assert.doesNotMatch(app, /function BrowserResults/);
 });
 
-test("legacy gallery milestones unlock the desktop evidence vault", () => {
+test("legacy gallery milestones automatically unlock the Mang folder and later reveal the password file", () => {
   assert.match(app, /\/recovered\/13-wang-keding/);
   assert.match(app, /verified_wang_poison/);
   assert.match(app, /\/archive\/case\/cemetery/);
@@ -118,7 +118,10 @@ test("legacy gallery milestones unlock the desktop evidence vault", () => {
   assert.match(app, /\/stage\/recovered-index/);
   assert.match(app, /heard_duwanlin_confession/);
   assert.match(app, /\["\/stage\/zhuhongmen", "\/stage\/shinan"\]/);
-  assert.match(app, /found_final_word_password/);
+  assert.match(app, /recovered_all_mang_manuscripts/);
+  assert.match(app, /FINAL_FOLDER_REQUIREMENTS\.every\(hasEvent\)/);
+  assert.match(app, /markEvent\("unlocked_final_folder"\)/);
+  assert.doesNotMatch(app, /验证片段 [ABC]|vaultSlots|vaultReady|拼合验证片段/);
 });
 
 test("NEW badges stay inside the gallery website instead of the XP desktop", () => {
@@ -127,20 +130,25 @@ test("NEW badges stay inside the gallery website instead of the XP desktop", () 
   assert.match(legacyApp, /item\.hasNew \? <i>NEW<\/i>/);
 });
 
-test("the locked folder contains only the Mang image manuscripts", () => {
+test("the locked folder contains the Mang image manuscripts and a gated hidden TXT", () => {
   const vault = app.match(/function renderVault\(\)[\s\S]*?\n  function renderWord\(\)/)?.[0] ?? "";
   assert.match(vault, /《目盲》图像诗稿/);
   assert.match(vault, /共 19 个篇目、51 张图像/);
+  assert.match(vault, /allManuscriptsRecovered \? <section/);
+  assert.match(vault, /mang-index\.txt/);
+  assert.match(vault, /opened_final_password_txt/);
+  assert.match(vault, /<pre>\{FINAL_WORD_PASSWORD\}<\/pre>/);
   assert.doesNotMatch(vault, /最终证据包|两起死亡与责任边界|文学角色与真实原型|其他文学文本|决定文件去向|publish-all|case-only|EndingCard|诗喃终场/);
   assert.doesNotMatch(data, /最终文件夹；不得改写或节选/);
 });
 
 test("the final objective is a locked Word document containing only the supplied link", () => {
   const word = app.match(/function renderWord\(\)[\s\S]*?\n  function renderSettings\(\)/)?.[0] ?? "";
-  assert.match(data, /export const FINAL_WORD_PASSWORD = "诗喃"/);
+  assert.match(data, /export const FINAL_WORD_PASSWORD = "shinan2024"/);
   assert.match(data, /https:\/\/mp\.weixin\.qq\.com\/s\/q1JOS5ufNDzoVLKh-BSaIA/);
-  assert.match(word, /found_final_word_password/);
+  assert.match(word, /opened_final_password_txt/);
   assert.match(word, /unlocked_final_word/);
+  assert.match(word, /wordPassword\.trim\(\) === FINAL_WORD_PASSWORD/);
   assert.match(word, /最终文件\.doc/);
   assert.match(word, /className=\{styles\.wordPage\}><a href=\{FINAL_WORD_URL\}/);
   assert.doesNotMatch(word, /航船诗歌社|朗读者|排演|谢幕|剧中人/);
@@ -161,6 +169,13 @@ test("the old Shinan finale and its image archive are removed", async () => {
   assert.doesNotMatch(data + app + legacyApp, /archive\/shinan|shinan-poster|现场档案 \/ 01—21|演出海报与活动照|静音字幕版开演|他们是剧中人，也是朗读者/);
   assert.doesNotMatch(legacyApp, /shinan-open|shinan-script|shinan-stage|航船诗歌社 · 国庆诗歌剧场/);
   await assert.rejects(access(new URL("../public/archive/shinan/", import.meta.url)));
+});
+
+test("gallery pages retain only verbatim clue excerpts from Mang", () => {
+  assert.match(legacyApp, /const MANG_CLUE_EXCERPTS/);
+  for (const clue of ["政府廉租房", "她名字叫莉香", "六十七个等身像", "我代为家属在火化单署名", "承办的寿享陵园着手"]) assert.match(legacyApp, new RegExp(clue));
+  assert.match(legacyApp, /画廊页面只保留推动当前调查所需的原稿片段/);
+  assert.match(legacyApp, /archive-clue-excerpt/);
 });
 
 test("literary sources are registered with the verbatim boundary", () => {

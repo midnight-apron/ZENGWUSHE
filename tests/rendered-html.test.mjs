@@ -139,7 +139,8 @@ test("renders the recovered identity and death-record chapter routes", async () 
   assert.match(liXiang, /材料名称：尸检报告/);
   assert.doesNotMatch(liXiang, /下一搜索词|搜索[“\"]?尸检报告/);
   assert.match(liXiang, /人体检验材料/);
-  assert.match(liXiang, /ARCHIVE MOVED/);
+  assert.match(liXiang, /CLUE EXCERPT/);
+  assert.match(liXiang, /她名字叫莉香/);
 });
 
 test("renders the forensic route, encrypted supplement, and completed cremation form", async () => {
@@ -241,7 +242,7 @@ test("renders the cached news, cemetery mirror, and Du Che profile", async () =>
   assert.doesNotMatch(duChe, /杜万琳与徐惠之子|朗读文件索引|编辑登录/);
 });
 
-test("keeps recovered Mang scripts out of the gallery while retaining the clue chain", async () => {
+test("keeps full Mang scripts in the folder while retaining only necessary gallery clues", async () => {
   const mangSpring = await renderPath("/recovered/01-mangzhichun");
   assert.match(mangSpring, /当前步骤 \/ 仍在画廊网站/);
   assert.match(mangSpring, /加密文件夹尚未开放/);
@@ -250,13 +251,14 @@ test("keeps recovered Mang scripts out of the gallery while retaining the clue c
   assert.match(mangSpring, /回到画廊搜索框/);
 
   const wedding = await renderPath("/archive/wedding/du-li");
-  assert.match(wedding, /ARCHIVE MOVED/);
+  assert.match(wedding, /IMAGE ARCHIVE/);
   assert.match(wedding, /舞/);
-  assert.match(wedding, /图像原稿仅保存在 Administrator 的加密文件夹/);
+  assert.match(wedding, /完整图像诗稿保存在 Administrator 的“上锁文件夹”/);
 
   const taste = await renderPath("/recovered/10-chuwei-taste");
-  assert.match(taste, /ARCHIVE MOVED/);
+  assert.match(taste, /CLUE EXCERPT/);
   assert.match(taste, /刍味/);
+  assert.match(taste, /承办的寿享陵园着手/);
 
   const redacted = await renderPath("/archive/medical/redacted");
   assert.match(redacted, /××××××/);
@@ -264,7 +266,7 @@ test("keeps recovered Mang scripts out of the gallery while retaining the clue c
   assert.match(redacted, /执行功能障碍/);
 
   const stomach = await renderPath("/recovered/11-chuwei-stomach");
-  assert.match(stomach, /ARCHIVE MOVED/);
+  assert.match(stomach, /IMAGE ARCHIVE/);
   assert.match(stomach, /刍胃/);
 });
 
@@ -320,19 +322,21 @@ test("renders the rewritten character history and encrypted fragment index", asy
   assert.match(fragments, /错误不会清空碎片/);
 });
 
-test("renders the warm stage reveal and hands the final password to the desktop Word file", async () => {
+test("renders the warm stage reveal and sends the player back to the hidden TXT", async () => {
   const finale = await renderPath("/stage/zhuhongmen");
   assert.match(finale, /场次 14 \/ 14/);
-  assert.match(finale, /ARCHIVE MOVED/);
+  assert.match(finale, /IMAGE ARCHIVE/);
   assert.match(finale, /所有人请就位/);
-  assert.match(finale, /最终文件口令/);
-  assert.match(finale, />诗喃</);
-  assert.match(finale, /最终文件\.doc/);
+  assert.match(finale, /14 \/ 14 · 全部恢复/);
+  assert.match(finale, /加密文件夹目录已更新/);
+  assert.match(finale, /隐藏 TXT/);
+  assert.doesNotMatch(finale, /shinan2024|最终文件口令|>诗喃</);
   assert.doesNotMatch(finale, /下一页不会公布凶手/);
 
   const shinan = await renderPath("/stage/shinan");
-  assert.match(shinan, /最终文件口令/);
-  assert.match(shinan, /最终文件\.doc/);
+  assert.match(shinan, /请检查加密文件夹/);
+  assert.match(shinan, /隐藏 TXT/);
+  assert.doesNotMatch(shinan, /shinan2024|最终文件口令|>诗喃</);
   assert.doesNotMatch(shinan, /archive\/shinan|<img|演出海报|活动照|现场照片/);
   assert.doesNotMatch(shinan, /航船诗歌社|静音字幕|朗读者|剧中人|谢幕/);
 });

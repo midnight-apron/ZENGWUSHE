@@ -5620,6 +5620,30 @@ button {
   line-height: 1.8;
 }
 
+.archive-clue-excerpt {
+  max-width: 42rem;
+  margin: 1.25rem 0 0;
+  border-left: 3px solid var(--blood);
+  background: #e9e5db;
+  padding: 1rem 1.2rem;
+}
+
+.archive-clue-excerpt small {
+  color: var(--blood);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+}
+
+.archive-clue-excerpt p {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0.7rem 0 0;
+  font-family: var(--display-serif);
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  line-height: 1.75;
+}
+
 .archive-next-step {
   display: grid;
   gap: 0.9rem;

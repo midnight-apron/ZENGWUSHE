@@ -246,7 +246,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.yuanchang]: "元昶／左君｜角色修订页",
   [ROUTES.recoveredIndex]: "始末的碎点｜解密索引",
   [ROUTES.stageZhuhongmen]: "赭红门｜终场",
-  [ROUTES.shinan]: "最终文件口令｜本地提示",
+  [ROUTES.shinan]: "诗稿完成｜本地提示",
 };
 
 const HINTS: Record<string, string[]> = {
@@ -460,14 +460,14 @@ const HINTS: Record<string, string[]> = {
     "输入左君；恢复后搜索赭红门。",
   ],
   [ROUTES.stageZhuhongmen]: [
-    "最终文件的口令已经写在终场场记里。",
+    "十四份诗稿已经全部恢复，加密文件夹的目录已更新。",
     "关闭或最小化浏览器，回到旧电脑桌面。",
-    "打开“最终文件.doc”，输入：诗喃。",
+    "打开“上锁文件夹”，寻找新出现的隐藏 TXT。",
   ],
   [ROUTES.shinan]: [
     "这条旧地址不再保存演出资料。",
-    "关闭或最小化浏览器，回到旧电脑桌面。",
-    "打开“最终文件.doc”，输入：诗喃。",
+    "最终口令不会直接显示在网页里。",
+    "回到桌面的“上锁文件夹”，打开全部诗稿完成后出现的隐藏 TXT。",
   ],
 };
 
@@ -1432,24 +1432,6 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
       return;
     }
 
-    if (normalized === "诗喃") {
-      const allowed = game.recovered.includes("14") || currentPath === ROUTES.stageZhuhongmen || game.unlocked.includes("S36");
-      setResults([{
-        id: "final-word-password",
-        kind: allowed ? "本地文件口令" : "受限口令",
-        title: "诗喃",
-        summary: allowed
-          ? "该名称与桌面上锁 Word 文件的口令字段相符。"
-          : "该名称尚未出现在终场场记中。",
-        path: allowed ? ROUTES.shinan : undefined,
-        unlock: allowed ? ["S36"] : undefined,
-        locked: !allowed,
-        note: allowed ? "回到桌面打开最终文件.doc" : "需恢复全部14份文本",
-      }]);
-      setResultNote(allowed ? "最终口令已确认；旧演出资料不再保存在画廊网站。" : "完成结诗后才能确认该口令。");
-      return;
-    }
-
     if (["尸检", "认尸记录"].includes(normalized)) {
       markWrong("同类材料过多；莉香档案给出了另一名死者的姓名。", [{
         id: "autopsy-public",
@@ -1599,7 +1581,7 @@ const SEARCH_TERMS = [
   ["阿尔茨海默病", "阿尔茨海默症", "阿尔兹海默症", "阿尔兹海默病", "阿爾茨海默病", "阿兹海默症", "阿茲海默症"],
   ["阔南会社", "闊南會社"], ["李司贰"], ["玛赫的厨房", "瑪赫的廚房", "玛赫厨房"],
   ["叶主任", "葉主任", "叶是", "葉是"], ["元昶", "礼倒僧元昶", "左君"], ["句肉抟飞", "句肉抟飛"],
-  ["始末的碎点", "始末碎点"], ["赭红门", "赭紅門"], ["诗喃"],
+  ["始末的碎点", "始末碎点"], ["赭红门", "赭紅門"],
 ];
 
 export function resolveGameSearch(query: string, game: GameState, currentPath: string): SearchOutcome {
@@ -1646,7 +1628,7 @@ export function getProgressHint(game: GameState) {
   const has = (n: number) => game.unlocked.includes(`S${String(n).padStart(2, "0")}`);
   const seen = (path: string) => game.visited.includes(path);
   const from = (id: string, path: string, hints = HINTS[path]) => ({ id, path, hints });
-  if (has(36)) return from("complete", ROUTES.shinan);
+  if (has(36)) return from("complete", ROUTES.stageZhuhongmen);
   if (game.recovered.includes("14")) return from("curtain", ROUTES.stageZhuhongmen);
   if (game.recovered.includes("12")) return from("final-poem", ROUTES.recoveredIndex, ["主要文本已恢复，接下来是终场场记。", "回到当期展览的名称。", "搜索：赭红门。"]);
   if (has(33)) return seen(ROUTES.recoveredIndex) ? from("fragment-password", ROUTES.recoveredIndex) : from("fragment-index", ROUTES.yuanchang);
@@ -2848,12 +2830,23 @@ function HistoryPage({ roleGlitch, membersRevealed }: { roleGlitch: boolean; mem
   );
 }
 
+const MANG_CLUE_EXCERPTS: Record<string, string[]> = {
+  "1.1 憎恶社": ["“我听见有人在讲他的画社", "他的艺术", "他的徐惠”"],
+  "王克定": ["“我没结婚。”不婚不育，住在西门车站的", "政府廉租房，窗口的角度看得见湖，那里每年", "都有赎买虚无的年轻人。"],
+  "溺水的莉香": ["但引线攥她手里。她名字叫莉香。", "也知道她堂哥是“阔南区”开画廊的杜万琳"],
+  "浣石": ["六十七个等身像放在院墙", "摆做一排。从主殿一直列到寝房。"],
+  "自白": ["我代为家属在火化单署名", "想到签下一个代号这门事儿"],
+  "刍味": ["你想到可以有另外的问题，譬如从世伯", "承办的寿享陵园着手，关于死后的住处"],
+};
+
 function TransferredReading({ title }: { title: string }) {
+  const clue = MANG_CLUE_EXCERPTS[title];
   return (
     <section className="embedded-script archive-transfer-note">
-      <span>ARCHIVE MOVED</span>
+      <span>{clue ? "CLUE EXCERPT" : "IMAGE ARCHIVE"}</span>
       <h2>{title}</h2>
-      <p>文字版朗读稿已从画廊网页移除；图像原稿仅保存在 Administrator 的加密文件夹中。</p>
+      <p>完整图像诗稿保存在 Administrator 的“上锁文件夹”中；画廊页面只保留推动当前调查所需的原稿片段。</p>
+      {clue ? <blockquote className="archive-clue-excerpt"><small>原稿线索片段</small><p>{clue.map((line, index) => <span key={`${title}-${index}`}>{line}</span>)}</p></blockquote> : null}
     </section>
   );
 }
@@ -3546,7 +3539,7 @@ function StageZhuhongmenPage() {
     <article className="stage-zhuhongmen-page">
       <header className="stage-warm-head"><div><ArtifactTag>场次 14 / 14</ArtifactTag><p className="section-kicker">结诗 · 合读</p><h1>赭红门</h1></div><aside><span>场记</span><p>文本已齐。<br />所有人请就位。</p></aside></header>
       <TransferredReading title="赭红门" />
-      <section className="stage-note-final"><span>最终文件口令</span><h2>诗喃</h2><p>关闭或最小化浏览器，回到桌面打开“最终文件.doc”。</p></section>
+      <section className="stage-note-final"><span>14 / 14 · 全部恢复</span><h2>加密文件夹目录已更新</h2><p>关闭或最小化浏览器，回到桌面的“上锁文件夹”，检查新出现的隐藏 TXT 文件。</p></section>
     </article>
   );
 }
@@ -3554,7 +3547,7 @@ function StageZhuhongmenPage() {
 function FinalWordPasswordPage() {
   return (
     <article className="stage-zhuhongmen-page">
-      <section className="stage-note-final"><span>最终文件口令</span><h2>诗喃</h2><p>旧演出资料已移除。请关闭或最小化浏览器，回到桌面打开“最终文件.doc”。</p></section>
+      <section className="stage-note-final"><span>旧地址 / 本地提示</span><h2>请检查加密文件夹</h2><p>最终口令不在网页里。完成全部诗稿后，请回到桌面的“上锁文件夹”，打开新出现的隐藏 TXT。</p></section>
     </article>
   );
 }
