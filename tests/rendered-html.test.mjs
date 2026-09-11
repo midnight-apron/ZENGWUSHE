@@ -320,18 +320,19 @@ test("renders the rewritten character history and encrypted fragment index", asy
   assert.match(fragments, /错误不会清空碎片/);
 });
 
-test("renders the warm stage reveal and text-only Shinan curtain call", async () => {
+test("renders the warm stage reveal and hands the final password to the desktop Word file", async () => {
   const finale = await renderPath("/stage/zhuhongmen");
   assert.match(finale, /场次 14 \/ 14/);
   assert.match(finale, /ARCHIVE MOVED/);
   assert.match(finale, /所有人请就位/);
-  assert.match(finale, /演出名：诗喃/);
+  assert.match(finale, /最终文件口令/);
+  assert.match(finale, />诗喃</);
+  assert.match(finale, /最终文件\.doc/);
   assert.doesNotMatch(finale, /下一页不会公布凶手/);
 
   const shinan = await renderPath("/stage/shinan");
-  assert.match(shinan, /航船诗歌社 · 国庆诗歌剧场/);
-  assert.match(shinan, /静音字幕版开演/);
+  assert.match(shinan, /最终文件口令/);
+  assert.match(shinan, /最终文件\.doc/);
   assert.doesNotMatch(shinan, /archive\/shinan|<img|演出海报|活动照|现场照片/);
-  assert.match(shinan, /他们是剧中人，也是朗读者/);
-  assert.match(shinan, /不构成通关门槛/);
+  assert.doesNotMatch(shinan, /航船诗歌社|静音字幕|朗读者|剧中人|谢幕/);
 });

@@ -1,4 +1,4 @@
-export type AppId = "browser" | "trash" | "audio" | "vault";
+export type AppId = "browser" | "trash" | "audio" | "vault" | "word";
 
 export type GameSettings = {
   volume: number;
@@ -21,7 +21,6 @@ export type V2Save = {
   readItems: string[];
   searchHistory: SearchEntry[];
   recovered: string[];
-  ending: "publish-all" | "case-only" | "close" | null;
   settings: GameSettings;
 };
 
@@ -37,7 +36,6 @@ export const DEFAULT_V2_SAVE: V2Save = {
     { term: "赭红门展览", searchedAt: 2 },
   ],
   recovered: [],
-  ending: null,
   settings: {
     volume: 70,
     subtitles: true,
@@ -53,6 +51,9 @@ export const PROLOGUE = {
   citation: "唐·段成式《酉阳杂俎·前集》卷八",
   dedication: "献给玛赫、L 和杜彻",
 };
+
+export const FINAL_WORD_PASSWORD = "诗喃";
+export const FINAL_WORD_URL = "https://mp.weixin.qq.com/s/q1JOS5ufNDzoVLKh-BSaIA";
 
 export const STORY_BIBLE = {
   names: {
@@ -98,7 +99,7 @@ export const LITERARY_REGISTRY = [
   { id: "mang", publicTitle: "目盲", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "加密文件夹中的图像诗稿与人物视角" },
   { id: "xiyan", publicTitle: "西岩大火", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "罪疚、梦境与地方文本" },
   { id: "mahe", publicTitle: "玛赫", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "编辑层与诗剧关联" },
-  { id: "zoudi", publicTitle: "走地国记", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "最终文件夹；不得改写或节选" },
+  { id: "zoudi", publicTitle: "走地国记", source: "憎恶社游戏全流程文本汇编", integrity: "verbatim", placement: "画廊终局叙事补遗；不得改写或节选" },
 ] as const;
 
 export const PROGRESS_RULES = [
@@ -110,7 +111,9 @@ export const PROGRESS_RULES = [
   { event: "recovered_ledger_mail", outputs: ["公墓完整案卷", "杜莉香时间线"] },
   { event: "verified_lixiang_homicide", outputs: ["杜莉香他杀结论槽", "杜万琳临终录音"] },
   { event: "heard_duwanlin_confession", outputs: ["杜南阳责任边界", "最终验证片段"] },
-  { event: "unlocked_final_folder", outputs: ["最终证据包", "三种结局", "诗喃终场"] },
+  { event: "unlocked_final_folder", outputs: ["《目盲》图像诗稿（19个篇目、51张图像）"] },
+  { event: "found_final_word_password", outputs: ["最终 Word 文件口令"] },
+  { event: "unlocked_final_word", outputs: ["终局链接"] },
 ] as const;
 
 export type BrowserNode = {
@@ -314,15 +317,6 @@ export const BROWSER_NODES: BrowserNode[] = [
     requires: ["editor_verified"],
     lockedHint: "先进入编辑后台，核对人物年表修订。",
   },
-  {
-    id: "shinan",
-    title: "诗喃｜最终排演档案",
-    kind: "演出档案",
-    summary: "案件与角色映射确认后开放的排演文本与静音字幕终场。",
-    aliases: ["诗喃", "詩喃"],
-    requires: ["unlocked_final_folder"],
-    lockedHint: "终场只能在案件与身份映射完成后出现。",
-  },
 ];
 
 export const TRASH_FILES = [
@@ -425,14 +419,21 @@ export const HINTS = [
     done: ["verified_lixiang_homicide", "heard_duwanlin_confession"],
     levels: ["公开溺亡说法需要与项目案卷和临终录音核对。", "账目、颈部损伤、藏尸环境与供述应互相印证。", "打开“他山地方公墓案”，选择他杀结论；随后听杜万琳临终录音。"],
   },
-];
-
-export const EVIDENCE_CLAIMS = [
-  { id: "wang-poison", claim: "王克定服毒自杀", sources: ["毒物检验", "死亡时间与非溺水征象", "精神与艺术信念记录"] },
-  { id: "wang-staging", claim: "投河现场为死后伪造", sources: ["绳结与反绑痕迹", "坠石物证", "搬运与入水时间"] },
-  { id: "lixiang-homicide", claim: "杜莉香遭邢万掐死", sources: ["颈部压迫损伤", "西岩寺藏尸勘验", "邢万供述与判决"] },
-  { id: "corruption", claim: "邢万挪用项目公款", sources: ["虚报账目", "杜莉香寄件邮戳", "逮捕报道"] },
-  { id: "suppression", claim: "杜南阳压下第一次举报", sources: ["杜万琳临终录音", "方晚证言", "账目邮件时间线"] },
+  {
+    id: "mang-folder",
+    done: ["unlocked_final_folder"],
+    levels: ["三组事实材料已经足够打开桌面上的加密文件夹。", "加密文件夹位于桌面，只保存《目盲》的图像诗稿。", "打开“上锁文件夹”，点击“打开《目盲》图像诗稿”。"],
+  },
+  {
+    id: "final-password",
+    done: ["found_final_word_password"],
+    levels: ["最终文件的口令藏在画廊流程最后一页。", "完成《始末的碎点》后，寻找与当前展览同名的结诗。", "在画廊中搜索“赭红门”，打开第 14 份文本并读取终场口令。"],
+  },
+  {
+    id: "final-word",
+    done: ["unlocked_final_word"],
+    levels: ["终场口令对应桌面上的一个文档。", "关闭或最小化浏览器，打开桌面的“最终文件.doc”。", "在 Word 文件中输入口令“诗喃”。"],
+  },
 ];
 
 export function hasAll(events: string[], requirements: string[] = []) {

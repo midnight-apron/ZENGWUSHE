@@ -12,13 +12,13 @@ import {
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpenText,
   Check,
   ChevronRight,
   CircleHelp,
   FileArchive,
   FileAudio,
   FileLock2,
+  FileText,
   FolderLock,
   Home,
   Maximize2,
@@ -57,11 +57,11 @@ import {
 import {
   BROWSER_NODES,
   DEFAULT_V2_SAVE,
-  EVIDENCE_CLAIMS,
+  FINAL_WORD_PASSWORD,
+  FINAL_WORD_URL,
   HINTS,
   PROLOGUE,
   RECORDINGS,
-  STORY_BIBLE,
   TRASH_FILES,
   V2_STORAGE_KEY,
   hasAll,
@@ -81,13 +81,15 @@ const INITIAL_WINDOWS: WindowState = {
   trash: { open: false, minimized: false, z: 2 },
   audio: { open: false, minimized: false, z: 3 },
   vault: { open: false, minimized: false, z: 4 },
+  word: { open: false, minimized: false, z: 5 },
 };
 
 const APP_META: Record<AppId, { label: string; subtitle: string; icon: typeof Search }> = {
   browser: { label: "浏览器", subtitle: "公开网页与搜索", icon: Search },
   trash: { label: "回收站", subtitle: "删除文件与恢复", icon: Trash2 },
   audio: { label: "录音文件", subtitle: "逐字稿与证言", icon: FileAudio },
-  vault: { label: "上锁文件夹", subtitle: "等待三项验证", icon: FolderLock },
+  vault: { label: "上锁文件夹", subtitle: "《目盲》图像诗稿", icon: FolderLock },
+  word: { label: "最终文件.doc", subtitle: "Microsoft Word", icon: FileText },
 };
 
 type GallerySection = "home" | "exhibitions" | "people" | "news" | "publications" | "about";
@@ -104,7 +106,7 @@ const GALLERY_SECTIONS: Array<{ id: GallerySection; label: string }> = [
 const GALLERY_DIRECTORY_IDS: Record<Exclude<GallerySection, "home" | "exhibitions">, string[]> = {
   people: ["ge-dongping", "xu-hui", "wang-keding", "xing-wan", "du-che", "du-lixiang", "fang-wan"],
   news: ["anonymous-xing", "evening-news", "wang-autopsy", "cremation-form", "stone-head", "phoenix-reservoir", "cemetery-case"],
-  publications: ["publisher", "alzheimer", "editor", "yuanchang", "shinan"],
+  publications: ["publisher", "alzheimer", "editor", "yuanchang"],
   about: ["society"],
 };
 
@@ -278,7 +280,7 @@ export function V2Game() {
   const [selectedDesktopApp, setSelectedDesktopApp] = useState<AppId | null>(null);
   const [startOpen, setStartOpen] = useState(false);
   const [clock, setClock] = useState("");
-  const [zCounter, setZCounter] = useState(5);
+  const [zCounter, setZCounter] = useState(6);
   const [browserTrail, setBrowserTrail] = useState<string[]>(["home"]);
   const [browserIndex, setBrowserIndex] = useState(0);
   const [query, setQuery] = useState("");
@@ -301,6 +303,8 @@ export function V2Game() {
   const [hintOpen, setHintOpen] = useState(false);
   const [hintLevel, setHintLevel] = useState(0);
   const [selectedMangPoem, setSelectedMangPoem] = useState<string | null>(null);
+  const [wordPassword, setWordPassword] = useState("");
+  const [wordNote, setWordNote] = useState("");
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -498,6 +502,7 @@ export function V2Game() {
             {id === "trash" ? renderTrash() : null}
             {id === "audio" ? renderAudio() : null}
             {id === "vault" ? renderVault() : null}
+            {id === "word" ? renderWord() : null}
           </AppWindow>
         ))}
       </section>
@@ -565,6 +570,9 @@ export function V2Game() {
                   "verified_lixiang_homicide",
                   "heard_duwanlin_confession",
                 );
+              }
+              if (["/stage/zhuhongmen", "/stage/shinan"].includes(path)) {
+                markEvent("found_final_word_password");
               }
               pushBrowser(`legacy:${path}`);
             }}
@@ -833,9 +841,7 @@ export function V2Game() {
       case "editor":
         return hasEvent("editor_verified") ? <div className={styles.documentSheet}><h2>编辑缓存已解锁</h2><p>初版人物年表把元昶与左君分开记录；批注要求恢复本名并将两条记录合并。</p><button className={styles.archiveAction} type="button" onClick={() => openBrowserNode("yuanchang")}>打开人物修订页<ChevronRight /></button></div> : <form className={styles.loginForm} onSubmit={(event) => { event.preventDefault(); if (editorUser.trim().toLowerCase() === "editor_ys" && editorPassword.trim().toUpperCase() === "MHDCF2019") { markEvent("editor_verified"); setEditorNote("身份核验通过。"); } else setEditorNote("账号或口令与两份来源不一致。"); }}><label>账号<input value={editorUser} onChange={(event) => setEditorUser(event.target.value)} autoComplete="username" /></label><label>口令<input type="password" value={editorPassword} onChange={(event) => setEditorPassword(event.target.value)} autoComplete="current-password" /></label><button type="submit">读取编辑缓存</button><p role="status">{editorNote}</p></form>;
       case "yuanchang":
-        return <><div className={styles.documentSheet}><span>人物修订 / 叶是</span><h2>元昶，即左君</h2><p>法名与本名属于同一个小说角色。文学角色与真实人物的对应关系将在最终文件夹中解释，不再使用损坏重定向把杜南阳与杜万琳简单合并。</p></div></>;
-      case "shinan":
-        return <ShinanArchive />;
+        return <><div className={styles.documentSheet}><span>人物修订 / 叶是</span><h2>元昶，即左君</h2><p>法名与本名属于同一个小说角色。这里仅记录修订结果，不再使用损坏重定向把杜南阳与杜万琳简单合并。</p></div></>;
       default:
         return <p>记录正在恢复。</p>;
     }
@@ -885,21 +891,15 @@ export function V2Game() {
 
   function renderVault() {
     const unlocked = hasEvent("unlocked_final_folder");
-    if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>FINAL_ARCHIVE</span><h1>文件夹已加密</h1><p>三个验证槽位分别来自不同应用。槽位只显示完成状态，不提前透露答案。</p><div className={styles.vaultSlots}>{vaultSlots.map((complete, index) => <div key={index} className={complete ? styles.slotComplete : ""}><span>验证片段 {String.fromCharCode(65 + index)}</span><b>{complete ? "已核验" : "等待材料"}</b></div>)}</div><button type="button" disabled={!vaultReady} onClick={() => markEvent("unlocked_final_folder")}>{vaultReady ? "拼合验证片段并打开" : "尚缺验证材料"}</button></section>;
+    if (!unlocked) return <section className={styles.vaultLocked}><FileLock2 /><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>此文件夹只保存《目盲》图像诗稿。完成三个验证片段后即可打开。</p><div className={styles.vaultSlots}>{vaultSlots.map((complete, index) => <div key={index} className={complete ? styles.slotComplete : ""}><span>验证片段 {String.fromCharCode(65 + index)}</span><b>{complete ? "已核验" : "等待材料"}</b></div>)}</div><button type="button" disabled={!vaultReady} onClick={() => markEvent("unlocked_final_folder")}>{vaultReady ? "打开《目盲》图像诗稿" : "尚缺验证材料"}</button></section>;
     const selectedPoem = MANG_IMAGE_ARCHIVE.find((item) => item.id === selectedMangPoem);
     return (
       <>
         <section className={styles.vaultOpen}>
-          <header><span>FINAL_ARCHIVE / VERIFIED</span><h1>杜彻整理的数字档案</h1><p>案件证据、角色映射与图像档案依次开放。案件结论不依赖文学隐喻。</p></header>
-          <div className={styles.finalEvidence}>{EVIDENCE_CLAIMS.map((item) => <article key={item.id}><span>{item.id}</span><h2>{item.claim}</h2><ul>{item.sources.map((source) => <li key={source}>{source}</li>)}</ul></article>)}</div>
-          <section className={styles.finalNarrative}><h2>两起死亡与责任边界</h2><p>{STORY_BIBLE.conclusions.wang}</p><p>{STORY_BIBLE.conclusions.lixiang}</p><p>{STORY_BIBLE.conclusions.nanyang}</p><p>{STORY_BIBLE.conclusions.fang}</p></section>
-          <section className={styles.roleMap}><h2>文学角色与真实原型</h2><dl><dt>表层文学世界</dt><dd>杜南阳、徐惠、方晚、邢万、王克定、杜莉香</dd><dt>里层档案世界</dt><dd>杜万琳是杜南阳的创作原型；徐惠与杜彻跨越两层。二者不是简单别名或损坏重定向。</dd><dt>杜彻为何持有材料</dt><dd>父亲去世后整理手稿、搜集案件细节，并向方晚核实往事。</dd></dl></section>
           <section className={styles.mangArchive}>
-            <header><span>ENCRYPTED IMAGE ARCHIVE</span><h2>《目盲》图像诗稿</h2><p>共 19 个篇目、51 张图像。文字版朗读稿不再保存在画廊网页中。</p></header>
+            <header><span>MANG / IMAGE ARCHIVE</span><h1>《目盲》图像诗稿</h1><p>共 19 个篇目、51 张图像。</p></header>
             <div>{MANG_IMAGE_ARCHIVE.map((item) => <button type="button" key={item.id} onClick={() => setSelectedMangPoem(item.id)}><span>{item.images.length} 张</span><b>{item.title}</b><ChevronRight aria-hidden="true" /></button>)}</div>
           </section>
-          <section className={styles.literatureShelf}><h2>其他文学文本</h2><p>《走地国记》保持完整原稿，仅承担杜南阳的罪疚与梦境层；案件事实由上方证据包负责。</p><a href={asset("/archive/scattered/zoudi-guoji.html")} target="_blank" rel="noreferrer"><BookOpenText />阅读《走地国记》完整原文</a><a href={asset("/publications/juroutuanfei/")} target="_blank" rel="noreferrer"><BookOpenText />打开《句肉抟飞》五章连载</a></section>
-          {save.ending ? <EndingCard ending={save.ending} /> : <EndingChoice />}
         </section>
         <Dialog open={Boolean(selectedPoem)} onOpenChange={(open) => { if (!open) setSelectedMangPoem(null); }}>
           <DialogContent className={styles.mangViewer}>
@@ -911,29 +911,47 @@ export function V2Game() {
     );
   }
 
-  function EndingChoice() {
-    const choices = [
-      { id: "publish-all" as const, title: "公开全部材料", copy: "案件证据、家庭材料、文学手稿与角色映射一并公开。" },
-      { id: "case-only" as const, title: "只提交案件证据", copy: "提交能够定案的法医学、账目、邮寄、供述与判决材料，保留私人手稿。" },
-      { id: "close" as const, title: "关闭文件夹", copy: "不对外提交；文件仍保存在这台设备的本地存档中。" },
-    ];
-    return <section className={styles.endingChoices}><h2>决定文件去向</h2><p>三项选择建立在同一事实真相上，只改变公开范围，不进行道德评分。</p><div>{choices.map((choice) => <button type="button" key={choice.id} onClick={() => setSave((previous) => ({ ...previous, ending: choice.id }))}><b>{choice.title}</b><span>{choice.copy}</span><ChevronRight /></button>)}</div></section>;
-  }
-
-  function EndingCard({ ending }: { ending: NonNullable<V2Save["ending"]> }) {
-    const copy = {
-      "publish-all": ["全部材料已公开", "档案离开了杜彻的旧电脑。证据与手稿同时进入公共视野，文学不再遮蔽案件，也无法再被当作纯粹私语。"],
-      "case-only": ["案件证据已提交", "足以定案的材料被提交，私人手稿与未寄出的便笺留在本地。事实获得出口，梦仍属于写梦的人。"],
-      close: ["文件夹已关闭", "你没有改变文件去向。事实仍然成立，只是暂时没有新的读者。旧电脑回到黑暗里，存档没有被删除。"],
-    }[ending];
-    return <section className={styles.endingCard}><span>ENDING / SAVED</span><h2>{copy[0]}</h2><p>{copy[1]}</p><button type="button" onClick={() => openBrowserNode("shinan")}>打开《诗喃》终场档案<ChevronRight /></button></section>;
-  }
-
-  function ShinanArchive() {
-    return <section className={styles.stageText}><span>场记末页</span><h2>诗喃，正式开演</h2><p>案件与角色映射已经完成。此处的表演不会推翻前面的事实；它只让被恢复的文本重新获得声音。</p></section>;
+  function renderWord() {
+    const unlocked = hasEvent("unlocked_final_word");
+    if (!unlocked) {
+      return (
+        <section className={styles.wordLocked}>
+          <form onSubmit={(event) => {
+            event.preventDefault();
+            if (!hasEvent("found_final_word_password")) {
+              setWordNote("系统尚未找到可验证的口令来源。");
+              return;
+            }
+            if ([FINAL_WORD_PASSWORD, "詩喃"].includes(wordPassword.trim())) {
+              markEvent("unlocked_final_word");
+              setWordNote("");
+              return;
+            }
+            setWordNote("密码不正确。请核对画廊终场留下的名称。");
+          }}>
+            <span className={styles.wordFileIcon}><FileText aria-hidden="true" /><b>W</b></span>
+            <div><span>Microsoft Word</span><h1>最终文件.doc</h1><p>此文档受密码保护。</p></div>
+            <label htmlFor="final-word-password">打开文件所需密码</label>
+            <input id="final-word-password" type="password" value={wordPassword} onChange={(event) => setWordPassword(event.target.value)} autoComplete="off" autoFocus />
+            <p role="status">{wordNote || (hasEvent("found_final_word_password") ? "口令来源已找到。" : "请先完成画廊中的最后一份文本。")}</p>
+            <button type="submit">确定</button>
+          </form>
+        </section>
+      );
+    }
+    return (
+      <section className={styles.wordApp}>
+        <nav aria-label="Word 菜单"><span>文件</span><span>编辑</span><span>视图</span><span>插入</span><span>格式</span><span>工具</span><span>表格</span><span>窗口</span><span>帮助</span></nav>
+        <div className={styles.wordToolbar} aria-hidden="true"><b>100%</b><span>正文</span><span>宋体</span><span>小四</span><i>B</i><i>I</i><i>U</i></div>
+        <div className={styles.wordWorkspace}>
+          <article className={styles.wordPage}><a href={FINAL_WORD_URL} target="_blank" rel="noreferrer">{FINAL_WORD_URL}</a></article>
+        </div>
+        <footer><span>第 1 页</span><span>1 / 1</span><span>中文（中国）</span></footer>
+      </section>
+    );
   }
 
   function renderSettings() {
-    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>减少惊吓</b><small>关闭突发闪烁；红字与渗血仅保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除当前调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除当前调查的事件、搜索历史、已恢复文件和结局。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); setSave(DEFAULT_V2_SAVE); setProloguePassword(""); setPrologueNote(""); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
+    return <Dialog><DialogTrigger asChild><button type="button" aria-label="设置"><Settings2 /></button></DialogTrigger><DialogContent className={styles.dialog}><DialogHeader><DialogTitle>系统与可访问性</DialogTitle><DialogDescription>设置不会改变谜题答案。存档仅保存在当前设备。</DialogDescription></DialogHeader><label className={styles.settingRow}><span><b>字幕与逐字稿</b><small>无声音也能完成全部核验。</small></span><Switch checked={save.settings.subtitles} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, subtitles: checked } }))} /></label><label className={styles.settingRow}><span><b>减少动态</b><small>缩短位移动画与渐变等待。</small></span><Switch checked={save.settings.reducedMotion} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedMotion: checked } }))} /></label><label className={styles.settingRow}><span><b>减少惊吓</b><small>关闭突发闪烁；红字与渗血仅保留静态结果。</small></span><Switch checked={save.settings.reducedFlashes} onCheckedChange={(checked) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, reducedFlashes: checked } }))} /></label><div className={styles.sliderRow}><span><b>音量</b><small>{save.settings.volume}%</small></span><Slider min={0} max={100} step={5} value={[save.settings.volume]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, volume: value[0] } }))} /></div><div className={styles.sliderRow}><span><b>文字字号</b><small>{save.settings.textScale}%</small></span><Slider min={90} max={130} step={10} value={[save.settings.textScale]} onValueChange={(value) => setSave((previous) => ({ ...previous, settings: { ...previous.settings, textScale: value[0] } }))} /></div><div className={styles.settingsActions}><button type="button" onClick={() => setSave((previous) => ({ ...previous, prologueSeen: false }))}><RotateCcw />重播序幕</button><button type="button" onClick={() => { const blob = new Blob([JSON.stringify(save, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const anchor = document.createElement("a"); anchor.href = url; anchor.download = "zengwu-she-save.json"; anchor.click(); URL.revokeObjectURL(url); }}><FileArchive />导出存档</button><button type="button" onClick={() => importRef.current?.click()}><Upload />导入存档</button><input ref={importRef} hidden type="file" accept="application/json" onChange={(event) => { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const parsed = JSON.parse(String(reader.result)) as V2Save; if (parsed.schemaVersion === 2) setSave({ ...DEFAULT_V2_SAVE, ...parsed, settings: { ...DEFAULT_V2_SAVE.settings, ...parsed.settings } }); } catch { /* Invalid saves remain untouched. */ } }; reader.readAsText(file); }} /><AlertDialog><AlertDialogTrigger asChild><button type="button" className={styles.dangerAction}><Trash2 />重新开始</button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>清除当前调查进度？</AlertDialogTitle><AlertDialogDescription>这会删除当前调查的事件、搜索历史、已恢复文件和最终文档状态。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>取消</AlertDialogCancel><AlertDialogAction variant="destructive" onClick={() => { window.localStorage.removeItem(V2_STORAGE_KEY); setSave(DEFAULT_V2_SAVE); setProloguePassword(""); setPrologueNote(""); setWordPassword(""); setWordNote(""); setWindows(INITIAL_WINDOWS); }}>确认重新开始</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div></DialogContent></Dialog>;
   }
 }

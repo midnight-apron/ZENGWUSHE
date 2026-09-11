@@ -246,7 +246,7 @@ const PAGE_TITLES: Record<string, string> = {
   [ROUTES.yuanchang]: "元昶／左君｜角色修订页",
   [ROUTES.recoveredIndex]: "始末的碎点｜解密索引",
   [ROUTES.stageZhuhongmen]: "赭红门｜终场",
-  [ROUTES.shinan]: "诗喃｜航船诗歌剧场",
+  [ROUTES.shinan]: "最终文件口令｜本地提示",
 };
 
 const HINTS: Record<string, string[]> = {
@@ -460,14 +460,14 @@ const HINTS: Record<string, string[]> = {
     "输入左君；恢复后搜索赭红门。",
   ],
   [ROUTES.stageZhuhongmen]: [
-    "最后的答案已经写在场记里。",
-    "它不是人物或案件名，而是一场演出的名字。",
-    "搜索：诗喃。",
+    "最终文件的口令已经写在终场场记里。",
+    "关闭或最小化浏览器，回到旧电脑桌面。",
+    "打开“最终文件.doc”，输入：诗喃。",
   ],
   [ROUTES.shinan]: [
-    "全部文本已经就位。选择静音字幕版即可完成谢幕。",
-    "终场只保留排演文字与静音字幕；成员录音仍待接入。",
-    "点击：静音字幕版开演。",
+    "这条旧地址不再保存演出资料。",
+    "关闭或最小化浏览器，回到旧电脑桌面。",
+    "打开“最终文件.doc”，输入：诗喃。",
   ],
 };
 
@@ -555,7 +555,6 @@ export function buildPublicCatalog(game: GameState) {
     unlocked("S21") && { id: "cemetery-case", eyebrow: "专题索引", title: "他山地方公墓贪污案", summary: "五名参与者、项目关系及死亡过程的交叉索引。", path: ROUTES.cemeteryCase, isNew: isUnvisited(ROUTES.cemeteryCase) },
     unlocked("S22") && { id: "xing-news", eyebrow: "新闻原刊 / 缓存", title: "刑某被捕报道的两个版本", summary: "公开报道与缓存页面之间存在姓名和时间差异。", path: ROUTES.xingNews, isNew: isUnvisited(ROUTES.xingNews) },
     unlocked("S23") && { id: "shouxiang", eyebrow: "站点存档", title: "寿享陵园旧站镜像恢复", summary: "失效网站的人员目录和早期文字层重新可读。", path: ROUTES.shouxiang, isNew: isUnvisited(ROUTES.shouxiang) },
-    recovered("14") && { id: "shinan-open", eyebrow: "演出资料", title: "《诗喃》终场档案开放", summary: "完整排练文本、朗读声部与静音字幕终场已经归档。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const publications: DirectoryEntry[] = [
@@ -569,13 +568,11 @@ export function buildPublicCatalog(game: GameState) {
       path: chapter.route,
       isNew: isUnvisited(chapter.route),
     }),
-    recovered("14") && { id: "shinan-script", eyebrow: "诗剧 / 完整版", title: "《诗喃》排练文本", summary: "序诗、五个篇章与结诗的完整恢复版本。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const exhibitions: DirectoryEntry[] = [
     { id: "zhuhongmen", eyebrow: "正在展出 / 主厅", title: "赭红门", summary: "10.01—10.14｜憎恶社二层主厅", path: ROUTES.exhibition },
     unlocked("S01") && { id: "baishaorou", eyebrow: "撤回作品缓存", title: "白芍肉", summary: "展厅目录中缺失的 A-07 作品记录。", path: ROUTES.artwork, isNew: isUnvisited(ROUTES.artwork) },
-    recovered("14") && { id: "shinan-stage", eyebrow: "特别项目 / 终场", title: "诗喃", summary: "航船诗歌社国庆诗歌剧场的排演文本与静音字幕终场。", path: ROUTES.shinan, isNew: isUnvisited(ROUTES.shinan) },
   ].filter(Boolean) as DirectoryEntry[];
 
   const about: DirectoryEntry[] = [
@@ -1438,18 +1435,18 @@ function resolveExactSearch(query: string, game: GameState, currentPath: string)
     if (normalized === "诗喃") {
       const allowed = game.recovered.includes("14") || currentPath === ROUTES.stageZhuhongmen || game.unlocked.includes("S36");
       setResults([{
-        id: "shinan-performance",
-        kind: allowed ? "航船诗歌社 · 国庆诗歌剧场" : "演出元数据",
+        id: "final-word-password",
+        kind: allowed ? "本地文件口令" : "受限口令",
         title: "诗喃",
         summary: allowed
-          ? "完整剧本、朗读声部与谢幕页已经开放。"
-          : "一场演出的名称。演出内容尚未就位。",
+          ? "该名称与桌面上锁 Word 文件的口令字段相符。"
+          : "该名称尚未出现在终场场记中。",
         path: allowed ? ROUTES.shinan : undefined,
         unlock: allowed ? ["S36"] : undefined,
         locked: !allowed,
-        note: allowed ? undefined : "需恢复全部14份文本",
+        note: allowed ? "回到桌面打开最终文件.doc" : "需恢复全部14份文本",
       }]);
-      setResultNote(allowed ? "档案人物现在回到航船诗歌社的朗读名单。" : "通关前只显示名称，不公开演出归属。");
+      setResultNote(allowed ? "最终口令已确认；旧演出资料不再保存在画廊网站。" : "完成结诗后才能确认该口令。");
       return;
     }
 
@@ -2454,7 +2451,7 @@ export function GameApp({ initialPath, embedded = false, onNavigate, onCemeteryV
       case ROUTES.stageZhuhongmen:
         return <StageZhuhongmenPage />;
       case ROUTES.shinan:
-        return <ShinanPage />;
+        return <FinalWordPasswordPage />;
       case ROUTES.exhibition:
       default:
         return <ExhibitionPage frameNotice={frameNotice} onInspectFrame={inspectFrame} />;
@@ -3549,29 +3546,15 @@ function StageZhuhongmenPage() {
     <article className="stage-zhuhongmen-page">
       <header className="stage-warm-head"><div><ArtifactTag>场次 14 / 14</ArtifactTag><p className="section-kicker">结诗 · 合读</p><h1>赭红门</h1></div><aside><span>场记</span><p>文本已齐。<br />所有人请就位。</p></aside></header>
       <TransferredReading title="赭红门" />
-      <section className="reader-call-sheet"><header><span>档案编号已转换为场次编号</span><b>朗读者就位</b></header><div><p>杜万琳 <span>朗读声部</span></p><p>方晚 <span>朗读声部</span></p><p>邢万 <span>朗读声部</span></p><p>徐惠 <span>朗读声部</span></p><p>杜彻 <span>朗读声部</span></p><p>合读 <span>终场</span></p></div></section>
-      <section className="stage-note-final"><span>终场场记</span><h2>演出名：诗喃</h2><p>案件索引到这里停止。下一页只让所有人物回到朗读者的位置。</p></section>
+      <section className="stage-note-final"><span>最终文件口令</span><h2>诗喃</h2><p>关闭或最小化浏览器，回到桌面打开“最终文件.doc”。</p></section>
     </article>
   );
 }
 
-function ShinanPage() {
-  const [performanceStarted, setPerformanceStarted] = useState(false);
-  const [cue, setCue] = useState(0);
-  const cues = [
-    { title: "开场", copy: "投影亮起。有人试着把麦克风推近，第一位朗读者走到灯下。" },
-    { title: "声部进入", copy: "黎晏读杜彻，叶非读方晚。剧中人与朗读者第一次在同一页相遇。" },
-    { title: "文本合流", copy: "郁绵读邢万，林锐读徐惠。那些曾被当成档案的人名，重新成为声部。" },
-    { title: "赭红门", copy: "陳潮读杜万琳，所有声部进入最后一段合读。" },
-    { title: "谢幕", copy: "灯光亮起。观众听见翻页，也看见台上的人从角色中退场。" },
-  ] as const;
-  const currentCue = cues[cue];
+function FinalWordPasswordPage() {
   return (
-    <article className="shinan-page">
-      <header className="shinan-hero"><div><span>航船诗歌社 · 国庆诗歌剧场</span><h1>诗喃</h1><p>你恢复的从来不是司法档案，而是一份被拆散、改写并藏进画廊网站的诗剧排练文本。</p></div></header>
-      {!performanceStarted ? <section className="performance-choice"><div><span>选择终场版本</span><h2>声音不构成通关门槛</h2><p>原成员录音尚未接入。本版先开放完整静音字幕终场；取得授权录音后，可在同一位置替换。</p></div><div><Button type="button" disabled>有声版 · 素材待接入</Button><Button type="button" onClick={() => setPerformanceStarted(true)}>静音字幕版开演</Button></div></section> : <section className="silent-performance"><header><span>静音字幕终场</span><b>{cue + 1}/{cues.length}</b></header><div className="cue-stage"><small>{currentCue.title}</small><p>{currentCue.copy}</p></div><footer><Button variant="outline" type="button" onClick={() => setCue((value) => Math.max(0, value - 1))} disabled={cue === 0}>上一场记</Button>{cue < cues.length - 1 ? <Button type="button" onClick={() => setCue((value) => Math.min(cues.length - 1, value + 1))}>下一场记</Button> : <span className="curtain-call">演出结束 · 谢幕</span>}</footer></section>}
-      <section className="shinan-truth"><span>最后一次身份转换</span><div><h2>他们是剧中人，也是朗读者。</h2><p>公墓案、死亡记录、人物年表和新闻缓存属于《诗喃》的剧内文本与舞台道具。现实层留下航船诗歌社、排练文字与尚待接入的成员声音。</p></div></section>
-      <section className="material-status"><article><span>14/14</span><h3>朗读索引完成</h3><p>《目盲》文字稿已从画廊移除，图像原稿仅存于 Administrator 的加密文件夹。</p></article><article><span>待录制</span><h3>成员声音谢幕</h3><p>录音接入后保留舞台字幕，不要求玩家开启声音。</p></article></section>
+    <article className="stage-zhuhongmen-page">
+      <section className="stage-note-final"><span>最终文件口令</span><h2>诗喃</h2><p>旧演出资料已移除。请关闭或最小化浏览器，回到桌面打开“最终文件.doc”。</p></section>
     </article>
   );
 }
